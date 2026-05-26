@@ -1,0 +1,19 @@
+[project]
+name = "kyrgstudio"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "faster-whisper>=1.2.1",
+    "openai>=2.38.0",
+    "pydantic>=2.13.4",
+    "requests>=2.34.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]
