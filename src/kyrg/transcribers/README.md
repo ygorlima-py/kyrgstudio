@@ -20,22 +20,27 @@ result = transcriber.transcribe()
 ```
 
 All providers inherit from `TranscriberBase`. Remote API providers inherit from
-`TranscriberAPIBase`, which defines the standard API flow:
+`TranscriberAPIBase`, which combines the transcription-specific state with the
+shared `AdapterAPIBase` request flow:
 
 ```python
 response = self._request()
 return self._normalize_response(response)
 ```
 
-This keeps provider-specific request logic separate from result normalization.
-The rest of the application can depend on `TranscriptionResult` instead of
-depending on provider-specific response formats.
+`TranscriberAPIBase` exposes the domain method `transcribe()` and delegates the
+request/normalization sequence to the shared adapter. This keeps
+provider-specific request logic separate from result normalization while
+allowing other domains, such as voice or image generation, to reuse the same API
+adapter pattern. The rest of the application can depend on
+`TranscriptionResult` instead of depending on provider-specific response
+formats.
 
 ## Modules
 
 | Module | Responsibility |
 | --- | --- |
-| `base.py` | Defines the shared transcriber contracts and the base API transcription flow. |
+| `base.py` | Defines the shared transcriber contracts and connects remote transcribers to the shared API adapter flow. |
 | `schemas.py` | Defines normalized Pydantic models for transcription results, text segments, and word segments. |
 | `local_model.py` | Provides the local Faster Whisper transcriber implementation. |
 | `remote_model.py` | Provides remote API-backed transcribers for OpenRouter, OpenAI, and ElevenLabs. |
@@ -152,11 +157,16 @@ class CustomProviderTranscriber(TranscriberAPIBase):
         ...
 ```
 
+`TranscriberAPIBase` stores transcription configuration such as `audio_path`,
+`model_name`, `language`, and `temperature`, while the shared adapter stores the
+remote `api_key` and runs the common request/normalization flow.
+
 ## Design Guidelines
 
 - Keep provider request logic inside the provider implementation.
 - Normalize every provider response into `TranscriptionResult`.
 - Preserve provider-specific payloads in `raw_response`.
+- Keep `transcribe()` as the public domain method; reuse the shared adapter only for the API request flow.
 - Keep API keys out of logs, errors, and persisted output.
 - Prefer provider identifiers that are stable and machine-readable.
 - Use `segments` and `words` only when the provider returns reliable timing metadata.

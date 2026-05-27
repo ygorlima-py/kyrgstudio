@@ -1,14 +1,15 @@
 """Base contracts for transcription providers.
 
-This module defines the common interface implemented by all transcription
-providers. Concrete implementations may run locally or call remote APIs, but
-they all expose the same ``transcribe`` contract and return a normalized
-``TranscriptionResult``.
+This module defines the transcription-specific interface implemented by local
+and remote providers. Local providers implement ``transcribe`` directly, while
+remote providers combine the transcription contract with the shared API adapter
+flow from ``kyrg.adapters``.
 """
 
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+from kyrg.adapters.base import APIAdapterBase
 from kyrg.transcribers.schemas import TranscriptionResult
 
 
@@ -55,25 +56,24 @@ class TranscriberBase(ABC):
         pass
 
 
-class TranscriberAPIBase(TranscriberBase):
+class TranscriberAPIBase(TranscriberBase, APIAdapterBase[TranscriptionResult]):
     """Base class for remote API-backed transcription providers.
 
-    API providers share the same high-level flow: send a provider-specific
-    request, receive a raw response, and normalize that response into the
-    application-level schema.
+    This class joins the transcription domain state from ``TranscriberBase``
+    with the reusable API request flow from ``AdapterAPIBase``. Provider
+    subclasses only need to implement ``_request`` and ``_normalize_response``;
+    ``transcribe`` delegates to the shared adapter flow.
     """
-
-    URL = ""
 
     def __init__(
         self,
         audio_path: str,
         model_name: str,
-        language: str,
+        language: Optional[str],
         temperature: float,
         api_key: str,
     ):
-        """Initialize shared API transcription configuration.
+        """Initialize shared remote transcription configuration.
 
         Args:
             audio_path: Path to the audio file that should be transcribed.
@@ -85,7 +85,7 @@ class TranscriberAPIBase(TranscriberBase):
 
         super().__init__(audio_path, model_name, language, temperature)
         self.api_key = api_key
-
+        
     @abstractmethod
     def _request(self) -> dict[str, Any]:
         """Send the provider-specific API request and return its raw response."""
@@ -108,12 +108,11 @@ class TranscriberAPIBase(TranscriberBase):
     def transcribe(self) -> TranscriptionResult:
         """Run the standard API transcription flow.
 
-        The default implementation delegates provider-specific request and
-        normalization behavior to subclass implementations.
+        The public transcription method stays domain-specific, while the
+        request and normalization sequence is reused from ``AdapterAPIBase``.
 
         Returns:
             A normalized ``TranscriptionResult``.
         """
 
-        response = self._request()
-        return self._normalize_response(response)
+        return self.run()
