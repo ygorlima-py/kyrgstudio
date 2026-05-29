@@ -9,11 +9,11 @@ class APIAdapterBase(ABC, Generic[OutPutT]):
     PROVIDER = ""
     
     @abstractmethod
-    def _request(self) -> dict[str, Any]:
+    def _request(self) -> Any:
         pass
     
     @abstractmethod
-    def _normalize_response(self, response: dict[str, Any]) -> OutPutT:
+    def _normalize_response(self, response: Any) -> OutPutT:
         pass
     
     def run(self) -> OutPutT:

@@ -5,7 +5,7 @@ only defines the provider name and base URL while reusing OpenAITTSBase for the
 request and normalization behavior.
 """
 
-from kyrg.generate.voices.openai import OpenAITTSBase
+from kyrg.generate.voices.openai_provider import OpenAITTSBase
 
 
 class OpenRouterVoiceGenerator(OpenAITTSBase):

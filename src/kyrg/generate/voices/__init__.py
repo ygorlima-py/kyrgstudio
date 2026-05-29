@@ -5,8 +5,8 @@ library users. Provider internals, shared adapter bases, and helper functions
 remain private to their modules.
 """
 
-from kyrg.generate.voices.openai import OpenAIVoiceGenerator
-from kyrg.generate.voices.openrouter import OpenRouterVoiceGenerator
+from kyrg.generate.voices.openai_provider import OpenAIVoiceGenerator
+from kyrg.generate.voices.openrouter_provider import OpenRouterVoiceGenerator
 from kyrg.generate.voices.elevenlabs import (
     ElevenLabsSpeechToSpeech,
     ElevenLabsVoiceCloner,
