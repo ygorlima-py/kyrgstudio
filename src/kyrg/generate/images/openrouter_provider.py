@@ -86,12 +86,12 @@ class OpenRouterImageGenerator(ImageGeneratorBase):
             ) from error
       
         
-    def _normalize_response(self, response: Any) -> ImageGeneratorOutput:
+    def _normalize_response(self, raw_result: Any) -> ImageGeneratorOutput:
         """Convert OpenRouter image data URLs or base64 strings into bytes."""
         
         try:
             images: list[GeneratedImage] = []
-            for image in response['images']:
+            for image in raw_result['images']:
                 image_url_base64 = image['image_url']['url']
                 
                 if "," in image_url_base64:
@@ -109,7 +109,7 @@ class OpenRouterImageGenerator(ImageGeneratorBase):
             return ImageGeneratorOutput(
                 images=images,
                 provider=self.PROVIDER,
-                model=response['model'],
+                model=raw_result['model'],
             )
             
         except (KeyError, IndexError, ValueError, TypeError) as error:

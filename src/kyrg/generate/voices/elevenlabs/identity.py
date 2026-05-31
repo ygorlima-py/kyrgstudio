@@ -97,15 +97,15 @@ class ElevenLabsVoiceCloner(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLabs]):
             for f in audio_files:
                 f.close()
  
-    def _normalize_response(self, response: dict[str, Any]) -> VoiceIdentityOutput:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceIdentityOutput:
         """Convert provider metadata into the public VoiceIdentityOutput schema."""
 
         return VoiceIdentityOutput(
             provider=self.PROVIDER,
-            voice_id=response["voice_id"],
-            name=response.get("name"),
-            description=response.get("description"),
-            raw_response=response.get("raw_response", {}),
+            voice_id=raw_result["voice_id"],
+            name=raw_result.get("name"),
+            description=raw_result.get("description"),
+            raw_response=raw_result.get("raw_response", {}),
         )
  
  
@@ -241,18 +241,18 @@ class ElevenLabsVoiceDesignPreview(APIAdapterSDKBase[VoiceDesignOutput, ElevenLa
                 f"Error calling ElevenLabs voice design previews: {error}"
             ) from error
 
-    def _normalize_response(self, response: dict[str, Any]) -> VoiceDesignOutput:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceDesignOutput:
         """Convert provider metadata into the public VoiceDesignOutput schema."""
 
         previews = [
             VoiceDesignPreview(**preview)
-            for preview in response.get("previews", [])
+            for preview in raw_result.get("previews", [])
         ]
         return VoiceDesignOutput(
             provider=self.PROVIDER,
-            text=response.get("text"),
+            text=raw_result.get("text"),
             previews=previews,
-            raw_response=response.get("raw_response", response),
+            raw_response=raw_result.get("raw_response", raw_result),
         )
     
 class ElevenLabsVoiceDesignSaver(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLabs]): 
@@ -308,13 +308,13 @@ class ElevenLabsVoiceDesignSaver(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLa
                 f"Error calling ElevenLabs voice design saver: {error}"
             ) from error
 
-    def _normalize_response(self, response: dict[str, Any]) -> VoiceIdentityOutput:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceIdentityOutput:
         """Convert provider metadata into the public VoiceIdentityOutput schema."""
 
         return VoiceIdentityOutput(
             provider=self.PROVIDER,
-            voice_id=response["voice_id"],
-            name=response.get("name"),
-            description=response.get("description"),
-            raw_response=response.get("raw_response", response),
+            voice_id=raw_result["voice_id"],
+            name=raw_result.get("name"),
+            description=raw_result.get("description"),
+            raw_response=raw_result.get("raw_response", raw_result),
         )

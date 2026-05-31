@@ -53,11 +53,11 @@ class OpenAIImageGenerator(ImageGeneratorBase):
                 f"Error calling {self.PROVIDER} image provider: {error}"
             ) from error
     
-    def _normalize_response(self, response: Any) -> ImageGeneratorOutput:
+    def _normalize_response(self, raw_result: Any) -> ImageGeneratorOutput:
         """Convert OpenAI's response into Kyrg's normalized image output."""
         
         images: list[GeneratedImage] = []
-        for image_base64 in response.data:
+        for image_base64 in raw_result.data:
             image_bytes = base64.b64decode(image_base64)
         
             images.append(GeneratedImage(

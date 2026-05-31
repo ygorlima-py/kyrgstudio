@@ -135,16 +135,16 @@ class OpenAITranscriber(TranscriberAPIBase):
         except requests.RequestException as error:
             raise RuntimeError(f"Error calling OpenAI provider: {error}") from error
 
-    def _normalize_response(self, response: dict[str, Any]) -> TranscriptionResult:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an OpenAI response into ``TranscriptionResult``."""
 
         return TranscriptionResult(
             audio_path=self.audio_path,
-            language=response.get("language", self.language),
-            text=response.get("text", "").strip(),
+            language=raw_result.get("language", self.language),
+            text=raw_result.get("text", "").strip(),
             segments=[],
             model=self.model_name,
-            raw_response=response,
+            raw_response=raw_result,
             provider=self.PROVIDER,
         )
 
@@ -202,12 +202,12 @@ class ElevenLabsTranscriber(TranscriberAPIBase):
         except requests.RequestException as error:
             raise RuntimeError(f"Error calling ElevenLabs provider: {error}") from error
 
-    def _normalize_response(self, response: dict[str, Any]) -> TranscriptionResult:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an ElevenLabs response into ``TranscriptionResult``."""
 
         words: list[WordSegment] = []
 
-        for word in response.get("words", []):
+        for word in raw_result.get("words", []):
             if word.get("type") != "word":
                 continue
 
@@ -224,16 +224,16 @@ class ElevenLabsTranscriber(TranscriberAPIBase):
             id=0,
             start=words[0].start if words else None,
             end=words[-1].end if words else None,
-            text=response.get("text", "").strip(),
+            text=raw_result.get("text", "").strip(),
             words=words,
         )
 
         return TranscriptionResult(
             audio_path=self.audio_path,
-            language=response.get("language_code", self.language),
-            text=response.get("text", "").strip(),
-            segments=[segment] if response.get("text") else [],
+            language=raw_result.get("language_code", self.language),
+            text=raw_result.get("text", "").strip(),
+            segments=[segment] if raw_result.get("text") else [],
             model=self.model_name,
-            raw_response=response,
+            raw_response=raw_result,
             provider=self.PROVIDER,
         )

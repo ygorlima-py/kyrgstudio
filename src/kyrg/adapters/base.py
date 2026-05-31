@@ -13,7 +13,7 @@ class APIAdapterBase(ABC, Generic[OutPutT]):
         pass
     
     @abstractmethod
-    def _normalize_response(self, response: Any) -> OutPutT:
+    def _normalize_response(self, raw_result: Any) -> OutPutT:
         pass
     
     def run(self) -> OutPutT:

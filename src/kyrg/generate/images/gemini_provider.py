@@ -58,12 +58,12 @@ class GeminiImageGenerator(ImageGeneratorBase):
                 f'Error calling {self.PROVIDER} image provider: {error}'
             )
         
-    def _normalize_response(self, response: Any) -> ImageGeneratorOutput:
+    def _normalize_response(self, raw_result: Any) -> ImageGeneratorOutput:
         """Convert Gemini byte images into Kyrg's normalized image output."""
 
         images: list[GeneratedImage] = []
         
-        for generated_image in response.generated_images:
+        for generated_image in raw_result.generated_images:
             image = generated_image.image
             
             if image.image_bytes:

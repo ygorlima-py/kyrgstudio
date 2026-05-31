@@ -78,16 +78,16 @@ class ElevenLabsVoiceGenerator(APIAdapterSDKBase[VoiceOutput, ElevenLabs]):
         except ApiError as error:
             raise RuntimeError(f"Error calling ElevenLabs text-to-speech: {error}")
  
-    def _normalize_response(self, response: dict[str, Any]) -> VoiceOutput:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceOutput:
         """Convert provider metadata into the public VoiceOutput schema."""
 
         return VoiceOutput(
-            audio_path=response["audio_path"],
+            audio_path=raw_result["audio_path"],
             provider=self.PROVIDER,
-            model=response["model"],
-            voice_id=response["voice"],
-            output_format=response.get("output_format"),
-            raw_response=response,
+            model=raw_result["model"],
+            voice_id=raw_result["voice"],
+            output_format=raw_result.get("output_format"),
+            raw_response=raw_result,
         )
  
  
@@ -156,15 +156,15 @@ class ElevenLabsSpeechToSpeech(APIAdapterSDKBase[VoiceOutput, ElevenLabs]):
         except ApiError as error:
             raise RuntimeError(f"Error calling ElevenLabs speech-to-speech: {error}")
  
-    def _normalize_response(self, response: dict[str, Any]) -> VoiceOutput:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceOutput:
         """Convert provider metadata into the public VoiceOutput schema."""
 
         return VoiceOutput(
-            audio_path=response["audio_path"],
+            audio_path=raw_result["audio_path"],
             provider=self.PROVIDER,
-            model=response["model"],
-            voice_id=response["voice"],
-            output_format=response.get("output_format"),
-            raw_response=response,
+            model=raw_result["model"],
+            voice_id=raw_result["voice"],
+            output_format=raw_result.get("output_format"),
+            raw_response=raw_result,
         )
  
