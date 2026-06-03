@@ -1,7 +1,16 @@
+"""Input and output schemas for video generation.
+
+These Pydantic models define the public data contract shared by video provider
+adapters. Inputs describe provider-agnostic generation requests, while outputs
+normalize provider responses into stable remote video references.
+"""
+
 from pydantic import BaseModel, Field
 from typing import Any, Optional
 
 class VideoReferenceImage(BaseModel):
+    """Reference image used to guide provider-specific video generation."""
+
     image_path: str = Field(
         description="Reference image path for video generation.",
     )
@@ -15,8 +24,10 @@ class VideoReferenceImage(BaseModel):
     )
     
 class VideoGenerateInput(BaseModel):
+    """Input payload for text-to-video and image-to-video generation."""
+
     model: str = Field(
-        description='Provider-specific image generation model.',
+        description='Provider-specific video generation model.',
         )
     prompt: str = Field(
         description="Natural-language prompt used to generate videos."
@@ -25,9 +36,9 @@ class VideoGenerateInput(BaseModel):
         default_factory=dict,
         description='Provider-specific optional generation parameters.',
     )
-    image_path: Optional[str] = Field(
+    image: Optional[str] = Field(
         default=None,
-        description="Image path for generation",
+        description="Image for video generation. Accepts a local file path or a remote URL (http/https). Behavior depends on the provider.",
     )
     image_mime_type: Optional[str] = Field(
         default=None,
@@ -39,8 +50,10 @@ class VideoGenerateInput(BaseModel):
     )
     
 class VideoGenerated(BaseModel):
+    """Remote reference to a generated video asset."""
+
     uri: str = Field(
-        description = 'Temporary URL to download the video'
+        description = 'Temporary URI or URL for the generated video.'
     )
     requires_auth: bool = Field(
         default=False,
@@ -52,6 +65,8 @@ class VideoGenerated(BaseModel):
     )
     
 class VideoGenerateOutput(BaseModel):
+    """Normalized output returned by video generation adapters."""
+
     videos: list[VideoGenerated] = Field(
         description="Generated videos."
         )

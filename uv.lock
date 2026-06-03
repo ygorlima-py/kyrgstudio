@@ -590,6 +590,7 @@ dependencies = [
     { name = "openai" },
     { name = "pydantic" },
     { name = "requests" },
+    { name = "runwayml" },
 ]
 
 [package.metadata]
@@ -600,6 +601,7 @@ requires-dist = [
     { name = "openai", specifier = ">=2.38.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "requests", specifier = ">=2.34.2" },
+    { name = "runwayml", specifier = ">=4.15.0" },
 ]
 
 [[package]]
@@ -960,6 +962,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654, upload-time = "2026-04-12T08:24:02.83Z" },
+]
+
+[[package]]
+name = "runwayml"
+version = "4.15.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8c/6c/af30c798b139ed6f50193150c483f3034f34b6fcd0692ca2ea22739d769c/runwayml-4.15.0.tar.gz", hash = "sha256:f6558f06a9f5bd96be99d24ab74d8f58f16a011d643e638ea23a84b15f3f05db", size = 273032, upload-time = "2026-05-27T18:10:08.255Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4d/51/d862904a1e803dd554ddc6f3e7fa99ff8ef81027d678635f6092820574bf/runwayml-4.15.0-py3-none-any.whl", hash = "sha256:40da115e96452de0e755a56e10023abd4d65d09843d9bdba7ec1b90c7b544856", size = 175886, upload-time = "2026-05-27T18:10:06.956Z" },
 ]
 
 [[package]]
