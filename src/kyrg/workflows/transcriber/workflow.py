@@ -2,18 +2,21 @@ from langgraph.graph import START, END
 
 from kyrg.workflows.base import WorkflowBase
 from kyrg.workflows.transcriber.state import TranscriberState
+from kyrg.workflows.transcriber.agent import TranscriptionAgent
 from kyrg.workflows.transcriber.nodes import (
     primary_router,
     extract_audio,
     audio_text_converter,
     extract_hybrid_context,
-    correction_transcriber,
     prepare_audio,
-    analyse_transcriber,
 )
 
 class TranscriberWorkflow(WorkflowBase):
     STATE_SCHEMA = TranscriberState
+    
+    def __init__(self, initial_state: dict | None, agent: TranscriptionAgent):
+        self.agent_analysys = agent.create()
+        super().__init__(initial_state)
     
     def _build(self) -> None:
         
@@ -21,8 +24,7 @@ class TranscriberWorkflow(WorkflowBase):
         self.graph.add_node('prepare_audio', prepare_audio)
         self.graph.add_node('audio_text_converter', audio_text_converter)
         self.graph.add_node('extract_hybrid_context', extract_hybrid_context)
-        self.graph.add_node('analyse_transcriber', analyse_transcriber)
-        self.graph.add_node('correction_transcriber', correction_transcriber )
+        self.graph.add_node('analyse_agent', self.agent_analysys)
 
         self.graph.add_conditional_edges(
             START, 
@@ -36,11 +38,35 @@ class TranscriberWorkflow(WorkflowBase):
         self.graph.add_edge('extract_audio', 'audio_text_converter')
         self.graph.add_edge('prepare_audio', 'audio_text_converter')
         self.graph.add_edge('audio_text_converter','extract_hybrid_context')
-        self.graph.add_edge('extract_hybrid_context', 'analyse_transcriber')
-        
-        
-        self.graph.add_edge('correction_transcriber', END)    
+        self.graph.add_edge('extract_hybrid_context', 'analyse_agent')
+        self.graph.add_edge('analyse_agent', END)    
 
-if __name__ == "__main__":
-    workflow = TranscriberWorkflow(initial_state={})
-    workflow.draw_workflow()
+# if __name__ == "__main__":
+#     from langchain_core.language_models.chat_models import BaseChatModel
+#     from kyrg.workflows.transcriber.tools import (
+#         accept_transcription_tool,
+#         correct_transcription_tool,
+#         request_human_review_tool,
+#     )
+    
+#     from langchain_openai import ChatOpenAI
+#     from dotenv import load_dotenv
+#     import os 
+    
+#     load_dotenv()
+    
+#     agent = TranscriptionAgent(
+#         llm=ChatOpenAI(
+#             api_key=os.getenv("OPENROUTER_API_KEY"),
+#             model="deepseek/deepseek-v4-flash"
+#             ),
+#         tools=[
+#             accept_transcription_tool,
+#             correct_transcription_tool,
+#             request_human_review_tool,
+#         ],
+#         debug=True,
+#     )
+
+#     workflow = TranscriberWorkflow(initial_state={}, agent=agent)
+#     workflow.draw_workflow()

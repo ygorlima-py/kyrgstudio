@@ -2,6 +2,12 @@ from kyrg.workflows.transcriber.state import TranscriberState
 from kyrg.editor import MediaContext, CommandRunner
 from kyrg.editor.audio import ExtractAudio, ConvertToWhisperFormat
 from kyrg.transcribers.base import TranscriberAPIBase
+from kyrg.workflows.transcriber.agent import TranscriptionAgent
+from kyrg.workflows.transcriber.tools import (
+    accept_transcription_tool,
+    correct_transcription_tool,
+    request_human_review_tool,
+)
 
 def primary_router(state: TranscriberState):
     source_type = state.get('source_type')
@@ -67,11 +73,7 @@ def audio_text_converter(state: TranscriberState) -> dict:
         'result': result
     }
     
-def analyse_transcriber(state: TranscriberState) -> dict:
-    return {}
-
 def extract_hybrid_context(state: TranscriberState) -> dict:
-    return {}
-    
-def correction_transcriber(state: TranscriberState) -> dict:
-    return {}
+    ...
+
+

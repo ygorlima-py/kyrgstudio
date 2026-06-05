@@ -9,6 +9,8 @@ from langchain_core.tools import BaseTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.agents import create_agent, AgentState
 
+from kyrg.llms.base import LLMBase
+
 class WorkflowBase(ABC):
     STATE_SCHEMA: type[Any]
         
@@ -30,7 +32,7 @@ class WorkflowBase(ABC):
         
     def draw_workflow(self):
         filename = f"{self.__class__.__name__}.png"
-        return self._compile().get_graph().draw_mermaid_png(output_file_path=filename)
+        return self._compile().get_graph(xray=True).draw_mermaid_png(output_file_path=filename)
     
     def start(self):
         return self._compile().invoke(input=self.initial_state)
@@ -55,7 +57,7 @@ class AgentBase(ABC):
         self.debug = debug
         
     
-    def create(self) -> Any:
+    def create(self) -> CompiledStateGraph:
         return create_agent(
             model=self.llm,
             tools=self.tools,
@@ -65,3 +67,15 @@ class AgentBase(ABC):
             name=self.NAME,
         )
     
+class AIActionBase(ABC):
+    def __init__(self, llm: LLMBase):
+        self.llm = llm
+
+    def _build_prompt(self) -> str:
+        ...
+        
+    def execute(self) -> Any:
+        ...
+        
+    async def aexecute(self) -> Any:
+        ... 
