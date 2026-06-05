@@ -70,16 +70,16 @@ class OpenRouterTranscriber(TranscriberAPIBase):
         except requests.RequestException as error:
             raise RuntimeError(f"Error calling OpenRouter provider: {error}") from error
 
-    def _normalize_response(self, response: dict[str, Any]) -> TranscriptionResult:
+    def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an OpenRouter response into ``TranscriptionResult``."""
 
         return TranscriptionResult(
             audio_path=self.audio_path,
-            language=response.get("language", self.language),
-            text=response.get("text", "").strip(),
+            language=raw_result.get("language", self.language),
+            text=raw_result.get("text", "").strip(),
             segments=[],
             model=self.model_name,
-            raw_response=response,
+            raw_response=raw_result,
             provider=self.PROVIDER,
         )
 
