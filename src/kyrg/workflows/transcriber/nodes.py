@@ -1,13 +1,12 @@
-from kyrg.workflows.transcriber.state import TranscriberState
 from kyrg.editor import MediaContext, CommandRunner
 from kyrg.editor.audio import ExtractAudio, ConvertToWhisperFormat
 from kyrg.transcribers.base import TranscriberAPIBase
-from kyrg.workflows.transcriber.agent import TranscriptionAgent
-from kyrg.workflows.transcriber.tools import (
-    accept_transcription_tool,
-    correct_transcription_tool,
-    request_human_review_tool,
-)
+from kyrg.workflows.transcriber.state import TranscriberState
+from kyrg.workflows.transcriber.actions import ExtractDomainContext
+from kyrg.workflows.base import AIActionExecutor
+from kyrg.workflows.transcriber.prompts import TranscriptionPrompts
+
+from langgraph.runtime import Runtime
 
 def primary_router(state: TranscriberState):
     source_type = state.get('source_type')
@@ -46,8 +45,11 @@ def extract_audio(state: TranscriberState)-> dict:
 def audio_text_converter(state: TranscriberState) -> dict: 
     transcriber_class = state["transcriber"]
     
+    language=state.get("language")
+    temperature=state.get("temperature", 0.0)
+    
     if issubclass(transcriber_class, TranscriberAPIBase):
-        api_key = state["api_key"]
+        api_key=state.get("api_key")
         
         if api_key is None:
             raise ValueError("api_key is required for remote transcriber")
@@ -55,8 +57,8 @@ def audio_text_converter(state: TranscriberState) -> dict:
         transcriber = transcriber_class(
             audio_path=state["audio_path"],
             model_name=state["model_name"],
-            language=state["language"],
-            temperature=state["temperature"],
+            language=language,
+            temperature=temperature,
             api_key=api_key,
         )
         
@@ -64,8 +66,8 @@ def audio_text_converter(state: TranscriberState) -> dict:
         transcriber = transcriber_class(
             audio_path=state["audio_path"],
             model_name=state["model_name"],
-            language=state["language"],
-            temperature=state["temperature"],
+            language=language,
+            temperature=temperature,
         )
     
     result = transcriber.transcribe()
@@ -73,7 +75,36 @@ def audio_text_converter(state: TranscriberState) -> dict:
         'result': result
     }
     
-def extract_hybrid_context(state: TranscriberState) -> dict:
-    ...
+def extract_hybrid_context(state: TranscriberState, runtime: Runtime) -> dict:
+    context = runtime.context
+    
+    if context is None:
+        raise RuntimeError("Transcriber workflow context is required.")
+    
+    result = state.get("result")
+    
+    if result is None:
+        raise ValueError("result is required to extract domain context")
+    
+    action = ExtractDomainContext(
+        llm=context.extract_context_llm,
+        result=result,
+    )
+    
+    domain_context = AIActionExecutor.run(action)
+    
+    return {
+        "domain_context": domain_context,
+        "messages": [
+            {
+                "role": "user",
+                "content": TranscriptionPrompts.QUALITY_AGENT_INPUT.format(
+                    domain_context=domain_context.model_dump_json(indent=2),
+                    result=result.model_dump_json(indent=2),
+                ),
+            }
+        ]
+    }
+
 
 

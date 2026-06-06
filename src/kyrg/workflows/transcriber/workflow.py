@@ -2,6 +2,7 @@ from langgraph.graph import START, END
 
 from kyrg.workflows.base import WorkflowBase
 from kyrg.workflows.transcriber.state import TranscriberState
+from kyrg.workflows.transcriber.schemas import TranscriberWorkflowContext
 from kyrg.workflows.transcriber.agent import TranscriptionAgent
 from kyrg.workflows.transcriber.nodes import (
     primary_router,
@@ -13,10 +14,17 @@ from kyrg.workflows.transcriber.nodes import (
 
 class TranscriberWorkflow(WorkflowBase):
     STATE_SCHEMA = TranscriberState
+    CONTEXT_SCHEMA = TranscriberWorkflowContext
     
-    def __init__(self, initial_state: dict | None, agent: TranscriptionAgent):
-        self.agent_analysys = agent.create()
-        super().__init__(initial_state)
+    def __init__(
+        self,
+        initial_state: dict | None,
+        agent: TranscriptionAgent,
+        context: TranscriberWorkflowContext,
+        ):
+        
+        self.agent_analysis = agent.create()
+        super().__init__(initial_state, context)
     
     def _build(self) -> None:
         
@@ -24,7 +32,7 @@ class TranscriberWorkflow(WorkflowBase):
         self.graph.add_node('prepare_audio', prepare_audio)
         self.graph.add_node('audio_text_converter', audio_text_converter)
         self.graph.add_node('extract_hybrid_context', extract_hybrid_context)
-        self.graph.add_node('analyse_agent', self.agent_analysys)
+        self.graph.add_node('analyse_agent', self.agent_analysis)
 
         self.graph.add_conditional_edges(
             START, 

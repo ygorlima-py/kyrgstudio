@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any, Callable
+from loguru import logger
 
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -13,18 +14,30 @@ from kyrg.llms.base import LLMBase
 
 class WorkflowBase(ABC):
     STATE_SCHEMA: type[Any]
+    CONTEXT_SCHEMA: type[Any] = dict
+
         
-    def __init__(self, initial_state: dict | None):
-        self.graph = StateGraph(self.STATE_SCHEMA)
+    def __init__(
+        self,
+        initial_state: dict | None,
+        context: object | None = None,
+        ):
+        
+        self.graph = StateGraph(self.STATE_SCHEMA, context_schema=self.CONTEXT_SCHEMA)
+        
         self.initial_state = initial_state or {}
-        self._compiled_graph: CompiledStateGraph | None = None
+        
+        self.context = context if context is not None else {}
+        
+        self._compiled_graph: Any  = None
+        
         self._build()
         
     @abstractmethod
     def _build(self) -> None:
         ...
 
-    def _compile(self) -> CompiledStateGraph:
+    def _compile(self) -> Any:
         if self._compiled_graph is None:
             self._compiled_graph = self.graph.compile()
 
@@ -35,10 +48,16 @@ class WorkflowBase(ABC):
         return self._compile().get_graph(xray=True).draw_mermaid_png(output_file_path=filename)
     
     def start(self):
-        return self._compile().invoke(input=self.initial_state)
+        return self._compile().invoke(
+                            input=self.initial_state,
+                            context=self.context,
+                            )
         
     async def astart(self):
-        return await self._compile().ainvoke(input=self.initial_state)
+        return await self._compile().ainvoke(
+                        input=self.initial_state,
+                        context=self.context,
+                        )
 
 class AgentBase(ABC):
     NAME: str
@@ -79,3 +98,27 @@ class AIActionBase(ABC):
         
     async def aexecute(self) -> Any:
         ... 
+        
+class AIActionExecutor:
+    
+    @staticmethod
+    def run(action: AIActionBase) -> Any:
+        logger.info(f"Executing {action.__class__.__name__}")
+        try:
+            result = action.execute()
+            logger.info(f"Success {action.__class__.__name__}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed {action.__class__.__name__}: {e}")
+            raise
+        
+    @staticmethod
+    async def arun(action: AIActionBase) -> Any:
+        logger.info(f"Executing {action.__class__.__name__}")
+        try:
+            result = await action.aexecute()
+            logger.info(f"Success {action.__class__.__name__}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed {action.__class__.__name__}: {e}")
+            raise

@@ -1,5 +1,8 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
+
+from kyrg.llms.base import LLMBase
 
 class DomainContextOutput(BaseModel):
     language: str = Field(
@@ -61,4 +64,33 @@ class UncertainTerm(BaseModel):
     )
     reason: str = Field(
         description="Short explanation describing why this term is uncertain and may need review."
+    )
+    
+
+    
+class CorrectedSegment(BaseModel):
+    id: int = Field(description="Original segment id.")
+    text: str = Field(description="Corrected text for this segment.")
+
+
+class CorrectedTranscriptionOutput(BaseModel):
+    corrected_text: str = Field(description="Full corrected transcription text.")
+    corrected_segments: list[CorrectedSegment] = Field(
+        default_factory=list,
+        description="Only segments whose text should be changed.",
+    )
+    
+
+@dataclass    
+class TranscriberWorkflowContext:
+    correction_llm: LLMBase = field(
+        metadata={
+            "description": "LLM used to correct transcription errors when the quality agent decides correction is safe."
+        }
+    )
+
+    extract_context_llm: LLMBase = field(
+        metadata={
+            "description": "LLM used to extract domain context from the raw transcription before quality analysis."
+        }
     )
