@@ -1,8 +1,8 @@
 from kyrg.editor import MediaContext, CommandRunner
-from kyrg.editor.audio import ExtractAudio, ConvertToWhisperFormat
+from kyrg.editor.audio import ExtractAudio, ConvertToWhisperFormat, AudioSize
 from kyrg.transcribers.base import TranscriberAPIBase
 from kyrg.workflows.transcriber.state import TranscriberState
-from kyrg.workflows.transcriber.actions import ExtractDomainContext
+from kyrg.workflows.transcriber.actions import ExtractDomainContext, CorrectTranscription
 from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.transcriber.prompts import TranscriptionPrompts
 from kyrg.workflows.core import WorkflowRuntime
@@ -80,6 +80,34 @@ def audio_text_converter(state: TranscriberState, runtime: WorkflowRuntime) -> d
         'result': result
     }
     
+def measure_audio(state: TranscriberState):
+    context = MediaContext(
+        input_path=state["source_path"],
+        output_path=state["audio_path"],
+    )
+    
+    action = AudioSize(context=context, runner=CommandRunner())
+    result = action.execute()
+    
+    duration_seconds = float(result.stdout.decode().strip())
+    
+    return {
+        "audio_duration_in_seconds": duration_seconds,
+    }
+    
+def secondary_router(state: TranscriberState):
+    audio_duration_in_seconds = state.get("audio_duration_in_seconds")
+    need_correction = state.get("need_correction", False)
+    
+    if audio_duration_in_seconds is None:
+        raise RuntimeError("Failed measure audio in seconds")
+    
+    if audio_duration_in_seconds <= 180 and need_correction:
+        return "to_correction"
+    
+    else:
+        return "not_correction"
+        
 def extract_hybrid_context(state: TranscriberState, runtime: WorkflowRuntime) -> dict:
     context = runtime.context
     
@@ -115,21 +143,51 @@ def extract_hybrid_context(state: TranscriberState, runtime: WorkflowRuntime) ->
         "total_tokens": token_usage["total_tokens"],
     }
 
-def collect_agent_tokens(state: TranscriberState) -> dict:
-    input_tokens = 0
-    output_tokens = 0
+def correction_transcriber(state: TranscriberState, runtime: WorkflowRuntime) -> dict:
+    context = runtime.context
 
-    for message in state.get("messages", []):
-        usage = getattr(message, "usage_metadata", None)
+    if context is None:
+        raise RuntimeError("Transcriber workflow context is required.")
 
-        if usage is None:
-            continue
+    result = state.get("result")
 
-        input_tokens += usage.get("input_tokens", 0)
-        output_tokens += usage.get("output_tokens", 0)
+    if result is None:
+        raise ValueError("result is required to correct transcription")
+
+    domain_context = state.get("domain_context")
+
+    if domain_context is None:
+        raise ValueError("domain_context is required to correct transcription")
+
+    action = CorrectTranscription(
+        llm=context.correction_llm,
+        result=result,
+        domain_context=domain_context,
+    )
+
+    correction_output = AIActionExecutor.run(action)
+    token_usage = action.tokens_usage
+
+    corrected_result = result.model_copy(deep=True)
+    corrected_result.text = correction_output.corrected_text
+
+    segments_by_id = {
+        segment.id: segment
+        for segment in corrected_result.segments
+    }
+
+    for corrected_segment in correction_output.corrected_segments:
+        segment = segments_by_id.get(corrected_segment.id)
+
+        if segment is not None:
+            segment.text = corrected_segment.text
 
     return {
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-        "total_tokens": input_tokens + output_tokens,
+        "result": corrected_result,
+        "status": "corrected",
+        "human_review_reason": None,
+        "input_tokens": token_usage["input_tokens"],
+        "output_tokens": token_usage["output_tokens"],
+        "total_tokens": token_usage["total_tokens"],
     }
+

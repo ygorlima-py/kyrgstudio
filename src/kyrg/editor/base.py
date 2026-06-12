@@ -19,6 +19,8 @@ ContextT = TypeVar("ContextT")
 
 
 class BaseEditor(ABC, Generic[ContextT]):
+    CAPTURE_OUTPUT: bool = False
+    
     """Abstract base class for command-backed editor operations.
 
     ``BaseEditor`` provides the shared execution flow for editor operations:
@@ -63,4 +65,4 @@ class BaseEditor(ABC, Generic[ContextT]):
         """
 
         command = self.build_command()
-        return self.runner.run(command, check=True)
+        return self.runner.run(command, check=True, capture_output=self.CAPTURE_OUTPUT)

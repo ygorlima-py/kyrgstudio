@@ -8,6 +8,7 @@ focused on translating a known input shape into a command-line invocation.
 """
 
 from dataclasses import dataclass
+from typing import NotRequired
 
 
 @dataclass

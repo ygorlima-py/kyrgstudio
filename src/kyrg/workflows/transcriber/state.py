@@ -22,8 +22,9 @@ class TranscriberState(WorkFlowAgentState):
     language: NotRequired[Optional[str]]
     
     result: NotRequired[TranscriptionResult | None]
+    audio_duration_in_seconds: NotRequired[float | None]
+    correction_llm: NotRequired[bool]
     domain_context: NotRequired[DomainContextOutput]
-    final_result: NotRequired[TranscriptionResult | None]
     status: NotRequired[str | None]
     human_review_reason: NotRequired[str | None]
     

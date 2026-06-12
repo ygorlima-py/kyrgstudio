@@ -1,22 +1,20 @@
 # Workflows
 
-Este pacote concentra os fluxos de trabalho inteligentes do projeto.
+Este pacote concentra os workflows inteligentes do projeto.
 
-A ideia principal é não tratar a criação de uma VSL ou criativo como uma tarefa gigante. O projeto deve ser dividido em workflows menores, cada um com uma responsabilidade clara, reutilizável e fácil de testar.
+A ideia principal é dividir a criação de VSLs, criativos e vídeos de marketing em etapas menores, claras e reutilizáveis. Cada workflow resolve uma parte do processo. Depois, um workflow mestre poderá coordenar todos eles sem criar um state gigante e confuso.
 
-Um workflow cuida de uma etapa do processo. Depois, um workflow maior poderá orquestrar todos eles.
+## Visão Geral
 
-## Ideia Geral
+O produto final desejado é uma plataforma capaz de automatizar a produção de VSLs e criativos com IA.
 
-O produto final desejado é uma plataforma capaz de automatizar a criação de VSLs, criativos e vídeos de marketing com IA.
-
-O fluxo completo, no futuro, deve ser algo parecido com:
+Fluxo macro desejado:
 
 ```text
 material de entrada
 -> transcrição
 -> análise da copy
--> reescrita/adaptação
+-> adaptação ou criação de roteiro
 -> planejamento de cenas
 -> geração de voz
 -> geração visual
@@ -25,15 +23,138 @@ material de entrada
 -> exportação
 ```
 
-Nem todas as etapas precisam ser agentes.
+Nem todo workflow precisa ser agente.
 
-Algumas etapas usam IA com structured output, outras usam agentes ReAct com tools, e outras são processos determinísticos, como conversão de áudio, extração com FFmpeg e montagem final.
+A regra atual do projeto é:
 
-## O Que Ja Foi Feito
+```text
+usar LLM estruturada quando a tarefa for extração, análise ou geração controlada
+usar processo determinístico quando a tarefa for mídia, arquivo, FFmpeg, montagem ou validação objetiva
+usar agente apenas quando existir decisão real com ferramentas e benefício claro
+```
 
-O primeiro workflow criado foi o `TranscriberWorkflow`.
+O agente ReAct foi removido do `TranscriberWorkflow` porque gerava redundância, aumentava muito o custo de tokens e não era necessário para o fluxo atual.
 
-Ele já consegue receber áudio ou vídeo, preparar o áudio, transcrever, extrair contexto semântico, avaliar a qualidade da transcrição com um agente e decidir se a transcrição deve ser aceita, corrigida ou enviada para revisão humana.
+## Estrutura Atual
+
+Workflows existentes:
+
+```text
+TranscriberWorkflow
+CopyAnalysisWorkflow
+```
+
+Fluxo atual no `main.py`:
+
+```text
+TranscriberWorkflow
+-> CopyAnalysisWorkflow
+```
+
+O primeiro workflow transforma áudio ou vídeo em uma transcrição final corrigida.
+
+O segundo workflow transforma essa transcrição final em uma análise estratégica de copy.
+
+## WorkflowBase
+
+`WorkflowBase` é a base comum dos workflows.
+
+Ele centraliza:
+
+```text
+criação do StateGraph
+context_schema
+initial_state
+context de execução
+checkpointer opcional
+thread_id opcional
+compile
+start
+astart
+draw_workflow
+```
+
+O state guarda dados do processo.
+
+O context guarda dependências de execução.
+
+Exemplos de dependências no context:
+
+```text
+LLMs
+transcriber config
+providers
+configurações externas
+```
+
+Essa separação é importante porque o state pode ser salvo em checkpointer. Dependências como classes, SDKs, clients e providers não devem ser salvas no state.
+
+## Checkpointers
+
+O projeto possui abstração para checkpointers em:
+
+```text
+src/kyrg/workflows/checkpointers.py
+```
+
+Backends atuais:
+
+```text
+MemoryCheckpointer
+SQLiteCheckpointer
+PostgresCheckpointer
+```
+
+Eles permitem persistir o estado do workflow e retomar execuções com `thread_id`.
+
+Regra importante:
+
+```text
+state deve carregar dados serializáveis
+context deve carregar dependências não serializáveis
+```
+
+Por isso o transcriber foi movido para o context, dentro de `TranscriptorConfig`, em vez de ficar no state.
+
+## Contagem De Tokens
+
+Os workflows usam campos acumuláveis no state:
+
+```text
+input_tokens
+output_tokens
+total_tokens
+```
+
+Esses campos usam reducer com `operator.add`.
+
+Cada node que chama LLM retorna a quantidade de tokens gasta naquela chamada.
+
+Exemplo conceitual:
+
+```text
+node A retorna input_tokens = 100, output_tokens = 50
+node B retorna input_tokens = 200, output_tokens = 80
+state final tem input_tokens = 300, output_tokens = 130
+```
+
+Isso deixa o resultado final do workflow fácil de ler:
+
+```text
+result["input_tokens"]
+result["output_tokens"]
+result["total_tokens"]
+```
+
+A contagem precisa representar a chamada atual da LLM, não o acumulado histórico da instância.
+
+## TranscriberWorkflow
+
+Responsabilidade:
+
+```text
+Transformar áudio ou vídeo em uma transcrição final corrigida.
+```
 
 Fluxo atual:
 
@@ -42,10 +163,7 @@ START
 -> extract_audio ou prepare_audio
 -> audio_text_converter
 -> extract_hybrid_context
--> analyse_agent
-   -> model
-   -> tools
-   -> model
+-> correction_transcriber
 -> END
 ```
 
@@ -55,32 +173,49 @@ Quando a entrada é áudio, o workflow usa `prepare_audio`.
 
 Depois disso, ambos os caminhos chegam em `audio_text_converter`.
 
-## TranscriberWorkflow
+### Entrada Principal
 
-Responsabilidade:
-
-```text
-Transformar áudio ou vídeo em uma transcrição final confiável.
-```
-
-Entrada principal:
+Campos principais do state:
 
 ```text
 source_path
 source_type
-transcriber
+audio_path
 model_name
+language
 ```
 
 `source_path` é o arquivo original recebido.
 
 `source_type` indica se a entrada é `audio` ou `video`.
 
-`transcriber` é a classe responsável por transcrever.
+`audio_path` é o caminho do áudio preparado ou extraído.
 
 `model_name` é o modelo usado pelo transcriber.
 
-O `audio_path` ainda existe como caminho interno do áudio preparado, mas a decisão correta para o futuro é ele ser gerado pelo próprio workflow, para não confundir o usuário da API.
+`language` é opcional e pode guiar o transcriber.
+
+### Context
+
+O context do transcriber é `TranscriberWorkflowContext`.
+
+Ele carrega:
+
+```text
+correction_llm
+extract_context_llm
+transcriptor_config
+```
+
+`transcriptor_config` carrega:
+
+```text
+transcriptor
+transcriptor_temperature
+transcriptor_api_key
+```
+
+Essa decisão evita salvar classes Python no state e evita erro de serialização em checkpointers.
 
 ## Nodes Do TranscriberWorkflow
 
@@ -88,13 +223,13 @@ O `audio_path` ainda existe como caminho interno do áudio preparado, mas a deci
 
 Decide o caminho inicial.
 
-Se for áudio:
+Se `source_type` for `audio`:
 
 ```text
 prepare_audio
 ```
 
-Se for vídeo:
+Se `source_type` for `video`:
 
 ```text
 extract_audio
@@ -119,15 +254,21 @@ audio_path
 
 ### prepare_audio
 
-Normaliza/converte um arquivo de áudio para o formato esperado pela transcrição.
+Normaliza ou converte um arquivo de áudio para o formato esperado pela transcrição.
 
-Esse node existe porque mesmo quando o usuário envia áudio, o arquivo pode vir em formato, codec, sample rate ou canais diferentes.
+Esse node existe porque o usuário pode enviar áudio em formatos diferentes, com codec, canais ou sample rate inadequados para o transcriber.
 
 ### audio_text_converter
 
 Executa a transcrição.
 
-Ele instancia o transcriber informado no state e chama:
+Ele lê o transcriber do context:
+
+```text
+context.transcriptor_config.transcriptor
+```
+
+Depois instancia o provider e chama:
 
 ```text
 transcribe()
@@ -141,14 +282,17 @@ result: TranscriptionResult
 
 ### extract_hybrid_context
 
-Usa LLM com structured output para analisar a transcrição e extrair contexto.
+Usa LLM com structured output para extrair contexto da transcrição.
 
-Esse contexto ajuda a identificar:
+Esse contexto ajuda a correção posterior.
+
+Extrai:
 
 ```text
 idioma
 assunto principal
 tipo de conteúdo
+resumo
 termos importantes
 nomes próprios
 termos técnicos
@@ -160,63 +304,23 @@ regras de correção
 Saída:
 
 ```text
-domain_context: DomainContextOutput
-messages: entrada para o agente de qualidade
-```
-
-Esse node também cria a mensagem que será lida pelo agente ReAct.
-
-### analyse_agent
-
-Esse node é um subgrafo de agente criado com `create_agent`.
-
-Ele recebe:
-
-```text
-messages
-result
 domain_context
+input_tokens
+output_tokens
+total_tokens
 ```
 
-O agente escolhe exatamente uma tool:
+### correction_transcriber
 
-```text
-accept_transcription_tool
-correct_transcription_tool
-request_human_review_tool
-```
+Usa a action `CorrectTranscription` para corrigir a transcrição com base no `domain_context`.
 
-## Tools Do Agente
+A LLM não deve recriar o `TranscriptionResult` inteiro.
 
-### accept_transcription_tool
-
-Usada quando a transcrição está boa.
-
-Ela define:
-
-```text
-final_result = result
-status = accepted
-```
-
-### correct_transcription_tool
-
-Usada quando existem erros corrigíveis com segurança.
-
-Ela chama uma action de IA:
-
-```text
-CorrectTranscription
-```
-
-A LLM não deve reconstruir o `TranscriptionResult` inteiro.
-
-Ela deve devolver apenas um patch de correção.
-
-Depois a tool aplica esse patch no `TranscriptionResult` original, preservando:
+Ela retorna uma estrutura de correção, e o node aplica essa correção no resultado original, preservando:
 
 ```text
 timestamps
+segments
 words
 probabilities
 audio_path
@@ -225,90 +329,28 @@ model
 raw_response
 ```
 
-Isso evita JSON gigante e reduz erro.
-
-### request_human_review_tool
-
-Usada quando a transcrição está ambígua demais para corrigir automaticamente.
-
-Ela define:
+Saída:
 
 ```text
-status = needs_human_review
-human_review_reason = motivo informado pelo agente
-```
-
-## Decisoes Arquiteturais
-
-O `TranscriberState` herda de `AgentState` porque o grafo principal contém um agente ReAct como subgrafo.
-
-Isso faz sentido neste workflow, porque o agente faz parte real do grafo.
-
-Regra:
-
-```text
-AgentState pode aparecer em workflows agentic.
-AgentState nao deve vazar para transcribers, editor, generate ou schemas de dominio.
-```
-
-O `runtime.context` é usado para dependências de execução, como LLMs.
-
-Exemplo:
-
-```text
-correction_llm
-extract_context_llm
-```
-
-O state carrega dados do processo.
-
-O context carrega dependências da execução.
-
-## O Que Foi Validado
-
-Teste com áudio:
-
-```text
-áudio -> prepare_audio -> transcrição -> contexto -> agente -> accepted
-```
-
-O agente aceitou a transcrição quando não encontrou correções relevantes.
-
-Teste com vídeo:
-
-```text
-vídeo -> extract_audio -> transcrição -> contexto -> agente -> corrected
-```
-
-O contexto detectou a correção:
-
-```text
-la renda -> a renda
-```
-
-O agente chamou:
-
-```text
-correct_transcription_tool
-```
-
-E o workflow terminou com:
-
-```text
+final_result
 status = corrected
+human_review_reason = None
+input_tokens
+output_tokens
+total_tokens
 ```
 
-## O Que Ainda Falta No TranscriberWorkflow
+## O Que Falta No TranscriberWorkflow
 
 Gerar `audio_path` automaticamente.
 
-Hoje o caminho ainda pode precisar ser passado manualmente em testes. O ideal é o workflow criar um diretório interno por execução/projeto e gerar o caminho do áudio preparado.
+Hoje o caminho ainda é passado no input de teste. O ideal é o workflow criar um diretório por execução/projeto e gerar o caminho interno do áudio preparado.
 
-Reduzir o payload enviado ao agente.
+Reduzir payload enviado para LLM.
 
-Hoje o agente ainda recebe muitos dados da transcrição, incluindo segmentos e palavras. Funciona, mas pode ficar caro em vídeos maiores.
+Hoje alguns prompts ainda usam `TranscriptionResult` completo em JSON. Isso pode ficar caro, principalmente se incluir segmentos, words e metadados.
 
-Salvar outputs em arquivos.
+Salvar outputs intermediários.
 
 Exemplos:
 
@@ -320,19 +362,22 @@ final_transcription.json
 
 Criar testes fake.
 
-Testes fake devem validar:
+Testes importantes:
 
 ```text
 roteamento audio/video
-accept tool
-correct tool
-human review tool
-aplicação de patch
+extração de áudio
+preparação de áudio
+transcrição fake
+extração de contexto fake
+correção fake
+contagem de tokens
+checkpointer com state serializável
 ```
 
 Criar suporte para transcrição por chunks.
 
-Isso deve ficar para depois. Para vídeos longos, o ideal será:
+Para vídeos longos, o caminho futuro deve ser:
 
 ```text
 extract_audio
@@ -340,17 +385,21 @@ extract_audio
 -> split_audio_chunks
 -> transcribe_chunks
 -> merge_transcriptions
+-> extract_hybrid_context
+-> correction_transcriber
 ```
 
-Essa melhoria não deve mudar os transcribers. Ela deve ser uma camada acima, no workflow.
+Essa melhoria deve ficar no workflow, não nos transcribers.
 
-## Proximo Workflow
+## CopyAnalysisWorkflow
 
-O próximo workflow recomendado é o `CopyAnalysisWorkflow`.
+Responsabilidade:
 
-Ele deve transformar uma transcrição final em inteligência de venda.
+```text
+Ler a transcrição final e entender a estrutura persuasiva da copy.
+```
 
-Fluxo sugerido:
+Fluxo atual:
 
 ```text
 START
@@ -362,29 +411,52 @@ START
 -> END
 ```
 
-Esse workflow deve ser linear no começo.
+Esse workflow é linear.
 
-Ele não precisa de agente ReAct agora, porque a tarefa principal é extração e análise estruturada, não decisão com tools.
+Ele não usa agente ReAct porque a tarefa principal é análise estruturada, não decisão com tools.
 
-## CopyAnalysisWorkflow
-
-Responsabilidade:
+### Entrada Principal
 
 ```text
-Ler a transcrição final e entender a estrutura persuasiva da copy.
+transcription: TranscriptionResult
 ```
+
+Ele recebe a transcrição final do `TranscriberWorkflow`.
+
+### Context
+
+O context do copy analysis é `CopyAnalysisWorkflowContext`.
+
+Ele carrega:
+
+```text
+analysis_llm
+```
+
+Essa LLM é usada para extrair estrutura de copy, elementos de oferta e análise persuasiva.
+
+## Nodes Do CopyAnalysisWorkflow
 
 ### prepare_copy_input
 
-Prepara o texto para análise.
+Prepara a transcrição para análise.
 
 Faz:
 
 ```text
-valida se existe transcrição final
+valida se existe transcrição
 extrai texto limpo
-remove metadados desnecessários
 normaliza espaços
+cria structured_transcription com start, end e text
+preserva language
+```
+
+Saída:
+
+```text
+clean_transcript
+structured_transcription
+language
 ```
 
 ### extract_copy_structure
@@ -395,86 +467,283 @@ Exemplos:
 
 ```text
 hook
-abertura
+problema
 dor
 promessa
 mecanismo
 prova
-objeções
+história
+objeção
 oferta
 CTA
 urgência
 escassez
+transição
+educação
+payoff
+```
+
+Saída:
+
+```text
+copy_structure
+input_tokens
+output_tokens
+total_tokens
 ```
 
 ### extract_offer_elements
 
-Extrai os elementos comerciais.
+Extrai os elementos comerciais da oferta.
 
 Exemplos:
 
 ```text
-produto
+produto ou solução
 público-alvo
-problema principal
-desejo principal
-transformação prometida
+problema central
+desejo central
+promessa principal
+mecanismo único
 benefícios
-diferenciais
+objeções
+provas
 bônus
-garantia
-preço
-condição especial
+urgência ou escassez
+CTA
+preço ou condições
+```
+
+Saída:
+
+```text
+offer_analysis
+input_tokens
+output_tokens
+total_tokens
 ```
 
 ### analyse_persuasion
 
-Avalia a força persuasiva da copy.
+Analisa como a copy persuade o espectador.
 
-Analisa:
+Avalia:
 
 ```text
+emoção dominante
+padrão persuasivo
 força do hook
 clareza da promessa
-credibilidade
-provas usadas
-objeções cobertas
-clareza do CTA
-riscos de exagero
-lacunas
-oportunidades de melhoria
+força da prova
+força da urgência
+força do CTA
+sinais persuasivos
+fraquezas
+resumo estratégico
+```
+
+Saída:
+
+```text
+persuasion_analysis
+input_tokens
+output_tokens
+total_tokens
 ```
 
 ### build_copy_analysis
 
-Junta os resultados anteriores em um output final.
+Monta o resultado final do workflow.
 
-Esse node não precisa de LLM. Ele apenas monta o objeto final.
+Esse node não usa LLM.
 
-## Como Os Workflows Se Conectam No Futuro
+Saída:
 
-Não deve existir um state gigante compartilhado por todos os workflows.
+```text
+analysis: CopyAnalysisOutput
+```
+
+## O Que Falta No CopyAnalysisWorkflow
+
+Salvar o relatório final em arquivo.
+
+Possíveis formatos:
+
+```text
+json
+md
+html
+pdf
+```
+
+Criar testes fake.
+
+Validar:
+
+```text
+prepare_copy_input
+schema dos outputs
+nodes com LLM fake
+contagem de tokens
+workflow completo com transcrição fake
+```
+
+Melhorar controle de tamanho para vídeos longos.
+
+Para transcrições grandes, será necessário resumir ou dividir análise em partes sem perder a visão global da copy.
+
+## Próximo Workflow Recomendado
+
+O próximo workflow recomendado é o `CopyAdaptationWorkflow`.
+
+Responsabilidade:
+
+```text
+Transformar a análise da copy de referência em um novo roteiro para uma oferta própria.
+```
+
+Esse é o próximo passo mais importante porque o projeto já consegue:
+
+```text
+transcrever
+corrigir
+analisar a copy
+```
+
+Mas ainda não gera o ativo principal que alimenta voz, cenas, vídeos e montagem:
+
+```text
+roteiro final
+```
+
+## CopyAdaptationWorkflow
+
+Fluxo sugerido:
+
+```text
+START
+-> prepare_adaptation_input
+-> build_copy_strategy
+-> write_script_sections
+-> validate_script
+-> build_script_output
+-> END
+```
+
+### prepare_adaptation_input
+
+Recebe a análise da copy e o briefing da nova oferta.
+
+Entradas prováveis:
+
+```text
+copy_analysis
+offer_brief
+target_audience
+target_language
+desired_duration
+tone
+platform
+```
+
+### build_copy_strategy
+
+Define a estratégia da nova copy.
+
+Exemplos:
+
+```text
+ângulo principal
+promessa principal
+mecanismo
+objeções a atacar
+provas necessárias
+CTA
+estrutura persuasiva
+```
+
+### write_script_sections
+
+Escreve o roteiro dividido em seções.
+
+Exemplos:
+
+```text
+hook
+abertura
+problema
+agitação
+mecanismo
+prova
+oferta
+CTA
+```
+
+### validate_script
+
+Valida se o roteiro está coerente com a oferta.
+
+Checa:
+
+```text
+não copiar literalmente a referência
+não inventar prova
+não prometer além do briefing
+manter idioma e tom
+ter CTA claro
+ter duração aproximada aceitável
+```
+
+### build_script_output
+
+Monta o output final.
+
+Saídas prováveis:
+
+```text
+script
+sections
+hooks
+cta
+estimated_duration
+voice_ready_text
+scene_planning_input
+```
+
+## Ordem Recomendada Dos Próximos Workflows
+
+```text
+1. CopyAdaptationWorkflow
+2. ScenePlannerWorkflow
+3. VoiceWorkflow
+4. VisualGenerationWorkflow
+5. AssemblyWorkflow
+6. ExportWorkflow
+```
+
+## Como Os Workflows Devem Se Conectar
+
+Não deve existir um state único gigante para todos os workflows.
 
 Cada workflow deve ter seu próprio state.
 
 Um workflow mestre deve orquestrar os subworkflows e passar apenas os dados necessários.
 
-Exemplo:
+Exemplo futuro:
 
 ```text
 MasterVSLWorkflow
 -> TranscriberWorkflow
 -> CopyAnalysisWorkflow
--> CopyRewriteWorkflow
+-> CopyAdaptationWorkflow
 -> ScenePlannerWorkflow
 -> VoiceWorkflow
 -> VisualGenerationWorkflow
 -> AssemblyWorkflow
--> ReviewWorkflow
 -> ExportWorkflow
 ```
 
-O master guarda os resultados principais:
+O master deve guardar apenas os resultados principais:
 
 ```text
 transcription
@@ -486,11 +755,11 @@ visual_assets
 final_video_path
 ```
 
-Regra:
+Regra final:
 
 ```text
-subworkflow tem state proprio
+subworkflow tem state próprio
 master passa outputs entre workflows
-nao criar um state unico gigante para tudo
+context carrega dependências
+state carrega dados serializáveis
 ```
-

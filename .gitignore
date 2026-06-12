@@ -65,3 +65,7 @@ exports/
 # Local model weights and generated artifacts
 /models/
 /artifacts/
+
+
+# Readme
+src/kyrg/workflows/README.md

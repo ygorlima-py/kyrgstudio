@@ -1,6 +1,7 @@
 from kyrg.editor.audio.analysis import (
     AnalyzeAudioStats,
     AnalyzeVolume,
+    AudioSize,
 )
 from kyrg.editor.audio.cleanup import (
     DeClickAudio,

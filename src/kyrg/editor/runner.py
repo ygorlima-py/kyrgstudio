@@ -26,6 +26,7 @@ class CommandRunner:
         command: list[str],
         *,
         check: bool = False,
+        capture_output: bool = False,
     ) -> subprocess.CompletedProcess[bytes]:
         """Execute a command and return the completed process.
 
@@ -41,4 +42,4 @@ class CommandRunner:
             ``subprocess.run``.
         """
 
-        return subprocess.run(command, check=check)
+        return subprocess.run(command, check=check, capture_output=capture_output)

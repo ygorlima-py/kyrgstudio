@@ -74,3 +74,28 @@ class AnalyzeAudioStats(BaseEditor[MediaContext]):
             "null",
             self.context.output_path,
         ]
+
+class AudioSize(BaseEditor[MediaContext]):
+    CAPTURE_OUTPUT = True
+    
+    def build_command(self) -> list[str]:
+        return [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            self.context.input_path,
+        ]
+    
+if __name__ == "__main__":
+    context = MediaContext(
+        input_path='src/data/output/audio_extraido.wav',
+        output_path='')
+    
+    action = AudioSize(context=context, runner=CommandRunner())
+    result = action.execute()
+    
+    
