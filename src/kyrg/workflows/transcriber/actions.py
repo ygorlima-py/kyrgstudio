@@ -51,7 +51,7 @@ class CorrectTranscription(AIActionBase):
             output_schema=CorrectedTranscriptionOutput,
         )
         
-    async def aexeculte(self) -> CorrectedTranscriptionOutput:
+    async def aexecute(self) -> CorrectedTranscriptionOutput:
         return await self.llm.astructured(
             prompt=self._build_prompt(),
             output_schema=CorrectedTranscriptionOutput,

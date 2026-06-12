@@ -14,6 +14,7 @@ class OpenAILLM(LLMBase):
         self.async_client = AsyncOpenAI(api_key=api_key, base_url=self.BASE_URL)
         self.model = model
         self.temperature = temperature
+        super().__init__()
 
     def invoke(self, prompt: str) -> str:
         logger.info(f"Calling OpenAI LLM provider: model={self.model}, method=invoke")
@@ -29,6 +30,12 @@ class OpenAILLM(LLMBase):
             raise RuntimeError(f"Error calling OpenAI LLM provider: {error}") from error
 
         logger.info(f"OpenAI LLM provider succeeded: model={self.model}, method=invoke")
+        
+        usage = response.usage
+        
+        if usage is not None:
+            self._add_token(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
+            
         return response.output_text
 
     def structured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
@@ -50,6 +57,10 @@ class OpenAILLM(LLMBase):
             raise RuntimeError(f"Error calling OpenAI LLM provider: {error}") from error
         
         parsed = response.output_parsed
+        
+        usage = response.usage
+        if usage is not None:
+            self._add_token(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
         
         if parsed is None:
             raise RuntimeError("OpenAI returned no structured output.")
@@ -73,6 +84,11 @@ class OpenAILLM(LLMBase):
             raise RuntimeError(f"Error calling OpenAI LLM provider: {error}") from error
 
         logger.info(f"OpenAI LLM provider succeeded: model={self.model}, method=ainvoke")
+        
+        usage = response.usage
+        if usage is not None:
+            self._add_token(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
+            
         return response.output_text
     
     async def astructured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
@@ -92,6 +108,10 @@ class OpenAILLM(LLMBase):
                 f"OpenAI LLM provider failed: model={self.model}, method=astructured"
             )
             raise RuntimeError(f"Error calling OpenAI LLM provider: {error}") from error
+        
+        usage = response.usage
+        if usage is not None:
+            self._add_token(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
         
         parsed = response.output_parsed
         

@@ -12,6 +12,7 @@ class GoogleLLM(LLMBase):
         self.client = genai.Client(api_key=api_key)
         self.model = model
         self.temperature = temperature
+        super().__init__()
 
     def invoke(self, prompt: str) -> str:
         logger.info(f"Calling Google LLM provider: model={self.model}, method=invoke")
@@ -27,6 +28,13 @@ class GoogleLLM(LLMBase):
         except errors.APIError as error:
             logger.exception(f"Google LLM provider failed: model={self.model}, method=invoke")
             raise RuntimeError(f"Error calling Google LLM provider: {error}") from error
+
+        usage = response.usage_metadata
+        if usage is not None:
+            self._add_token(
+                input_tokens=usage.prompt_token_count or 0,
+                output_tokens=usage.candidates_token_count or 0,
+            )
 
         if response.text is None:
             raise RuntimeError("Google returned no text output.")
@@ -54,6 +62,13 @@ class GoogleLLM(LLMBase):
                 f"Google LLM provider failed: model={self.model}, method=structured"
             )
             raise RuntimeError(f"Error calling Google LLM provider: {error}") from error
+
+        usage = response.usage_metadata
+        if usage is not None:
+            self._add_token(
+                input_tokens=usage.prompt_token_count or 0,
+                output_tokens=usage.candidates_token_count or 0,
+            )
 
         parsed = response.parsed
 
@@ -90,6 +105,13 @@ class GoogleLLM(LLMBase):
             logger.exception(f"Google LLM provider failed: model={self.model}, method=ainvoke")
             raise RuntimeError(f"Error calling Google LLM provider: {error}") from error
 
+        usage = response.usage_metadata
+        if usage is not None:
+            self._add_token(
+                input_tokens=usage.prompt_token_count or 0,
+                output_tokens=usage.candidates_token_count or 0,
+            )
+
         if response.text is None:
             raise RuntimeError("Google returned no text output.")
 
@@ -120,6 +142,13 @@ class GoogleLLM(LLMBase):
                 f"Google LLM provider failed: model={self.model}, method=astructured"
             )
             raise RuntimeError(f"Error calling Google LLM provider: {error}") from error
+
+        usage = response.usage_metadata
+        if usage is not None:
+            self._add_token(
+                input_tokens=usage.prompt_token_count or 0,
+                output_tokens=usage.candidates_token_count or 0,
+            )
 
         parsed = response.parsed
 

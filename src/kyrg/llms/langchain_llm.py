@@ -1,5 +1,6 @@
 from loguru import logger
 from langchain_core.language_models.chat_models import BaseChatModel
+from typing import Any, cast
 
 from kyrg.llms.base import LLMBase, OutputT
 
@@ -7,6 +8,7 @@ from kyrg.llms.base import LLMBase, OutputT
 class LangChainLLM(LLMBase):
     def __init__(self, llm: BaseChatModel):
         self.llm = llm
+        super().__init__()
 
     def invoke(self, prompt: str) -> str:
         logger.info("Calling LangChain LLM provider: method=invoke")
@@ -18,9 +20,13 @@ class LangChainLLM(LLMBase):
             raise RuntimeError(f"Error calling LangChain LLM provider: {error}") from error
 
         content = response.content
-
+        
+        metadata = response.usage_metadata
+        if metadata is not None:
+            self._add_token(input_tokens=metadata["input_tokens"], output_tokens=metadata["output_tokens"])
+    
         logger.info("LangChain LLM provider succeeded: method=invoke")
-
+        
         if isinstance(content, str):
             return content
 
@@ -30,18 +36,32 @@ class LangChainLLM(LLMBase):
         logger.info("Calling LangChain LLM provider: method=structured")
 
         try:
-            structured_llm = self.llm.with_structured_output(output_schema)
-            response = structured_llm.invoke(prompt)
+            structured_llm = self.llm.with_structured_output(output_schema, include_raw=True,)
+            response = cast(
+                        dict[str, Any],
+                        structured_llm.invoke(prompt),
+                    )
+            
+            raw = response["raw"]
+            parsed = response["parsed"]
+            usage = getattr(raw, "usage_metadata", None)
+
         except Exception as error:
             logger.exception("LangChain LLM provider failed: method=structured")
             raise RuntimeError(f"Error calling LangChain LLM provider: {error}") from error
 
-        if isinstance(response, output_schema):
+        if usage:
+            self._add_token(
+                input_tokens=usage.get("input_tokens", 0),
+                output_tokens=usage.get("output_tokens", 0),
+            )
+        
+        if isinstance(parsed, output_schema):
             logger.info("LangChain LLM provider succeeded: method=structured")
-            return response
+            return parsed
 
-        if isinstance(response, dict):
-            result = output_schema.model_validate(response)
+        if isinstance(parsed, dict):
+            result = output_schema.model_validate(parsed)
             logger.info("LangChain LLM provider succeeded: method=structured")
             return result
 
@@ -58,6 +78,10 @@ class LangChainLLM(LLMBase):
 
         content = response.content
 
+        metadata = response.usage_metadata
+        if metadata is not None:
+            self._add_token(input_tokens=metadata["input_tokens"], output_tokens=metadata["output_tokens"])
+            
         logger.info("LangChain LLM provider succeeded: method=ainvoke")
 
         if isinstance(content, str):
@@ -73,18 +97,32 @@ class LangChainLLM(LLMBase):
         logger.info("Calling LangChain LLM provider: method=astructured")
 
         try:
-            structured_llm = self.llm.with_structured_output(output_schema)
-            response = await structured_llm.ainvoke(prompt)
+            structured_llm = self.llm.with_structured_output(output_schema, include_raw=True)
+            response = cast(
+                        dict[str, Any],
+                        structured_llm.invoke(prompt),
+                    )
+            
+            raw = response["raw"]
+            parsed = response["parsed"]
+            usage = getattr(raw, "usage_metadata", None)
+            
         except Exception as error:
             logger.exception("LangChain LLM provider failed: method=astructured")
             raise RuntimeError(f"Error calling LangChain LLM provider: {error}") from error
 
-        if isinstance(response, output_schema):
+        if usage:
+            self._add_token(
+                input_tokens=usage.get("input_tokens", 0),
+                output_tokens=usage.get("output_tokens", 0),
+            )
+            
+        if isinstance(parsed, output_schema):
             logger.info("LangChain LLM provider succeeded: method=astructured")
-            return response
+            return parsed
 
-        if isinstance(response, dict):
-            result = output_schema.model_validate(response)
+        if isinstance(parsed, dict):
+            result = output_schema.model_validate(parsed)
             logger.info("LangChain LLM provider succeeded: method=astructured")
             return result
 

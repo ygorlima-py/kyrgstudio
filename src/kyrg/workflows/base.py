@@ -1,16 +1,21 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any, Callable
 from loguru import logger
-
-from langgraph.graph import StateGraph
-from langgraph.graph.state import CompiledStateGraph
-
-from langchain_core.tools import BaseTool
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain.agents import create_agent, AgentState
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 
 from kyrg.llms.base import LLMBase
+from kyrg.workflows.core import create_workflow_flow_agent
+from kyrg.workflows.workflow_types import (
+    WorkflowCheckpointer,
+    WorkflowStateGraph,
+    WorkflowCompiledStateGraph,
+    WorkflowAgentLLM,
+    WorkFlowAgentState,
+    WorkflowBaseTool,
+    WorkflowRunnableConfig,
+    )
 
 class WorkflowBase(ABC):
     STATE_SCHEMA: type[Any]
@@ -21,16 +26,16 @@ class WorkflowBase(ABC):
         self,
         initial_state: dict | None,
         context: object | None = None,
+        checkpointer: CheckpointerBase | None = None,
+        thread_id: str | None = None,
         ):
         
-        self.graph = StateGraph(self.STATE_SCHEMA, context_schema=self.CONTEXT_SCHEMA)
-        
+        self.graph = WorkflowStateGraph(self.STATE_SCHEMA, context_schema=self.CONTEXT_SCHEMA)
         self.initial_state = initial_state or {}
-        
         self.context = context if context is not None else {}
-        
+        self.checkpointer = checkpointer
+        self.thread_id = thread_id
         self._compiled_graph: Any  = None
-        
         self._build()
         
     @abstractmethod
@@ -38,36 +43,73 @@ class WorkflowBase(ABC):
         ...
 
     def _compile(self) -> Any:
+        
         if self._compiled_graph is None:
             self._compiled_graph = self.graph.compile()
 
         return self._compiled_graph
+    
+    def _config(self) ->  WorkflowRunnableConfig | None:
+        if self.thread_id is None:
+            return None
+
+        return WorkflowRunnableConfig(
+            configurable={
+                "thread_id": self.thread_id,
+            }
+        )
         
     def draw_workflow(self):
         filename = f"{self.__class__.__name__}.png"
         return self._compile().get_graph(xray=True).draw_mermaid_png(output_file_path=filename)
     
     def start(self):
-        return self._compile().invoke(
+        
+        if self.checkpointer is None:
+            return self._compile().invoke(
+                input=self.initial_state,
+                context=self.context,
+            )
+        
+        with self.checkpointer.create() as checkpointer:
+            compiled_graph = self.graph.compile(
+                checkpointer=checkpointer,
+            )
+            
+            return compiled_graph.invoke(
+                input=self.initial_state,
+                context=self.context,
+                config=self._config(),
+            )
+        
+
+    async def astart(self):
+        
+        if self.checkpointer is None:
+            return await self._compile().ainvoke(
                             input=self.initial_state,
                             context=self.context,
                             )
         
-    async def astart(self):
-        return await self._compile().ainvoke(
-                        input=self.initial_state,
-                        context=self.context,
-                        )
+        async with self.checkpointer.acreate() as checkpointer:
+            compiled_graph = self.graph.compile(
+                checkpointer=checkpointer,
+            )
+
+            return await compiled_graph.ainvoke(
+                input=self.initial_state,
+                context=self.context,
+            )
 
 class AgentBase(ABC):
     NAME: str
     PROMPT: str
-    STATE_SCHEMA: type[AgentState] | None = None
+    STATE_SCHEMA: type[WorkFlowAgentState] | None = None
     
     def __init__(
         self,
-        llm: BaseChatModel,
-        tools: Sequence[BaseTool | Callable[..., Any] | dict[str, Any]],
+        llm: WorkflowAgentLLM,
+        tools: Sequence[WorkflowBaseTool | Callable[..., Any] | dict[str, Any]],
         debug: bool = True,
         ) -> None:
         
@@ -76,8 +118,8 @@ class AgentBase(ABC):
         self.debug = debug
         
     
-    def create(self) -> CompiledStateGraph:
-        return create_agent(
+    def create(self) -> WorkflowCompiledStateGraph:
+        return create_workflow_flow_agent(
             model=self.llm,
             tools=self.tools,
             system_prompt=self.PROMPT,
@@ -85,19 +127,26 @@ class AgentBase(ABC):
             debug=self.debug,
             name=self.NAME,
         )
-    
+            
 class AIActionBase(ABC):
     def __init__(self, llm: LLMBase):
         self.llm = llm
 
+    @abstractmethod
     def _build_prompt(self) -> str:
         ...
-        
+
+    @abstractmethod
     def execute(self) -> Any:
         ...
-        
+    
+    @abstractmethod
     async def aexecute(self) -> Any:
         ... 
+        
+    @property
+    def tokens_usage(self):      
+        return self.llm.token_usage()
         
 class AIActionExecutor:
     
@@ -122,3 +171,15 @@ class AIActionExecutor:
         except Exception as e:
             logger.error(f"Failed {action.__class__.__name__}: {e}")
             raise
+        
+
+class CheckpointerBase(ABC):
+    ...
+    
+    @abstractmethod
+    def create(self) -> AbstractContextManager[WorkflowCheckpointer]:
+        ...
+        
+    @abstractmethod
+    def acreate(self) -> AbstractAsyncContextManager[WorkflowCheckpointer]:
+        ...

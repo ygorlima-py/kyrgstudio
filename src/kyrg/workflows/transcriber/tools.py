@@ -1,14 +1,10 @@
-from langchain_core.tools import tool
-from langchain_core.messages import ToolMessage
-
-from langgraph.prebuilt import ToolRuntime
-from langgraph.types import Command
-
+from kyrg.workflows.core import WorkflowToolRuntime, WorkflowToolMessage, workflow_tool
+from kyrg.workflows.workflow_types import WorkFlowCommand
 from kyrg.workflows.transcriber.actions import CorrectTranscription
 from kyrg.workflows.base import AIActionExecutor
 
-@tool
-def correct_transcription_tool(runtime: ToolRuntime) -> Command:
+@workflow_tool
+def correct_transcription_tool(runtime: WorkflowToolRuntime) -> WorkFlowCommand:
     """Description"""
     state = runtime.state
     context = runtime.context
@@ -27,6 +23,8 @@ def correct_transcription_tool(runtime: ToolRuntime) -> Command:
     
     correction_output = AIActionExecutor.run(corrector_action)
 
+    token_usage = corrector_action.tokens_usage
+
     corrected_result = result.model_copy(deep=True)
     corrected_result.text = correction_output.corrected_text
 
@@ -41,13 +39,16 @@ def correct_transcription_tool(runtime: ToolRuntime) -> Command:
         if segment is not None:
             segment.text = corrected_segment.text
     
-    return Command(
+    return WorkFlowCommand(
         update={
             "final_result": corrected_result,
             "status": "corrected",
             "human_review_reason": None,
+            "input_tokens": token_usage["input_tokens"],
+            "output_tokens": token_usage["output_tokens"],
+            "total_tokens": token_usage["total_tokens"],
             "messages": [
-                ToolMessage(
+                WorkflowToolMessage(
                     content="Transcription was corrected successfully.",
                     tool_call_id=runtime.tool_call_id,
                 )
@@ -55,15 +56,15 @@ def correct_transcription_tool(runtime: ToolRuntime) -> Command:
         }
     )
     
-@tool
-def request_human_review_tool(reason: str, runtime: ToolRuntime) -> Command:
+@workflow_tool
+def request_human_review_tool(reason: str, runtime: WorkflowToolRuntime) -> WorkFlowCommand:
     """Request human review when the transcription is too uncertain to correct safely."""
-    return Command(
+    return WorkFlowCommand(
         update={
             "status": "needs_human_review",
             "human_review_reason": reason,
             "messages": [
-                ToolMessage(
+                WorkflowToolMessage(
                     content=f"Human review requested: {reason}",
                     tool_call_id=runtime.tool_call_id,
                 )
@@ -71,8 +72,8 @@ def request_human_review_tool(reason: str, runtime: ToolRuntime) -> Command:
         }
     )
 
-@tool
-def accept_transcription_tool(runtime: ToolRuntime) -> Command:
+@workflow_tool
+def accept_transcription_tool(runtime: WorkflowToolRuntime) -> WorkFlowCommand:
     """Accept the current transcription as the final transcription."""
     state = runtime.state
     result = state["result"]
@@ -80,13 +81,13 @@ def accept_transcription_tool(runtime: ToolRuntime) -> Command:
     if result is None:
         raise ValueError("result is required to accept transcription")
     
-    return Command(
+    return WorkFlowCommand(
         update={
             "final_result": result,
             "status": "accepted",
             "human_review_reason": None,
             "messages": [
-                ToolMessage(
+                WorkflowToolMessage(
                     content="The transcription was accepted as final.",
                     tool_call_id=runtime.tool_call_id,
                 )

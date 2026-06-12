@@ -5,8 +5,8 @@ from kyrg.workflows.transcriber.state import TranscriberState
 from kyrg.workflows.transcriber.actions import ExtractDomainContext
 from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.transcriber.prompts import TranscriptionPrompts
+from kyrg.workflows.core import WorkflowRuntime
 
-from langgraph.runtime import Runtime
 
 def primary_router(state: TranscriberState):
     source_type = state.get('source_type')
@@ -42,19 +42,24 @@ def extract_audio(state: TranscriberState)-> dict:
     }
     
 
-def audio_text_converter(state: TranscriberState) -> dict: 
-    transcriber_class = state["transcriber"]
+def audio_text_converter(state: TranscriberState, runtime: WorkflowRuntime) -> dict: 
+    context = runtime.context
     
-    language=state.get("language")
-    temperature=state.get("temperature", 0.0)
+    if context is None:
+        raise RuntimeError("Transcriber workflow context is required.")
+
+    transcriptor = context.transcriptor_config.transcriptor
+    temperature = context.transcriptor_config.transcriptor_temperature
     
-    if issubclass(transcriber_class, TranscriberAPIBase):
-        api_key=state.get("api_key")
+    language=state.get("language") 
+
+    if issubclass(transcriptor, TranscriberAPIBase):
+        api_key=context.transcriptor_config.transcriptor_api_key
         
         if api_key is None:
             raise ValueError("api_key is required for remote transcriber")
         
-        transcriber = transcriber_class(
+        transcriber = transcriptor(
             audio_path=state["audio_path"],
             model_name=state["model_name"],
             language=language,
@@ -63,7 +68,7 @@ def audio_text_converter(state: TranscriberState) -> dict:
         )
         
     else:
-        transcriber = transcriber_class(
+        transcriber = transcriptor(
             audio_path=state["audio_path"],
             model_name=state["model_name"],
             language=language,
@@ -75,7 +80,7 @@ def audio_text_converter(state: TranscriberState) -> dict:
         'result': result
     }
     
-def extract_hybrid_context(state: TranscriberState, runtime: Runtime) -> dict:
+def extract_hybrid_context(state: TranscriberState, runtime: WorkflowRuntime) -> dict:
     context = runtime.context
     
     if context is None:
@@ -93,6 +98,7 @@ def extract_hybrid_context(state: TranscriberState, runtime: Runtime) -> dict:
     
     domain_context = AIActionExecutor.run(action)
     
+    token_usage = action.tokens_usage
     return {
         "domain_context": domain_context,
         "messages": [
@@ -103,8 +109,27 @@ def extract_hybrid_context(state: TranscriberState, runtime: Runtime) -> dict:
                     result=result.model_dump_json(indent=2),
                 ),
             }
-        ]
+        ],
+        "input_tokens": token_usage["input_tokens"],
+        "output_tokens": token_usage["output_tokens"],
+        "total_tokens": token_usage["total_tokens"],
     }
 
+def collect_agent_tokens(state: TranscriberState) -> dict:
+    input_tokens = 0
+    output_tokens = 0
 
+    for message in state.get("messages", []):
+        usage = getattr(message, "usage_metadata", None)
 
+        if usage is None:
+            continue
+
+        input_tokens += usage.get("input_tokens", 0)
+        output_tokens += usage.get("output_tokens", 0)
+
+    return {
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": input_tokens + output_tokens,
+    }

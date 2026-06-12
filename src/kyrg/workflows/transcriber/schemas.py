@@ -1,8 +1,10 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, field
+from typing import Optional
 
 from kyrg.llms.base import LLMBase
+from kyrg.transcribers.base import TranscriberBase
 
 class DomainContextOutput(BaseModel):
     language: str = Field(
@@ -66,7 +68,6 @@ class UncertainTerm(BaseModel):
         description="Short explanation describing why this term is uncertain and may need review."
     )
     
-
     
 class CorrectedSegment(BaseModel):
     id: int = Field(description="Original segment id.")
@@ -80,7 +81,7 @@ class CorrectedTranscriptionOutput(BaseModel):
         description="Only segments whose text should be changed.",
     )
     
-
+    
 @dataclass    
 class TranscriberWorkflowContext:
     correction_llm: LLMBase = field(
@@ -94,3 +95,32 @@ class TranscriberWorkflowContext:
             "description": "LLM used to extract domain context from the raw transcription before quality analysis."
         }
     )
+    
+    transcriptor_config: TranscriptorConfig = field(
+        metadata={
+            "description": "Transcriber configuration, which transcriber is used, API, and temperature."
+        }
+    )
+    
+@dataclass
+class TranscriptorConfig:
+    transcriptor: type[TranscriberBase] = field(
+        metadata={
+            "description": "A transcriber used to convert audio into text."
+        }
+    )
+    
+    transcriptor_temperature: Optional[float] = field(
+        metadata={
+            "description": "Temperature of the transcriber used to convert audio to text."
+        },
+        default=0.0,
+    )
+    
+    transcriptor_api_key: Optional[str] = field(
+        metadata={
+            "description": "API key of the transcriber to be used, optional argument, use only if the transcriber is an API"
+        },
+        default=None
+    )
+    
