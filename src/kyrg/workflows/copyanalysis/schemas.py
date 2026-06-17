@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 from pydantic import BaseModel, Field
 
 from kyrg.llms.base import LLMBase
@@ -55,8 +56,25 @@ class CopyStructureOutput(BaseModel):
     )
     
 class CopySection(BaseModel):
-    section_type: str = Field(
-        description="Type of copy section, such as hook, problem, promise, proof, offer, CTA, story, objection, or transition."
+    section_type: Literal[
+        "hook",
+        "problem",
+        "pain",
+        "agitation",
+        "promise",
+        "mechanism",
+        "proof",
+        "story",
+        "objection",
+        "offer",
+        "cta",
+        "urgency",
+        "scarcity",
+        "transition",
+        "education",
+        "payoff",
+    ] = Field(
+        description="Canonical English type of copy section. Never translate this value."
     )
     text: str = Field(
         description="Exact or summarized text that represents this section."

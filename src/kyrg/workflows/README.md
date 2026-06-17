@@ -592,174 +592,293 @@ Melhorar controle de tamanho para vídeos longos.
 
 Para transcrições grandes, será necessário resumir ou dividir análise em partes sem perder a visão global da copy.
 
-## Próximo Workflow Recomendado
+# CopyAdaptationWorkflow
 
-O próximo workflow recomendado é o `CopyAdaptationWorkflow`.
+## Objetivo
 
-Responsabilidade:
+Transformar a análise de uma VSL de referência em um roteiro profissional adaptado para uma nova oferta, mantendo os padrões persuasivos que fazem a referência converter enquanto substitui produto, público, provas e mecanismo.
 
-```text
-Transformar a análise da copy de referência em um novo roteiro para uma oferta própria.
+---
+
+## Pré-requisitos
+
+Este workflow depende de dois outputs já existentes no projeto:
+
+- `CopyAnalysisOutput` — gerado pelo `CopyAnalysisWorkflow`
+- `UserProfileOutput` — gerado pelo `UserProfileWorkflow`
+
+Ambos devem estar disponíveis no estado do grafo antes de iniciar este workflow.
+
+---
+
+## Fluxo atual
+
+```
+START
+-> prepare_adaptation_input
+-> build_copy_strategy
+-> write_script_sections
+-> review_section_flow
+-> validate_script
+-> build_script_output
+-> END
 ```
 
-Esse é o próximo passo mais importante porque o projeto já consegue:
+## Fluxo planejado com retry
 
-```text
-transcrever
-corrigir
-analisar a copy
-```
+O retry planejado não deve simplesmente repetir um node sem contexto.
 
-Mas ainda não gera o ativo principal que alimenta voz, cenas, vídeos e montagem:
+Quando `review_section_flow` reprovar o fluxo das seções, o grafo deve voltar para `write_script_sections` levando feedback no state.
 
-```text
-roteiro final
-```
-
-## CopyAdaptationWorkflow
-
-Fluxo sugerido:
+Fluxo esperado:
 
 ```text
 START
 -> prepare_adaptation_input
 -> build_copy_strategy
 -> write_script_sections
--> validate_script
+-> review_section_flow
+-> route_flow_review
+   -> validate_script          # aprovado
+   -> write_script_sections    # reprovado com retry disponível
+
+validate_script
 -> build_script_output
 -> END
 ```
 
-### prepare_adaptation_input
-
-Recebe a análise da copy e o briefing da nova oferta.
-
-Entradas prováveis:
+O retorno para `write_script_sections` deve carregar:
 
 ```text
-copy_analysis
-offer_brief
-target_audience
-target_language
-desired_duration
-tone
-platform
+previous_sections  # seções geradas na tentativa anterior
+flow_issues        # problemas encontrados pelo review_section_flow
+retry_count        # quantidade de tentativas já realizadas
 ```
 
-### build_copy_strategy
+Esse retry é uma reescrita orientada por feedback, não uma nova geração cega.
 
-Define a estratégia da nova copy.
-
-Exemplos:
+O router planejado deve decidir:
 
 ```text
-ângulo principal
-promessa principal
-mecanismo
-objeções a atacar
-provas necessárias
-CTA
-estrutura persuasiva
+se flow_approved == true:
+    seguir para validate_script
+
+se flow_approved == false e retry_count ainda está dentro do limite:
+    voltar para write_script_sections com flow_issues
+
+se flow_approved == false e retry_count excedeu o limite:
+    seguir para validate_script ou retornar erro controlado
 ```
 
-### write_script_sections
+---
 
-Escreve o roteiro dividido em seções.
+## Nós
 
-Exemplos:
+### `prepare_adaptation_input`
 
-```text
-hook
-abertura
-problema
-agitação
-mecanismo
-prova
-oferta
-CTA
+**Responsabilidade:** Consolidar a análise da referência e o perfil da oferta num contexto único e estruturado que alimenta todos os nós seguintes.
+
+**Entradas:**
+- `copy_analysis: CopyAnalysisOutput` — análise completa da VSL de referência
+- `user_profile: UserProfileOutput` — produto, público, dores, mecanismo, provas disponíveis, tom, restrições
+
+**O que deve fazer:**
+- Mapear cada `CopySection` da referência para o contexto da nova oferta
+- Identificar quais seções têm equivalente direto e quais precisam ser criadas do zero
+- Extrair os scores fracos da `PersuasionAnalysisOutput` (urgência, objeções, prova) para sinalizar gaps a corrigir
+- Normalizar o `target_language` — se a referência está em espanhol e a nova oferta é em português, registrar isso explicitamente
+
+**Campos de saída do estado:**
+```
+mapped_sections       # seções da referência mapeadas para a nova oferta
+sections_to_create    # seções que precisam ser criadas do zero
+gaps_to_fix           # dimensões com score baixo na análise original
+target_language       # idioma do roteiro final
+platform              # onde a VSL vai rodar (YouTube, página de vendas, etc.)
+desired_duration      # duração estimada em minutos
 ```
 
-### validate_script
+---
 
-Valida se o roteiro está coerente com a oferta.
+### `build_copy_strategy`
 
-Checa:
+**Responsabilidade:** Definir a estratégia persuasiva da nova copy antes de escrever qualquer linha de roteiro.
 
-```text
-não copiar literalmente a referência
-não inventar prova
-não prometer além do briefing
-manter idioma e tom
-ter CTA claro
-ter duração aproximada aceitável
+**O que deve fazer:**
+- Escolher o ângulo principal baseado na dor mais forte do `UserProfileOutput`
+- Definir o nível de consciência do público (`unaware`, `problem aware`, `solution aware`, `product aware`) e adaptar a estratégia de entrada
+- Formular a promessa principal em uma frase clara e verificável contra o briefing
+- Selecionar o padrão persuasivo (`PAS`, `AIDA`, `BAB`, `Hybrid`) mais adequado ao produto e plataforma
+- Listar as objeções prioritárias a atacar, em ordem de impacto
+- Definir que tipo de prova será usada em cada seção (depoimento, dado, demonstração, história)
+- Especificar o mecanismo único — o que torna a solução diferente e crível
+
+**Campos de saída do estado:**
+```
+main_angle            # ângulo principal da copy
+awareness_level       # nível de consciência do público
+main_promise          # promessa central em uma frase
+persuasion_pattern    # padrão estrutural escolhido
+objections_to_address # lista ordenada de objeções
+proof_plan            # tipo de prova por seção
+unique_mechanism      # mecanismo único da oferta
 ```
 
-### build_script_output
+> **Atenção:** Este nó não escreve copy. Define estratégia. O modelo deve retornar apenas decisões estratégicas, sem rascunhos de texto.
 
-Monta o output final.
+---
 
-Saídas prováveis:
+### `write_script_sections`
 
-```text
-script
-sections
-hooks
-cta
-estimated_duration
-voice_ready_text
-scene_planning_input
+**Responsabilidade:** Escrever cada seção do roteiro individualmente, usando a estratégia definida e os padrões extraídos da referência.
+
+Este node não recebe mais o `CopyAnalysisOutput` completo.
+
+O prompt desta etapa foi ajustado para usar apenas o contexto refinado gerado pelos nodes anteriores.
+
+Entradas usadas pela action:
+
+```
+user_profile          # oferta, público, promessa, provas, CTA, tom e restrições
+mapped_sections       # seções da referência já mapeadas
+sections_to_create    # seções que devem ser criadas do zero
+gaps_to_fix           # fraquezas estratégicas que devem ser corrigidas
+target_language       # idioma final do roteiro
+platform              # canal de uso do criativo/VSL
+desired_duration      # duração desejada
+main_angle            # ângulo escolhido pela estratégia
+awareness_level       # nível de consciência do público
+main_promise          # promessa central permitida
+persuasion_pattern    # estrutura persuasiva escolhida
+objections_to_address # objeções prioritárias
+proof_plan            # plano de provas por seção
+unique_mechanism      # mecanismo único
+previous_sections     # seções anteriores, usado em retry
+flow_issues           # feedback do review_section_flow, usado em retry
+retry_count           # tentativa atual de reescrita
 ```
 
-## Ordem Recomendada Dos Próximos Workflows
+Motivo da mudança:
 
-```text
-1. CopyAdaptationWorkflow
-2. ScenePlannerWorkflow
-3. VoiceWorkflow
-4. VisualGenerationWorkflow
-5. AssemblyWorkflow
-6. ExportWorkflow
+```
+copy_analysis já foi usado por prepare_adaptation_input e build_copy_strategy.
+write_script_sections deve escrever com o contexto refinado, não com a análise bruta inteira.
+Isso reduz tokens, evita redundância e diminui risco de misturar a oferta da referência com a oferta do usuário.
 ```
 
-## Como Os Workflows Devem Se Conectar
+**O que deve fazer:**
+- Escrever cada seção em sequência usando os tipos canônicos: `hook`, `problem`, `pain`, `agitation`, `education`, `mechanism`, `proof`, `offer`, `urgency`, `cta`
+- Para cada seção: manter o padrão persuasivo identificado na referência, substituir todos os elementos contextuais (produto, público, dor, prova, mecanismo) pelos dados do `UserProfileOutput`
+- Respeitar `target_language`, `tone` e `platform` do estado
+- Não inventar provas, depoimentos ou dados que não estejam no `UserProfileOutput`
+- Marcar `missing_proof = true` quando a estratégia exige prova mas o briefing não forneceu
+- Em retry, usar `previous_sections` como versão base e `flow_issues` como instruções obrigatórias de correção
 
-Não deve existir um state único gigante para todos os workflows.
-
-Cada workflow deve ter seu próprio state.
-
-Um workflow mestre deve orquestrar os subworkflows e passar apenas os dados necessários.
-
-Exemplo futuro:
-
-```text
-MasterVSLWorkflow
--> TranscriberWorkflow
--> CopyAnalysisWorkflow
--> CopyAdaptationWorkflow
--> ScenePlannerWorkflow
--> VoiceWorkflow
--> VisualGenerationWorkflow
--> AssemblyWorkflow
--> ExportWorkflow
+**Campos de saída do estado:**
+```
+sections: list[ScriptSection]
+  - order                         # ordem da seção no roteiro
+  - section_type                  # hook, problem, mechanism, cta, etc.
+  - text                          # texto da seção
+  - purpose                       # função persuasiva da seção
+  - adaptation_mode               # adapted_from_reference ou created_from_scratch
+  - source_reference_section_type # seção da referência usada como base, se existir
+  - proof_used                    # prova utilizada ou null
+  - missing_proof                 # true se há gap de prova
+  - transition_hint               # observação para conexão com a próxima seção
+  - word_count                    # contagem de palavras
+missing_proofs                    # lista de provas faltantes
+adaptation_notes                  # notas sobre adaptação e retry
+word_count                        # total estimado de palavras
 ```
 
-O master deve guardar apenas os resultados principais:
+---
 
-```text
-transcription
-copy_analysis
-script
-scenes
-voice_assets
-visual_assets
-final_video_path
+### `review_section_flow`
+
+**Responsabilidade:** Verificar coerência e continuidade entre as seções antes da validação final.
+
+**O que deve fazer:**
+- Checar se a promessa do `hook` é entregue pelo `mecanismo`
+- Verificar se cada seção faz transição natural para a próxima
+- Identificar contradições entre seções (ex: hook promete resultado em 7 dias, oferta menciona 30 dias)
+- Verificar se o nível emocional sobe progressivamente até o CTA
+- Reescrever apenas as transições problemáticas — não reescreve seções inteiras
+
+**Campos de saída do estado:**
+```
+flow_issues           # lista de problemas de fluxo encontrados
+sections_revised      # seções corrigidas (apenas as alteradas)
+flow_approved         # bool — true se não há problemas críticos
+retry_count           # incrementado quando o fluxo reprovar e voltar para escrita
 ```
 
-Regra final:
+---
 
-```text
-subworkflow tem state próprio
-master passa outputs entre workflows
-context carrega dependências
-state carrega dados serializáveis
+### `validate_script`
+
+**Responsabilidade:** Checagem de segurança antes de montar o output final.
+
+**Regras de validação — todas obrigatórias:**
+
+| Regra | Descrição |
+|-------|-----------|
+| `no_literal_copy` | Nenhuma frase da referência foi copiada literalmente |
+| `no_invented_proof` | Nenhuma prova, dado ou depoimento foi inventado |
+| `no_overpromise` | A promessa não excede o que o briefing autoriza |
+| `language_consistent` | Todo o roteiro está no idioma definido |
+| `tone_consistent` | Tom e voz estão alinhados com o `UserProfileOutput` |
+| `cta_present` | Há pelo menos um CTA claro e direto |
+| `duration_acceptable` | Duração estimada está dentro do intervalo solicitado |
+| `no_missing_proof_critical` | Seções marcadas com `[PROVA NECESSÁRIA]` foram sinalizadas ao usuário |
+
+**Comportamento esperado:**
+- Se alguma regra crítica falhar (`no_invented_proof`, `no_overpromise`, `no_literal_copy`): interromper e retornar erro com descrição do problema
+- Se regras secundárias falharem: registrar warnings e continuar
+- Não tentar corrigir automaticamente — reportar para o usuário decidir
+
+**Campos de saída do estado:**
 ```
+validation_passed     # bool
+validation_errors     # list[str] — erros críticos
+validation_warnings   # list[str] — avisos não bloqueantes
+```
+
+---
+
+### `build_script_output`
+
+**Responsabilidade:** Montar o output final estruturado e pronto para consumo pelos workflows de produção (voz, cenas, montagem).
+
+**O que deve fazer:**
+- Consolidar as seções aprovadas em um roteiro contínuo
+- Gerar `voice_ready_text` — texto limpo, sem markdown, com pontuação para pausas naturais, pronto para TTS
+- Gerar `scene_planning_input` — roteiro segmentado com sugestão de cena por bloco de texto
+- Calcular duração estimada (referência: 130 palavras por minuto para narração pausada)
+- Produzir `adaptation_notes` explicando o que foi mantido da referência e o que foi mudado
+
+**Campos do output final (`AdaptedScriptOutput`):**
+```
+script                # roteiro completo em markdown
+sections              # list[ScriptSection] com metadados
+hooks                 # list[str] — variações do hook para teste A/B
+cta                   # texto final do CTA
+estimated_duration    # duração estimada em minutos
+word_count            # total de palavras
+voice_ready_text      # texto limpo para TTS, sem formatação
+scene_planning_input  # roteiro segmentado por cena
+adaptation_notes      # o que foi mantido, o que foi mudado e por quê
+validation_warnings   # warnings herdados do validate_script
+missing_proofs        # seções que precisam de prova real antes de usar
+```
+
+---
+
+## Regras gerais para implementação
+
+1. **Modelo:** Usar o modelo mais capaz disponível neste nó — o output é o ativo principal que o usuário vai usar em produção.
+2. **Temperatura:** Manter baixa nos nós de estratégia e validação (`0.3`). Permitir criatividade nos nós de escrita (`0.7`).
+3. **Contexto:** Não passar `CopyAnalysisOutput` completo em todos os nós. Usar `copy_analysis` completo apenas em etapas que realmente analisam ou definem estratégia. Em escrita, usar contexto refinado (`mapped_sections`, `sections_to_create`, `gaps_to_fix`, estratégia e `user_profile`).
+4. **Idioma:** Nunca assumir idioma. Sempre ler `target_language` do estado.
+5. **Prova:** Nunca inventar. Se não há prova disponível no briefing, marcar e sinalizar — jamais criar.
+6. **Output do usuário:** O único arquivo que o usuário deve ver é o `AdaptedScriptOutput`. Todos os estados intermediários são internos ao grafo.

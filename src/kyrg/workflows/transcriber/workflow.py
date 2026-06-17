@@ -47,9 +47,10 @@ class TranscriberWorkflow(WorkflowBase):
         
         self.graph.add_edge('extract_audio', 'audio_text_converter')
         self.graph.add_edge('prepare_audio', 'audio_text_converter')
+        self.graph.add_edge("audio_text_converter", "measure_audio")
         
         self.graph.add_conditional_edges(
-            'audio_text_converter',
+            'measure_audio',
             secondary_router,
             {
              'to_correction': 'extract_hybrid_context',

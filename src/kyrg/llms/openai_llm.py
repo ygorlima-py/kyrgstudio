@@ -9,7 +9,7 @@ from kyrg.llms.base import LLMBase, OutputT
 class OpenAILLM(LLMBase):
     BASE_URL = "https://api.openai.com/v1"
     
-    def __init__(self, api_key, model: str, temperature: Optional[float] = None):   
+    def __init__(self, api_key: str | None, model: str, temperature: Optional[float] = None):   
         self.client = OpenAI(api_key=api_key, base_url=self.BASE_URL)
         self.async_client = AsyncOpenAI(api_key=api_key, base_url=self.BASE_URL)
         self.model = model

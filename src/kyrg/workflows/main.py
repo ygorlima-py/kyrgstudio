@@ -1,193 +1,222 @@
 import os
+from pathlib import Path
 
-from rich import print
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from rich import print
 
 from kyrg.llms.openai_llm import OpenAILLM
 from kyrg.transcribers.local_model import TranscriberWhisperLocal
-from kyrg.workflows.transcriber.schemas import TranscriberWorkflowContext, TranscriptorConfig
-from kyrg.workflows.transcriber.workflow import TranscriberWorkflow
+from kyrg.workflows.checkpointers import SQLiteCheckpointer
+from kyrg.workflows.copyadaptation.schemas import (
+    CopyAdaptationWorkflowContext,
+    UserProfileOutput,
+)
+from kyrg.workflows.copyadaptation.workflow import CopyAdaptationWorkflow
 from kyrg.workflows.copyanalysis.schemas import CopyAnalysisWorkflowContext
 from kyrg.workflows.copyanalysis.workflow import CopyAnalysisWorkflow
-from kyrg.workflows.checkpointers import SQLiteCheckpointer
+from kyrg.workflows.transcriber.schemas import (
+    TranscriberWorkflowContext,
+    TranscriptorConfig,
+)
+from kyrg.workflows.transcriber.workflow import TranscriberWorkflow
+
 
 class OpenRouterLLM(OpenAILLM):
     BASE_URL = "https://openrouter.ai/api/v1"
 
+
 if __name__ == "__main__":
-    from pathlib import Path
-    from weasyprint import HTML
     load_dotenv()
 
     openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-    
-    transcriber_workflow_llm = OpenRouterLLM(
+
+    if openrouter_api_key is None:
+        raise RuntimeError("OPENROUTER_API_KEY is required to run this workflow test.")
+
+    Path("src/data/output").mkdir(parents=True, exist_ok=True)
+    Path("src/data/checkpoints").mkdir(parents=True, exist_ok=True)
+
+    run_id = "finance_agronomos_v2"
+    database_path = "src/data/checkpoints/kyrg_workflows.sqlite"
+    source_path = "src/data/input/video_spanish.mp4"
+    audio_path = "src/data/output/audio_extraido.wav"
+
+    transcriber_llm = OpenRouterLLM(
         api_key=openrouter_api_key,
         model="deepseek/deepseek-v4-flash",
         temperature=0.0,
     )
-    
-    copy_analysis_workflow_llm = OpenRouterLLM(
+    copy_analysis_llm = OpenRouterLLM(
         api_key=openrouter_api_key,
         model="deepseek/deepseek-v4-flash",
         temperature=0.3,
     )
-        
-    initial_state = {
-        "source_path": "src/data/input/video_spanish.mp4",
-        "source_type": "video",
-        "audio_path": "src/data/output/audio_extraido.wav",
-        "model_name": "small",
-        "language": "es"
-    }
-    
-    context = TranscriberWorkflowContext(
-        correction_llm=transcriber_workflow_llm,
-        extract_context_llm=transcriber_workflow_llm,
-        transcriptor_config=TranscriptorConfig(
-            transcriptor=TranscriberWhisperLocal
-            ),
+    strategy_llm = OpenRouterLLM(
+        api_key=openrouter_api_key,
+        model="deepseek/deepseek-v4-flash",
+        temperature=0.3,
+    )
+    writing_llm = OpenRouterLLM(
+        api_key=openrouter_api_key,
+        model="deepseek/deepseek-v4-flash",
+        temperature=0.7,
+    )
+    review_llm = OpenRouterLLM(
+        api_key=openrouter_api_key,
+        model="deepseek/deepseek-v4-flash",
+        temperature=0.2,
+    )
+    validation_llm = OpenRouterLLM(
+        api_key=openrouter_api_key,
+        model="deepseek/deepseek-v4-flash",
+        temperature=0.0,
     )
 
     transcriber_workflow = TranscriberWorkflow(
-        initial_state=initial_state,
-        context=context,
-        checkpointer=SQLiteCheckpointer(
-            database_path="src/data/checkpoints/kyrg_workflows.sqlite",
+        initial_state={
+            "source_path": source_path,
+            "source_type": "video",
+            "audio_path": audio_path,
+            "model_name": "small",
+            "language": "es",
+            "need_correction": False,
+        },
+        context=TranscriberWorkflowContext(
+            correction_llm=transcriber_llm,
+            extract_context_llm=transcriber_llm,
+            transcriptor_config=TranscriptorConfig(
+                transcriptor=TranscriberWhisperLocal,
             ),
-        thread_id="teste_vsl_leo:transcriber_teste3",
+        ),
+        checkpointer=SQLiteCheckpointer(database_path=database_path),
+        thread_id=f"{run_id}:transcriber",
     )
 
-    transcriber_workflow.draw_workflow()
-    # transcriber_result = transcriber_workflow.start()
-    # transcription = transcriber_result.get("result")
-    
-    # if transcription is None:
-    #     raise RuntimeError("Transcriber workflow finished without result.")
+    transcriber_result = transcriber_workflow.start()
+    transcription = transcriber_result.get("final_result") or transcriber_result.get("result")
 
-    # copyanalysis_context = CopyAnalysisWorkflowContext(
-    #     analysis_llm=copy_analysis_workflow_llm,
-    # )
+    if transcription is None:
+        raise RuntimeError("Transcriber workflow finished without transcription result.")
 
-    # copyanalysis_workflow = CopyAnalysisWorkflow(
-    #     initial_state={
-    #         "transcription": transcription,
-    #     },
-    #     context=copyanalysis_context,
-    #     checkpointer=SQLiteCheckpointer(
-    #             database_path="src/data/checkpoints/kyrg_workflows.sqlite",
-    #         ),
-    #     thread_id="teste_vsl_leo:copy_analysis_teste3",
-    # )
+    copyanalysis_workflow = CopyAnalysisWorkflow(
+        initial_state={
+            "transcription": transcription,
+        },
+        context=CopyAnalysisWorkflowContext(
+            analysis_llm=copy_analysis_llm,
+        ),
+        checkpointer=SQLiteCheckpointer(database_path=database_path),
+        thread_id=f"{run_id}:copyanalysis",
+    )
 
-    # copyanalysis_result = copyanalysis_workflow.start()
+    copyanalysis_result = copyanalysis_workflow.start()
+    copy_analysis = copyanalysis_result.get("analysis")
 
-    # print(copyanalysis_result["analysis"])
-    # print()
+    if copy_analysis is None:
+        raise RuntimeError("CopyAnalysis workflow finished without analysis.")
 
-    # print("Quantidade de tokens gasta Transcriber\n")
-    # print(f"Entrada {transcriber_result['input_tokens']}")
-    # print(f"Saida {transcriber_result['output_tokens']}")
-    # print(f"Total {transcriber_result['total_tokens']}")
-    # print("________________________________________________\n\n")
+    user_profile = UserProfileOutput(
+        product_or_solution=(
+            "Curso de finanças pessoais e investimentos para agrônomos, "
+            "indo do básico ao avançado."
+        ),
+        target_audience=(
+            "Agrônomos que recebem comissão, querem investir melhor esse dinheiro, "
+            "mas ainda não sabem planejar o futuro financeiro."
+        ),
+        core_problem=(
+            "Recebem comissão, mas não têm método para organizar, proteger e investir "
+            "esse dinheiro com visão de longo prazo."
+        ),
+        core_desire=(
+            "Aprender a investir com segurança, diversificar patrimônio e construir "
+            "uma carteira sólida para o futuro."
+        ),
+        main_promise=(
+            "Ensinar agrônomos a sair do básico em finanças e evoluir até uma estratégia "
+            "de investimentos diversificada para longo prazo."
+        ),
+        unique_mechanism=(
+            "Trilha progressiva que começa em juros simples e compostos, passa por "
+            "planejamento financeiro, reserva, classes de ativos, diversificação e "
+            "montagem de carteira."
+        ),
+        benefits=[
+            "Entender juros simples e compostos sem linguagem complicada.",
+            "Planejar o uso das comissões sem depender de tentativa e erro.",
+            "Conhecer classes de investimentos e seus riscos.",
+            "Aprender a diversificar uma carteira para longo prazo.",
+            "Criar uma visão financeira mais estratégica para o futuro.",
+        ],
+        objections=[
+            "Não sei nada sobre investimentos.",
+            "Tenho medo de perder dinheiro.",
+            "Não sei por onde começar.",
+            "Minha renda varia por causa das comissões.",
+            "Acho que investir é complicado demais.",
+        ],
+        proof_assets=[],
+        offer_details=None,
+        call_to_action="Entrar na lista de interesse do curso.",
+        tone="Didático, direto, confiável e próximo da realidade do agrônomo.",
+        target_language="português",
+        platform="VSL para página de captura",
+        desired_duration=2.5,
+        restrictions=[
+            "Não prometer enriquecimento rápido.",
+            "Não prometer rentabilidade garantida.",
+            "Não recomendar ativos específicos como garantia de resultado.",
+            "Não usar linguagem sensacionalista.",
+        ],
+    )
 
-    # print("Quantidade de tokens gasta CopyAnalyse\n")
-    # print(f"Entrada {copyanalysis_result['input_tokens']}")
-    # print(f"Saida {copyanalysis_result['output_tokens']}")
-    # print(f"Total {copyanalysis_result['total_tokens']}")
-    # print("________________________________________________\n\n")
+    copyadaptation_workflow = CopyAdaptationWorkflow(
+        initial_state={
+            "copy_analysis": copy_analysis,
+            "user_profile": user_profile,
+        },
+        context=CopyAdaptationWorkflowContext(
+            strategy_llm=strategy_llm,
+            writing_llm=writing_llm,
+            review_llm=review_llm,
+            validation_llm=validation_llm,
+        ),
+        checkpointer=SQLiteCheckpointer(database_path=database_path),
+        thread_id=f"{run_id}:copyadaptation",
+    )
 
-    # total_input = transcriber_result["input_tokens"] + copyanalysis_result["input_tokens"]
-    # total_output = transcriber_result["output_tokens"] + copyanalysis_result["output_tokens"]
-    # total_tokens = transcriber_result["total_tokens"] + copyanalysis_result["total_tokens"]
+    copyadaptation_result = copyadaptation_workflow.start()
 
-    # print("Quantidade total de tokens\n")
-    # print(f"Entrada {total_input}")
-    # print(f"Saida {total_output}")
-    # print(f"Total {total_tokens}")
+    print("\n[bold]Roteiro adaptado[/bold]\n")
+    print(copyadaptation_result.get("script"))
 
-    # def save_copy_analysis_pdf(
-    #     analysis,
-    #     output_path: str
-    # ) -> None:
-    #     html = f"""
-    #     <!doctype html>
-    #     <html>
-    #     <head>
-    #         <meta charset="utf-8">
-    #         <title>Análise da Copy</title>
-    #         <style>
-    #             body {{
-    #                 font-family: Arial, sans-serif;
-    #                 line-height: 1.6;
-    #                 color: #222;
-    #                 padding: 32px;
-    #             }}
-    #             h1 {{
-    #                 font-size: 28px;
-    #                 margin-bottom: 8px;
-    #             }}
-    #             h2 {{
-    #                 margin-top: 28px;
-    #                 border-bottom: 1px solid #ddd;
-    #                 padding-bottom: 6px;
-    #             }}
-    #             .card {{
-    #                 border: 1px solid #ddd;
-    #                 border-radius: 8px;
-    #                 padding: 12px;
-    #                 margin: 10px 0;
-    #                 background: #fafafa;
-    #             }}
-    #             .muted {{
-    #                 color: #666;
-    #                 font-size: 13px;
-    #             }}
-    #         </style>
-    #     </head>
-    #     <body>
-    #         <h1>Análise da Copy</h1>
-    #         <p class="muted">Relatório gerado automaticamente.</p>
+    print("\n[bold]Validação[/bold]\n")
+    print(
+        {
+            "validation_passed": copyadaptation_result.get("validation_passed"),
+            "validation_errors": copyadaptation_result.get("validation_errors"),
+            "validation_warnings": copyadaptation_result.get("validation_warnings"),
+            "missing_proofs": copyadaptation_result.get("missing_proofs"),
+        }
+    )
 
-    #         <h2>Resumo</h2>
-    #         <p>{analysis.copy_structure.summary}</p>
-
-    #         <h2>Estrutura da Copy</h2>
-    #         {"".join(
-    #             f'''
-    #             <div class="card">
-    #                 <strong>{section.section_type}</strong>
-    #                 <p>{section.text}</p>
-    #                 <p><em>{section.purpose}</em></p>
-    #             </div>
-    #             '''
-    #             for section in analysis.copy_structure.sections
-    #         )}
-
-    #         <h2>Oferta</h2>
-    #         <p><strong>Solução:</strong> {analysis.offer_analysis.product_or_solution or "Não identificado"}</p>
-    #         <p><strong>Público-alvo:</strong> {analysis.offer_analysis.target_audience or "Não identificado"}</p>
-    #         <p><strong>Problema:</strong> {analysis.offer_analysis.core_problem or "Não identificado"}</p>
-    #         <p><strong>Promessa:</strong> {analysis.offer_analysis.main_promise or "Não identificado"}</p>
-    #         <p><strong>CTA:</strong> {analysis.offer_analysis.call_to_action or "Não identificado"}</p>
-
-    #         <h2>Persuasão</h2>
-    #         <p><strong>Emoção dominante:</strong> {analysis.persuasion_analysis.dominant_emotion or "Não identificado"}</p>
-    #         <p><strong>Padrão:</strong> {analysis.persuasion_analysis.persuasion_pattern or "Não identificado"}</p>
-    #         <p><strong>Força do hook:</strong> {analysis.persuasion_analysis.hook_strength or "Não identificado"}</p>
-    #         <p><strong>Clareza da promessa:</strong> {analysis.persuasion_analysis.promise_clarity or "Não identificado"}</p>
-    #         <p>{analysis.persuasion_analysis.summary}</p>
-    #     </body>
-    #     </html>
-    # """
-
-    #     output = Path(output_path)
-    #     output.parent.mkdir(parents=True, exist_ok=True)
-
-    #     HTML(string=html).write_pdf(str(output))
-    
-    # save_copy_analysis_pdf(
-    #     analysis=copyanalysis_result["analysis"],
-    #     output_path="src/data/output/copy_analysis.pdf",
-    # )
+    print("\n[bold]Tokens[/bold]\n")
+    print(
+        {
+            "transcriber": {
+                "input": transcriber_result.get("input_tokens", 0),
+                "output": transcriber_result.get("output_tokens", 0),
+                "total": transcriber_result.get("total_tokens", 0),
+            },
+            "copyanalysis": {
+                "input": copyanalysis_result.get("input_tokens", 0),
+                "output": copyanalysis_result.get("output_tokens", 0),
+                "total": copyanalysis_result.get("total_tokens", 0),
+            },
+            "copyadaptation": {
+                "input": copyadaptation_result.get("input_tokens", 0),
+                "output": copyadaptation_result.get("output_tokens", 0),
+                "total": copyadaptation_result.get("total_tokens", 0),
+            },
+        }
+    )

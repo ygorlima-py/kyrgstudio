@@ -56,9 +56,11 @@ class CopyAnalysisPrompts:
     - Do not rewrite the transcription.
     - Use timestamps only when they are available in the structured transcription.
     - If a section is implied but not clearly present, mention it in missing_sections instead of inventing it.
-    - Keep section_type concise and lowercase.
+    - section_type must always be one of these canonical English values: hook, problem, pain, agitation, promise, mechanism, proof, story, objection, offer, cta, urgency, scarcity, transition, education, payoff.
+    - Never translate section_type.
+    - Keep section_type lowercase.
     - The sections must follow the same order as the original transcription.
-    - Write all textual analysis fields in the same language as the transcription.
+    - Write textual fields such as text, purpose, summary, narrative_flow, and missing_sections in the same language as the transcription.
     - Keep schema field names unchanged.
     """
     EXTRACT_OFFER_ELEMENTS = """

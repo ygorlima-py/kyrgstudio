@@ -1,4 +1,3 @@
-from typing import Any
 import json
 
 from kyrg.workflows.base import AIActionBase

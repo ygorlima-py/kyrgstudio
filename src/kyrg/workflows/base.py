@@ -4,8 +4,10 @@ from collections.abc import Sequence
 from typing import Any, Callable
 from loguru import logger
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
+import time
 
 from kyrg.llms.base import LLMBase
+from kyrg.workflows.decorator import save_output_json
 from kyrg.workflows.core import create_workflow_flow_agent
 from kyrg.workflows.workflow_types import (
     WorkflowCheckpointer,
@@ -63,8 +65,8 @@ class WorkflowBase(ABC):
         filename = f"{self.__class__.__name__}.png"
         return self._compile().get_graph(xray=True).draw_mermaid_png(output_file_path=filename)
     
-    def start(self):
-        
+    @save_output_json
+    def start(self):     
         if self.checkpointer is None:
             return self._compile().invoke(
                 input=self.initial_state,
@@ -82,7 +84,6 @@ class WorkflowBase(ABC):
                 config=self._config(),
             )
         
-
     async def astart(self):
         
         if self.checkpointer is None:
@@ -154,8 +155,11 @@ class AIActionExecutor:
     def run(action: AIActionBase) -> Any:
         logger.info(f"Executing {action.__class__.__name__}")
         try:
+            start = time.perf_counter()
             result = action.execute()
+            end = time.perf_counter()
             logger.info(f"Success {action.__class__.__name__}")
+            logger.info(f"Task execution time {end-start}s")
             return result
         except Exception as e:
             logger.error(f"Failed {action.__class__.__name__}: {e}")
