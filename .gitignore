@@ -69,3 +69,7 @@ exports/
 
 # Readme
 src/kyrg/workflows/README.md
+
+CopyAdaptationWorkflow.json
+CopyAnalysisWorkflow.json
+TranscriberWorkflow.json

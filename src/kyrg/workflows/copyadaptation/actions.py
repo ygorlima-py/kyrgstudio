@@ -91,9 +91,6 @@ class WriteScriptSection(AIActionBase):
         objections_to_address: list[str],
         proof_plan: dict[str, Any],
         unique_mechanism: str,
-        previous_sections: list[dict[str, Any]] | None = None,
-        flow_issues: list[str] | None = None,
-        retry_count: int = 0,
     ) -> None:
         self.user_profile = user_profile
         self.mapped_sections = mapped_sections
@@ -109,9 +106,6 @@ class WriteScriptSection(AIActionBase):
         self.objections_to_address = objections_to_address
         self.proof_plan = proof_plan
         self.unique_mechanism = unique_mechanism
-        self.previous_sections = previous_sections or []
-        self.flow_issues = flow_issues or []
-        self.retry_count = retry_count
         super().__init__(llm)
 
     def execute(self) -> WriteScriptSectionsOutput:
@@ -162,19 +156,7 @@ class WriteScriptSection(AIActionBase):
                 indent=2,
             ),
             unique_mechanism=self.unique_mechanism,
-            previous_sections=json.dumps(
-                self.previous_sections,
-                ensure_ascii=False,
-                indent=2,
-            ),
-            flow_issues=json.dumps(
-                self.flow_issues,
-                ensure_ascii=False,
-                indent=2,
-            ),
-            retry_count=self.retry_count,
         )
-
 
 class CorrectScriptSections(AIActionBase):
     def __init__(
@@ -261,6 +243,96 @@ class CorrectScriptSections(AIActionBase):
             ),
             revision_instructions=json.dumps(
                 self.revision_instructions,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            missing_proofs=json.dumps(
+                self.missing_proofs,
+                ensure_ascii=False,
+                indent=2,
+            ),
+        )
+
+
+class CorrectValidatedScript(AIActionBase):
+    def __init__(
+        self,
+        llm: LLMBase,
+        user_profile: UserProfileOutput,
+        sections: list[dict[str, Any]],
+        validation_errors: list[str],
+        validation_warnings: list[str],
+        timing_metrics: dict[str, Any],
+        missing_proofs: list[str],
+        target_language: str,
+        platform: str,
+        desired_duration: float | None,
+        main_angle: str,
+        main_promise: str,
+        proof_plan: dict[str, Any],
+        unique_mechanism: str,
+        retry_count: int,
+    ) -> None:
+        self.user_profile = user_profile
+        self.sections = sections
+        self.validation_errors = validation_errors
+        self.validation_warnings = validation_warnings
+        self.timing_metrics = timing_metrics
+        self.missing_proofs = missing_proofs
+        self.target_language = target_language
+        self.platform = platform
+        self.desired_duration = desired_duration
+        self.main_angle = main_angle
+        self.main_promise = main_promise
+        self.proof_plan = proof_plan
+        self.unique_mechanism = unique_mechanism
+        self.retry_count = retry_count
+        super().__init__(llm)
+
+    def execute(self) -> WriteScriptSectionsOutput:
+        return self.llm.structured(
+            prompt=self._build_prompt(),
+            output_schema=WriteScriptSectionsOutput,
+        )
+
+    async def aexecute(self) -> WriteScriptSectionsOutput:
+        return await self.llm.astructured(
+            prompt=self._build_prompt(),
+            output_schema=WriteScriptSectionsOutput,
+        )
+
+    def _build_prompt(self) -> str:
+        return CopyAdaptationPrompts.CORRECT_VALIDATED_SCRIPT.format(
+            target_language=self.target_language,
+            platform=self.platform,
+            desired_duration=self.desired_duration,
+            retry_count=self.retry_count,
+            user_profile=self.user_profile.model_dump_json(indent=2),
+            main_angle=self.main_angle,
+            main_promise=self.main_promise,
+            unique_mechanism=self.unique_mechanism,
+            proof_plan=json.dumps(
+                self.proof_plan,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            sections=json.dumps(
+                self.sections,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            validation_errors=json.dumps(
+                self.validation_errors,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            validation_warnings=json.dumps(
+                self.validation_warnings,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            timing_metrics=json.dumps(
+                self.timing_metrics,
                 ensure_ascii=False,
                 indent=2,
             ),
@@ -363,7 +435,7 @@ class ValidateScriptAction(AIActionBase):
         main_promise: str,
         unique_mechanism: str,
         proof_plan: dict[str, Any],
-        word_count: int | None,
+        timing_metrics: dict[str, Any],
     ) -> None:
         self.user_profile = user_profile
         self.mapped_sections = mapped_sections
@@ -376,7 +448,7 @@ class ValidateScriptAction(AIActionBase):
         self.main_promise = main_promise
         self.unique_mechanism = unique_mechanism
         self.proof_plan = proof_plan
-        self.word_count = word_count
+        self.timing_metrics = timing_metrics
         super().__init__(llm)
 
     def execute(self) -> ValidateScriptOutput:
@@ -420,5 +492,9 @@ class ValidateScriptAction(AIActionBase):
                 ensure_ascii=False,
                 indent=2,
             ),
-            word_count=self.word_count,
+            timing_metrics=json.dumps(
+                self.timing_metrics,
+                ensure_ascii=False,
+                indent=2,
+            ),
         )

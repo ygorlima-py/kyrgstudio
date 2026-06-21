@@ -28,6 +28,12 @@ class CopyAdaptationWorkflowContext:
             "description": "LLM used to validate the adapted script against the user profile and safety rules."
         }
     )
+    max_retry: int = field(
+        default=0,
+        metadata={
+            "description": "maximum attempts at correction"
+        }
+    )
 
 
 class UserProfileOutput(BaseModel):
@@ -219,12 +225,47 @@ class ScriptSectionOutput(BaseModel):
         default=None,
         description="Short note explaining how this section should connect to the next one."
     )
+    # Intencao narrativa da pausa posterior; o tempo exato e calculado pelo codigo.
+    pause_intent: Literal[
+        "short",
+        "medium",
+        "long",
+        "dramatic",
+    ] = Field(
+        description=(
+            "Semantic pause intent after this section. Use short for continuity, "
+            "medium for a normal transition, long for emphasis, and dramatic only "
+            "for a major reveal or emotional beat. This field expresses intent, "
+            "not a duration in seconds."
+        )
+    )
+   
+class TimedScriptSectionOutput(ScriptSectionOutput):
     # Estimativa de palavras desta secao.
     word_count: int = Field(
         description="Estimated number of words in this section."
     )
-
-
+    # Duracao estimada da fala desta secao em segundos, sem contar a pausa posterior.
+    estimated_duration_seconds: float | None = Field(
+        default=None,
+        description="Estimated spoken duration for this section in seconds, excluding the pause after it."
+    )
+    # Pausa estimada depois desta secao em segundos.
+    pause_after_seconds: float | None = Field(
+        default=None,
+        description="Estimated pause after this section in seconds."
+    )
+    # Momento estimado em que esta secao comeca na narracao final.
+    start_seconds: float | None = Field(
+        default=None,
+        description="Estimated start time of this section in the final narration."
+    )
+    # Momento estimado em que esta secao termina na narracao final, sem incluir a pausa posterior.
+    end_seconds: float | None = Field(
+        default=None,
+        description="Estimated end time of this section in the final narration, excluding the pause after it."
+    )
+    
 class WriteScriptSectionsOutput(BaseModel):
     # Secoes escritas do roteiro adaptado, ainda sem revisao final de fluxo.
     sections: list[ScriptSectionOutput] = Field(
@@ -239,10 +280,6 @@ class WriteScriptSectionsOutput(BaseModel):
     # Explicacao curta do que foi adaptado, criado do zero ou protegido por restricoes.
     adaptation_notes: str = Field(
         description="Short explanation of how the reference copy was adapted to the user offer."
-    )
-    # Quantidade total estimada de palavras geradas.
-    word_count: int = Field(
-        description="Estimated total number of words across all written sections."
     )
 
 
@@ -329,9 +366,9 @@ class AdaptedScriptOutput(BaseModel):
         description="Complete adapted script assembled from the approved sections."
     )
     # Secoes finais usadas para montar o roteiro.
-    sections: list[ScriptSectionOutput] = Field(
+    sections: list[TimedScriptSectionOutput] = Field(
         default_factory=list,
-        description="Final ordered sections used to assemble the adapted script."
+        description="Final ordered sections enriched with deterministic timing data."
     )
     # Variacoes ou textos de hook encontrados no roteiro final.
     hooks: list[str] = Field(
@@ -343,10 +380,10 @@ class AdaptedScriptOutput(BaseModel):
         default=None,
         description="Primary call to action extracted from the final script."
     )
-    # Duracao estimada em minutos com base na quantidade de palavras.
+    # Duracao estimada em minutos incluindo fala e pausas entre secoes.
     estimated_duration: float | None = Field(
         default=None,
-        description="Estimated spoken duration in minutes."
+        description="Estimated total duration in minutes, including spoken text and pauses between sections."
     )
     # Quantidade total de palavras do roteiro final.
     word_count: int = Field(
@@ -355,11 +392,6 @@ class AdaptedScriptOutput(BaseModel):
     # Texto limpo para TTS, sem markdown ou metadados.
     voice_ready_text: str = Field(
         description="Clean narration text ready for text-to-speech generation."
-    )
-    # Entrada inicial para o futuro workflow de planejamento de cenas.
-    scene_planning_input: list[dict[str, Any]] = Field(
-        default_factory=list,
-        description="Structured section data prepared for a future scene planning workflow."
     )
     # Explicacao do que foi adaptado e quais cuidados foram aplicados.
     adaptation_notes: str | None = Field(
@@ -385,3 +417,7 @@ class AdaptedScriptOutput(BaseModel):
         default_factory=list,
         description="Proof gaps that should be reviewed before production."
     )
+
+if __name__ == "__main__":
+    from rich import print
+    print(ValidateScriptOutput.model_json_schema())

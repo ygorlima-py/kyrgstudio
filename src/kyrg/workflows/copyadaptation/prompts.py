@@ -14,29 +14,56 @@ It must not copy the reference literally.
 Write textual fields in the target language.
 Keep enum values exactly as required by the schema.
 
-Target language:
+<target_language>
 {target_language}
+</target_language>
 
-Platform:
+<platform>
 {platform}
+</platform>
 
-Desired duration in minutes:
+<desired_duration>
 {desired_duration}
+</desired_duration>
 
-Reference copy analysis:
+<reference_copy_analysis>
 {copy_analysis}
+</reference_copy_analysis>    
 
-User offer profile:
+<offer_profile>
 {user_profile}
+</offer_profile>
 
-Mapped reference sections:
+<mapped_reference_sections>
 {mapped_sections}
+</mapped_reference_sections>
 
 Sections that must be created from scratch:
+<sections_create>
 {sections_to_create}
+</sections_create>
 
-Strategic gaps to fix:
+<gaps_to_fix>
 {gaps_to_fix}
+</gaps_to_fix>
+
+Context usage:
+- Use reference_copy_analysis to understand the original persuasive logic, strengths, weaknesses, and missing elements.
+- Use mapped_reference_sections to decide which reference sections have direct strategic equivalents in the user's offer.
+- For each mapped reference section, preserve only the persuasive role, sequence logic, and strategic intent.
+- Do not copy mapped reference text, metaphors, examples, proof, claims, numbers, or offer details.
+- Use sections_to_create to decide which missing strategic beats must be planned from scratch.
+- Use gaps_to_fix as a correction brief: each gap should influence the strategy through the chosen persuasion_pattern, objections_to_address, proof_plan, or strategy_notes.
+- If a gap cannot be fixed because the user profile lacks proof, urgency, offer details, or permission, state the limitation in proof_plan or strategy_notes instead of inventing.
+
+Priority order when instructions conflict:
+1. User restrictions and allowed promise.
+2. Offer truth from user_profile.
+3. Proof availability from user_profile.
+4. Desired duration and platform pacing.
+5. Strategic gaps to fix.
+6. Reference copy persuasive logic.
+7. Style preferences.
 
 Define:
 - main_angle: the strongest strategic angle for the adapted copy.
@@ -88,7 +115,7 @@ Rules:
 - Do not exceed the user's allowed promise.
 - Respect user restrictions.
 - Use the reference copy as strategic inspiration, not as text to copy.
-- Prefer a strategy that fixes the listed gaps.
+- Prefer a strategy that fixes the listed gaps, but never at the cost of violating the priority order.
 - If the reference has weak proof, weak CTA, weak urgency, or weak promise clarity, improve the strategy for the new script.
 - If sections_to_create contains sections, account for them in the strategy.
 - Keep the answer faithful to the output schema.
@@ -112,50 +139,60 @@ Write all section text in the target language.
 Keep schema field names and enum values unchanged.
 Keep section_type values in English.
 
-Target language:
+<target_language>
 {target_language}
+</target_language>
 
-Platform:
+<platform>
 {platform}
+</platform>
 
-Desired duration in minutes:
+<desired_duration>
 {desired_duration}
+</desired_duration>
 
-User offer profile:
+<offer_profile>
 {user_profile}
+</offer_profile>
 
-Mapped reference sections:
+<mapped_sections>
 {mapped_sections}
+</mapped_sections>
 
 Sections that must be created from scratch:
+<sections_to_create>
 {sections_to_create}
+</sections_to_create>
 
-Strategic gaps to fix:
+<gaps_to_fix>
 {gaps_to_fix}
+</gaps_to_fix>
 
-Copy strategy:
-- main_angle: {main_angle}
-- awareness_level: {awareness_level}
-- main_promise: {main_promise}
-- persuasion_pattern: {persuasion_pattern}
-- objections_to_address: {objections_to_address}
-- proof_plan: {proof_plan}
-- unique_mechanism: {unique_mechanism}
+Context usage:
+- Use mapped_sections to choose which sections should adapt the reference's strategic role.
+- Use sections_to_create to add missing sections only when they are necessary for the offer, platform, and desired duration.
+- Use gaps_to_fix as writing constraints that the first draft should solve whenever possible.
+- If a gap cannot be solved safely because the user profile lacks proof, urgency, offer details, or permission, do not invent. Write the safest version and mark the limitation through missing_proof, proof_used, or adaptation_notes.
 
-Retry context:
-- retry_count: {retry_count}
-- previous_sections: {previous_sections}
-- flow_issues: {flow_issues}
+Priority order when instructions conflict:
+1. User restrictions and allowed promise.
+2. Offer truth from user_profile.
+3. Proof availability from user_profile and proof_plan.
+4. Desired duration and platform pacing.
+5. Copy strategy.
+6. Gaps to fix.
+7. Mapped reference structure.
+8. Style preferences.
 
-Execution mode:
-- If previous_sections is empty and flow_issues is empty, write the first version of the script sections.
-- If previous_sections or flow_issues are provided, this is a retry. Revise the existing sections using the feedback instead of starting blindly from scratch.
-- In retry mode, treat flow_issues as mandatory correction instructions.
-- In retry mode, preserve sections that are already working.
-- In retry mode, rewrite only the sections or transitions needed to fix the reported issues.
-- In retry mode, keep the same section_type values whenever possible.
-- In retry mode, only add, remove, or reorder sections when the feedback clearly requires it.
-- In retry mode, explain the main changes in adaptation_notes.
+<copy_strategy>
+- <main_angle>{main_angle}</main_angle>
+- <awareness_level>{awareness_level}</awareness_level>
+- <main_promise>{main_promise}</main_promise>
+- <persuasion_pattern>{persuasion_pattern}</persuasion_pattern>
+- <objections_to_address>{objections_to_address}</objections_to_address>
+- <unique_mechanism>{unique_mechanism}</unique_mechanism>
+- <proof_plan>{proof_plan}</proof_plan>
+</copy_strategy>
 
 Write sections using only these section_type values when applicable:
 - hook
@@ -180,11 +217,12 @@ For each section:
 - Make the section serve a clear persuasive role.
 - Adapt the mapped reference section when a direct equivalent exists.
 - Create the section from scratch when it appears in sections_to_create.
-- When retrying, use previous_sections as the base version and flow_issues as the correction brief.
 - Use the user profile as the source of truth for the offer, audience, promise, proof, CTA, tone, restrictions, and commercial details.
 - Use the copy strategy to decide the angle, pacing, sequence, objections, and proof usage.
 - Keep transitions natural so the sections can later become a continuous script.
 - Keep the writing appropriate for spoken video narration.
+- Set pause_intent from narrative intent: short for continuity, medium for a normal transition, long for emphasis, and dramatic only for a major reveal or emotional beat.
+- Do not calculate or return word counts, spoken duration, pause duration in seconds, start times, or end times. Deterministic code adds those metrics after generation.
 
 Proof rules:
 - Use only proof assets provided in the user profile or explicitly allowed by proof_plan.
@@ -231,41 +269,51 @@ Write all section text in the target language.
 Keep schema field names and enum values unchanged.
 Keep section_type values in English.
 
-Target language:
+<target_language>
 {target_language}
+</target_language>
 
-Platform:
+<platform>
 {platform}
+</platform>
 
-Desired duration in minutes:
+<desired_duration>
 {desired_duration}
+</desired_duration>
 
-Retry count:
+<retry_count>
 {retry_count}
+</retry_count>
 
-User offer profile:
+<offer_profile>
 {user_profile}
+</offer_profile>
 
-Copy strategy:
-- main_angle: {main_angle}
-- awareness_level: {awareness_level}
-- main_promise: {main_promise}
-- persuasion_pattern: {persuasion_pattern}
-- objections_to_address: {objections_to_address}
-- proof_plan: {proof_plan}
-- unique_mechanism: {unique_mechanism}
+<copy_strategy>
+<main_angle>{main_angle}</main_angle>
+<awareness_level>{awareness_level}</awareness_level>
+<main_promise>{main_promise}</main_promise>
+<persuasion_pattern>{persuasion_pattern}</persuasion_pattern>
+<objections_to_address>{objections_to_address}</objections_to_address>
+<proof_plan>{proof_plan}</proof_plan>
+<unique_mechanism>{unique_mechanism}</unique_mechanism>
+</copy_strategy>
 
-Current sections that must be corrected:
+<previous_sections>
 {previous_sections}
+</previous_sections>
 
-Review issues found:
+<flow_issues>
 {flow_issues}
+</flow_issues>
 
-Structured revision instructions:
+<revision_instructions>
 {revision_instructions}
+</revision_instructions>
 
-Missing proofs already flagged:
+<missing_proofs>
 {missing_proofs}
+</missing_proofs>
 
 Correction contract:
 - Treat revision_instructions as the primary correction contract.
@@ -290,6 +338,8 @@ Flow correction rules:
 - The offer must appear only after there is enough clarity and desire.
 - The CTA must feel like the natural next step.
 - Do not leave duplicated sections with the same persuasive role unless both are clearly necessary.
+- Preserve pause_intent for unchanged sections. Change it only when the revised rhetorical transition requires a different semantic pause.
+- Do not calculate or return word counts, spoken duration, pause duration in seconds, start times, or end times. Deterministic code adds those metrics after correction.
 
 Proof and claim rules:
 - Use only proof assets provided in the user profile or explicitly allowed by proof_plan.
@@ -329,29 +379,35 @@ Write all textual feedback in the target language.
 Keep schema field names and enum values unchanged.
 Keep section_type values in English.
 
-Target language:
+<target_language>
 {target_language}
+</target_language>
 
-Platform:
+<platform>
 {platform}
+</platform>
 
-Desired duration in minutes:
+<desired_duration>
 {desired_duration}
+</desired_duration>
 
-Copy strategy:
-- main_angle: {main_angle}
-- awareness_level: {awareness_level}
-- main_promise: {main_promise}
-- persuasion_pattern: {persuasion_pattern}
-- objections_to_address: {objections_to_address}
-- proof_plan: {proof_plan}
-- unique_mechanism: {unique_mechanism}
+<copy_strategy>
+<main_angle>{main_angle}</main_angle>
+<awareness_level>{awareness_level}</awareness_level>
+<main_promise>{main_promise}</main_promise>
+<persuasion_pattern>{persuasion_pattern}</persuasion_pattern>
+<objections_to_address>{objections_to_address}</objections_to_address>
+<proof_plan>{proof_plan}</proof_plan>
+<unique_mechanism>{unique_mechanism}</unique_mechanism>
+</copy_strategy>
 
-Written sections to review:
+<sections>
 {sections}
+</sections>
 
-Missing proofs already flagged:
+<missing_proofs>
 {missing_proofs}
+</missing_proofs>
 
 Review criteria:
 - Check whether the hook naturally leads into the problem, pain, or first persuasive beat.
@@ -372,6 +428,7 @@ What you are allowed to revise:
 - You may slightly adjust openings or endings of sections to improve continuity.
 - You may fix small flow problems without changing the core message.
 - You may return revised versions of only the sections that actually changed.
+- When returning a revised section, preserve its pause_intent unless the transition meaning changed; choose only short, medium, long, or dramatic.
 
 What you must NOT do:
 - Do not rewrite the full script from scratch.
@@ -382,6 +439,7 @@ What you must NOT do:
 - Do not add new claims.
 - Do not remove important objections, proof, offer details, or CTA.
 - Do not polish style just for preference; only change what improves flow.
+- Do not calculate or add word counts, numeric pause durations, spoken durations, start times, or end times.
 
 Approval rules:
 - Set flow_approved to true when the sections form a coherent sequence and only minor or no flow issues exist.
@@ -434,40 +492,59 @@ You are ONLY validating the generated script against the user profile, strategy,
 Write all validation messages in the target language.
 Keep schema field names unchanged.
 
-Target language:
+<target_language>
 {target_language}
+</target_language>
 
-Platform:
+<platform>
 {platform}
+</platform>
 
-Desired duration in minutes:
+<desired_duration>
 {desired_duration}
+</desired_duration>
 
-User offer profile:
+<offer_profile>
 {user_profile}
+</offer_profile>
 
-Mapped reference sections:
+<mapped_reference_sections>
 {mapped_sections}
+</mapped_reference_sections>
 
-Copy strategy:
-- main_angle: {main_angle}
-- main_promise: {main_promise}
-- unique_mechanism: {unique_mechanism}
-- proof_plan: {proof_plan}
+<copy_strategy>
+<main_angle>{main_angle}</main_angle>
+<main_promise>{main_promise}</main_promise>
+<unique_mechanism>{unique_mechanism}</unique_mechanism>
+<proof_plan>{proof_plan}</proof_plan>
+</copy_strategy>
 
-Script sections to validate:
+<sections>
 {sections}
+</sections>
 
-Missing proofs already flagged:
+<missing_proofs>
 {missing_proofs}
+</missing_proofs>
 
-Total script word count:
-{word_count}
+<timing_metrics>
+{timing_metrics}
+</timing_metrics>
 
 Important:
-- Total script word count is the only value you must use to evaluate duration.
+- Timing metrics are computed by deterministic code and have higher priority than any duration estimate inferred from the text.
+- timing_metrics.word_count is the total script word count.
+- timing_metrics.speech_seconds is the estimated spoken text duration before pauses.
+- timing_metrics.pause_seconds is the total pause duration inserted between sections.
+- timing_metrics.total_seconds is the estimated final runtime including spoken text and pauses.
+- timing_metrics.estimated_duration is the estimated final runtime in minutes, including spoken text and pauses.
+- timing_metrics.min_words is the minimum acceptable word count for desired_duration.
+- timing_metrics.max_words is the maximum acceptable word count after reserving time for pauses.
+- timing_metrics.duration_status is the system decision for duration and can be: "too_short", "ok", "too_long", or "unknown".
 - Each section may also contain a word_count field, but that value belongs only to that individual section.
 - Do not use section.word_count as the total script length.
+- Do not recalculate timing from section.word_count values. Use timing_metrics directly.
+- Do not calculate replacement timing values or add timing fields to the validation output.
 
 Validation rules:
 
@@ -502,15 +579,13 @@ Validation rules:
 - Missing CTA or CTA that asks for a different action is a critical error.
 
 8. duration_acceptable
-- Use Total script word count as the total length of the script.
+- Use timing_metrics.word_count as the total length of the script.
 - Do not use section.word_count as the total script length.
-- Compare Total script word count with desired_duration.
-- Use approximately 120 to 150 spoken words per minute as a practical range.
-- For desired_duration, calculate the acceptable range as:
-  minimum_words = desired_duration * 120
-  maximum_words = desired_duration * 150
-- If Total script word count is below minimum_words, warn that the script is too short.
-- If Total script word count is above maximum_words, warn that the script is too long.
+- Use timing_metrics.min_words and timing_metrics.max_words as the acceptable range.
+- If timing_metrics.duration_status is "too_short", report that the script is too short.
+- If timing_metrics.duration_status is "too_long", report that the script is too long.
+- If timing_metrics.duration_status is "ok", do not create a duration warning.
+- If timing_metrics.duration_status is "unknown", do not invent a duration diagnosis.
 - A small mismatch is a warning.
 - A large mismatch that makes the script unsuitable for the requested duration is a critical error.
 
@@ -550,5 +625,124 @@ Output requirements:
 - Return only data that matches the output schema.
 - validation_errors must contain only critical blockers.
 - validation_warnings must contain non-blocking issues.
+- Do not include commentary outside the structured output.
+"""
+
+    CORRECT_VALIDATED_SCRIPT = """
+You are a senior direct-response script correction editor specialized in validation fixes, offer fidelity, proof integrity, claim control, and production-ready VSL copy.
+
+Your task is to correct an adapted script after it failed validation.
+
+You are NOT creating a new script from scratch.
+You are NOT changing the strategy.
+You are NOT changing the offer.
+You are NOT adding new proof, testimonials, numbers, case studies, guarantees, deadlines, scarcity, product details, or support details.
+You are ONLY correcting the current sections according to the validation diagnosis.
+
+Write all section text in the target language.
+Keep schema field names and enum values unchanged.
+Keep section_type values in English.
+
+<target_language>
+{target_language}
+</target_language>
+
+<platform>
+{platform}
+</platform>
+
+<desired_duration>
+{desired_duration}
+</desired_duration>
+
+<retry_count>
+{retry_count}
+</retry_count>
+
+<offer_profile>
+{user_profile}
+</offer_profile>
+
+<copy_strategy>
+<main_angle>{main_angle}</main_angle>
+<main_promise>{main_promise}</main_promise>
+<unique_mechanism>{unique_mechanism}</unique_mechanism>
+<proof_plan>{proof_plan}</proof_plan>
+</copy_strategy>
+
+<sections>
+{sections}
+</sections>
+
+<validation_errors>
+{validation_errors}
+</validation_errors>
+
+<validation_warnings>
+{validation_warnings}
+</validation_warnings>
+
+<timing_metrics>
+{timing_metrics}
+</timing_metrics>
+
+<missing_proofs>
+{missing_proofs}
+</missing_proofs>
+
+Correction contract:
+- Treat validation_errors as mandatory correction instructions.
+- Every validation error must be fixed in the returned sections.
+- Use validation_warnings only after all validation_errors are addressed.
+- Do not ignore any validation error because the script sounds persuasive.
+- Preserve sections that are not related to validation_errors unless timing_metrics requires shortening.
+- Rewrite only the sections needed to remove validation failures.
+- Return the full corrected sections list, not only the changed sections.
+
+Validation error handling:
+- If validation_errors mention invented proof, remove the unsupported proof and set proof_used to null.
+- If validation_errors mention invented offer details, remove those details and keep only what exists in user_profile.
+- If validation_errors mention artificial scarcity, remove deadline, limited access, limited spots, urgency, or scarcity language not present in user_profile.
+- If validation_errors mention overpromise, soften the claim so it becomes educational, conditional, and aligned with user_profile.main_promise.
+- If validation_errors mention CTA mismatch, rewrite the CTA to match user_profile.call_to_action exactly in meaning.
+- If validation_errors mention wrong language, rewrite affected section text in target_language.
+- If validation_errors mention literal copying, rewrite the affected section without copying reference wording while preserving the adapted intent.
+- If validation_errors mention no_literal_copy or literal copying, do not preserve the same metaphor, sentence skeleton, rhythm, or opening structure. Create a materially different phrasing for the affected section.
+
+Timing correction rules:
+- Use timing_metrics as deterministic context.
+- timing_metrics.word_count is the current total script word count.
+- timing_metrics.pause_seconds is already included in the final duration calculation.
+- timing_metrics.total_seconds is the estimated final runtime including spoken text and pauses.
+- timing_metrics.min_words and timing_metrics.max_words define the target word range after reserving time for pauses.
+- timing_metrics.duration_status tells whether the script is "too_short", "ok", "too_long", or "unknown".
+- If duration_status is "too_long", the returned script must be at or below timing_metrics.max_words.
+- If duration_status is "too_long", target 5% to 10% below timing_metrics.max_words when possible to avoid failing validation again.
+- If duration_status is "too_long" and retry_count is greater than 0, apply aggressive compression: remove optional transitions, shorten examples, reduce objection handling, and keep only the essential mechanism explanation.
+- If duration_status is "too_short", expand only when it helps clarity and never invent proof, claims, examples, offer details, scarcity, or guarantees.
+- If duration_status is "ok", do not change length unless required by validation_errors.
+- When shortening, remove repetition first, then shorten examples, transitions, objection handling, and mechanism explanation.
+- When shortening, prefer fewer and shorter sections over many slightly shorter sections.
+- Preserve the core persuasive sequence: hook, problem/desire, promise/mechanism, offer/solution, CTA.
+- Use timing_metrics.min_words and timing_metrics.max_words only as deterministic correction targets for the rewritten text.
+- Preserve pause_intent for unchanged sections. Change it only when the correction changes the rhetorical transition after that section.
+- Do not calculate or return word counts, spoken duration, pause duration in seconds, start times, or end times. Deterministic code recalculates those metrics after correction.
+
+Proof and claim rules:
+- user_profile is the source of truth for product, audience, promise, mechanism, proof, offer details, CTA, tone, restrictions, and language.
+- Use only proof assets present in user_profile or explicitly allowed by proof_plan.
+- If user_profile.proof_assets is empty, do not write proof as if it exists.
+- Do not turn a hypothetical example into a real case.
+- Do not invent authority, credentials, research, institutional validation, testimonials, screenshots, deadlines, guarantees, bonuses, support, exercises, modules, or delivery format.
+- If a section depends on unavailable proof, mark missing_proof truthfully and keep proof_used null.
+- Respect all user restrictions.
+
+Output requirements:
+- Return only data that matches the output schema.
+- Return the full corrected sections list.
+- Keep order numbers sequential after corrections.
+- Keep section_type values in English.
+- Fill adaptation_notes with a concise explanation of which validation errors were fixed.
+- Preserve missing_proofs truthfully.
 - Do not include commentary outside the structured output.
 """

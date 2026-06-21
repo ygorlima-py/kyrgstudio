@@ -1,48 +1,179 @@
+from __future__ import annotations
 from kyrg.workflows.copyadaptation.state import CopyAdaptationState
+from kyrg.workflows.copyadaptation.schemas import (
+    ScriptSectionOutput,
+    TimedScriptSectionOutput,
+    WriteScriptSectionsOutput,
+)
+from kyrg.workflows.copyadaptation.constants import PAUSE_INTENT_COEFFICIENT, SECTION_PAUSE_SECONDS
+
 import json
 from typing import Any
 
+class _BuildScriptOutput:
+    def __init__(self, state: CopyAdaptationState):
+        sections = _resolve_final_sections(state)
+        desired_duration = state.get("desired_duration")
+        if not sections:
+            raise ValueError("sections is required to build script")
+
+        if desired_duration is None:
+            raise ValueError("desired_duration is required to build script")
+
+        self.sections = sections
+        self.desired_duration = desired_duration
+        self.max_words_per_minute = state.get("max_words_per_minute", 140)
+        self.min_words_per_minute = state.get("min_words_per_minute", 150)
+        self.mean_words_per_minutes = (
+            self.max_words_per_minute + self.min_words_per_minute
+        ) / 2
+    
+    def _voice_ready_text(self) -> str:
+        section_texts = [
+            section["text"].strip()
+            for section in self.sections
+            if section.get("text")
+        ]
+        
+        return "\n\n".join(section_texts)
+    
+    def _script(self) -> str:
+        script = "\n\n".join(
+        f"## {section.get('section_type', 'section')}\n{section.get('text', '').strip()}"
+        for section in self.sections
+        if section.get("text")
+    )
+        return script
+
+    def _hooks(self) -> list[Any]:
+        
+        return [
+            section["text"].strip()
+            for section in self.sections
+            if section.get("section_type") == "hook" and section.get("text")
+        ]
+        
+    def _cta_sections(self) -> list[Any]:
+        return  [
+            section["text"].strip()
+            for section in self.sections
+            if section.get("section_type") == "cta" and section.get("text")
+        ]
+        
+    def _final_sections(self) -> list[TimedScriptSectionOutput]:
+        sections = [
+            ScriptSectionOutput.model_validate(section)
+            for section in self.sections
+        ]
+
+        final_sections = []
+        cursor = 0.0
+
+        for index, section in enumerate(sections):
+            word_count = len(section.text.split())
+
+            duration = round(
+                (word_count / self.mean_words_per_minutes) * 60,
+                2,
+            )
+            is_last_section = index == len(sections) - 1
+            pause = (
+                0.0
+                if is_last_section
+                else _resolve_pause(
+                    section_type=section.section_type,
+                    pause_intent=section.pause_intent,
+                )
+            )
+
+            start = round(cursor, 2)
+            end = round(start + duration, 2)
+
+            final_sections.append(
+                TimedScriptSectionOutput(
+                    **section.model_dump(),
+                    word_count=word_count,
+                    estimated_duration_seconds=duration,
+                    pause_after_seconds=pause,
+                    start_seconds=start,
+                    end_seconds=end,
+                )
+            )
+
+            cursor = round(end + pause, 2)
+                
+        return final_sections
+
+def _add_words_count_per_section(script_sections: WriteScriptSectionsOutput) -> list[dict[str, Any]]:
+    sections = [
+        section.model_dump()
+        for section in script_sections.sections
+    ]
+    
+    for section in sections:
+        section["word_count"] = len(section["text"].split())
+
+    return sections
+
+def _resolve_pause(section_type: str, pause_intent: str = "medium") -> float:
+    base = SECTION_PAUSE_SECONDS.get(section_type, 0.4)
+    coefficient = PAUSE_INTENT_COEFFICIENT.get(pause_intent, 1.0)
+
+    return round(min(max(base * coefficient, 0.1), 1.8), 2)
+    
 def _calculate_time_estimated(state) -> dict[str, Any]:
-    MAX_WORDS_PER_MINUTE = 150
-    MIN_WORDS_PER_MINUTE = 120
+    MAX_WORDS_PER_MINUTE = state.get("max_words_per_minute", 140)
+    MIN_WORDS_PER_MINUTE = state.get("min_words_per_minute", 150)
     MEAN_WORDS_PER_MINUTE = (MAX_WORDS_PER_MINUTE + MIN_WORDS_PER_MINUTE) / 2
 
-    sections = state.get("sections")
+    sections = _resolve_final_sections(state)
     desired_duration = state.get("desired_duration")
 
     if not sections:
         raise ValueError("sections is required to calculate script timing")
 
-    section_texts = [
-        section["text"].strip()
-        for section in sections
-        if section.get("text")
-    ]
+    word_count = 0
+    speech_seconds = 0.0
+    pause_seconds = 0.0
 
-    word_count = sum(len(text.split()) for text in section_texts)
-    estimated_duration = (
-        round(word_count / MEAN_WORDS_PER_MINUTE, 2)
-        if word_count
-        else None
-    )
+    for index, section in enumerate(sections):
+        text = section.get("text", "")
+        words = len(text.split())
+        word_count += words
+        speech_seconds += round((words / MEAN_WORDS_PER_MINUTE) * 60, 2)
+
+        is_last_section = index == len(sections) - 1
+        if not is_last_section:
+            pause_seconds += _resolve_pause(
+                section_type=section.get("section_type", "section"),
+                pause_intent=section.get("pause_intent", "medium"),
+            )
+
+    total_seconds = speech_seconds + pause_seconds
+    estimated_duration = round(total_seconds / 60, 2) if word_count else None
 
     min_words = None
     max_words = None
     duration_status = "unknown"
 
     if desired_duration is not None:
-        min_words = round(MIN_WORDS_PER_MINUTE * desired_duration)
-        max_words = round(MAX_WORDS_PER_MINUTE * desired_duration)
+        target_seconds = desired_duration * 60
+        available_speech_seconds = max(target_seconds - pause_seconds, 0)
+        min_words = round((available_speech_seconds / 60) * MIN_WORDS_PER_MINUTE)
+        max_words = round((available_speech_seconds / 60) * MAX_WORDS_PER_MINUTE)
 
-        if word_count < min_words:
-            duration_status = "too_short"
-        elif word_count > max_words:
+        if total_seconds > target_seconds:
             duration_status = "too_long"
+        elif word_count < min_words:
+            duration_status = "too_short"
         else:
             duration_status = "ok"
 
     return {
         "word_count": word_count,
+        "speech_seconds": round(speech_seconds, 2),
+        "pause_seconds": round(pause_seconds, 2),
+        "total_seconds": round(total_seconds, 2),
         "estimated_duration": estimated_duration,
         "min_words": min_words,
         "max_words": max_words,
@@ -82,8 +213,11 @@ def _resolve_final_sections(state: CopyAdaptationState) -> list[dict]:
     )
     
 if __name__ == "__main__":
+    from rich import print
+    
     with open("CopyAdaptationWorkflow.json", "r", encoding="utf-8") as file:
         result = json.load(file)
         
-        print(_calculate_time_estimated(result))
+        build_copy = _BuildScriptOutput(result)
         
+        print(build_copy._final_sections())

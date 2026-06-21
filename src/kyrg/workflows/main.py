@@ -36,9 +36,9 @@ if __name__ == "__main__":
     Path("src/data/output").mkdir(parents=True, exist_ok=True)
     Path("src/data/checkpoints").mkdir(parents=True, exist_ok=True)
 
-    run_id = "finance_agronomos_v2"
+    run_id = "finance_agronomos_v8"
     database_path = "src/data/checkpoints/kyrg_workflows.sqlite"
-    source_path = "src/data/input/video_spanish.mp4"
+    source_path = "src/data/input/video_teste.mp4"
     audio_path = "src/data/output/audio_extraido.wav"
 
     transcriber_llm = OpenRouterLLM(
@@ -116,87 +116,94 @@ if __name__ == "__main__":
         raise RuntimeError("CopyAnalysis workflow finished without analysis.")
 
     user_profile = UserProfileOutput(
-        product_or_solution=(
-            "Curso de finanças pessoais e investimentos para agrônomos, "
-            "indo do básico ao avançado."
-        ),
-        target_audience=(
-            "Agrônomos que recebem comissão, querem investir melhor esse dinheiro, "
-            "mas ainda não sabem planejar o futuro financeiro."
-        ),
-        core_problem=(
-            "Recebem comissão, mas não têm método para organizar, proteger e investir "
-            "esse dinheiro com visão de longo prazo."
-        ),
-        core_desire=(
-            "Aprender a investir com segurança, diversificar patrimônio e construir "
-            "uma carteira sólida para o futuro."
-        ),
-        main_promise=(
-            "Ensinar agrônomos a sair do básico em finanças e evoluir até uma estratégia "
-            "de investimentos diversificada para longo prazo."
-        ),
-        unique_mechanism=(
-            "Trilha progressiva que começa em juros simples e compostos, passa por "
-            "planejamento financeiro, reserva, classes de ativos, diversificação e "
-            "montagem de carteira."
-        ),
-        benefits=[
-            "Entender juros simples e compostos sem linguagem complicada.",
-            "Planejar o uso das comissões sem depender de tentativa e erro.",
-            "Conhecer classes de investimentos e seus riscos.",
-            "Aprender a diversificar uma carteira para longo prazo.",
-            "Criar uma visão financeira mais estratégica para o futuro.",
-        ],
-        objections=[
-            "Não sei nada sobre investimentos.",
-            "Tenho medo de perder dinheiro.",
-            "Não sei por onde começar.",
-            "Minha renda varia por causa das comissões.",
-            "Acho que investir é complicado demais.",
-        ],
-        proof_assets=[],
-        offer_details=None,
-        call_to_action="Entrar na lista de interesse do curso.",
-        tone="Didático, direto, confiável e próximo da realidade do agrônomo.",
-        target_language="português",
-        platform="VSL para página de captura",
-        desired_duration=2.5,
-        restrictions=[
-            "Não prometer enriquecimento rápido.",
-            "Não prometer rentabilidade garantida.",
-            "Não recomendar ativos específicos como garantia de resultado.",
-            "Não usar linguagem sensacionalista.",
-        ],
+    product_or_solution="ClarePure - creme facial noturno para tratamento de acne e espinhas inflamadas",
+    
+    target_audience="Mulheres de 18 a 32 anos com pele oleosa a mista, que sofrem de acne hormonal recorrente e já tentaram outros produtos sem sucesso duradouro",
+    
+    core_problem="Espinhas inflamadas que voltam sempre, principalmente antes do período menstrual, causando baixa autoestima e frustração com produtos que prometem e não cumprem",
+    
+    core_desire="Ter uma pele limpa, uniforme e sem inflamações, podendo sair de casa sem maquiagem e se sentir confiante em fotos e no dia a dia",
+    
+    main_promise="Reduza visivelmente as espinhas inflamadas em até 14 dias de uso contínuo",
+    
+    unique_mechanism="Complexo Niacinamida 10% + Ácido Salicílico microencapsulado, que penetra nos poros de forma gradual durante a noite, reduzindo irritação comparado a tratamentos tradicionais",
+    
+    benefits=[
+        "Reduz vermelhidão e inflamação em poucos dias",
+        "Não resseca a pele como outros tratamentos com ácido",
+        "Textura leve, não deixa a pele oleosa pela manhã",
+        "Ajuda a prevenir novas espinhas com uso contínuo",
+        "Dermatologicamente testado para peles sensíveis"
+    ],
+    
+    objections=[
+        "Já tentei muitos produtos e nenhum funcionou para mim",
+        "Tenho medo de irritar ainda mais minha pele",
+        "Acho que vai ser caro demais para o resultado",
+        "Não tenho tempo para rotina complicada de skincare",
+        "Será que funciona pra acne hormonal mesmo?"
+    ],
+    
+    proof_assets=[
+        "Estudo clínico com 120 participantes mostrando 78% de redução nas lesões inflamatórias em 30 dias",
+        "Mais de 4.300 avaliações no site com média 4.7/5 estrelas",
+        "Depoimento em vídeo da influenciadora @paulacosmeticos mostrando resultado de 21 dias",
+        "Antes e depois de clientes reais postados no Instagram da marca",
+        "Aprovado pela Sociedade Brasileira de Dermatologia (selo SBD)"
+    ],
+    
+    offer_details="R$ 89,90 (de R$ 149,90) na compra do kit com 2 unidades, frete grátis para todo Brasil, garantia de 30 dias ou seu dinheiro de volta",
+    
+    call_to_action="Clique no link abaixo e garanta seu ClarePure com 40% de desconto antes que o estoque promocional acabe",
+    
+    tone="Empático, acolhedor e direto, like a friend giving honest advice — sem ser alarmista ou usar medo excessivo",
+    
+    target_language="Português (Brasil)",
+    
+    platform="Instagram Reels / TikTok",
+    
+    desired_duration=1.5,
+    
+    restrictions=[
+        "Não prometer cura definitiva da acne",
+        "Não usar a palavra 'milagroso' ou 'instantâneo'",
+        "Não comparar diretamente com marcas concorrentes pelo nome",
+        "Não usar antes/depois que pareçam editados ou irreais",
+        "Não fazer promessas médicas (este não é produto medicamentoso registrado em ANVISA como fármaco)"
+        ]
     )
 
     copyadaptation_workflow = CopyAdaptationWorkflow(
         initial_state={
             "copy_analysis": copy_analysis,
             "user_profile": user_profile,
+            "max_words_per_minute": 160,
+            "min_words_per_minute": 140,
         },
         context=CopyAdaptationWorkflowContext(
             strategy_llm=strategy_llm,
             writing_llm=writing_llm,
             review_llm=review_llm,
             validation_llm=validation_llm,
+            max_retry=2
         ),
         checkpointer=SQLiteCheckpointer(database_path=database_path),
         thread_id=f"{run_id}:copyadaptation",
     )
 
     copyadaptation_result = copyadaptation_workflow.start()
+    adapted_script = copyadaptation_result.get("adapted_script") or {}
 
     print("\n[bold]Roteiro adaptado[/bold]\n")
-    print(copyadaptation_result.get("script"))
+    print(adapted_script.get("script"))
 
     print("\n[bold]Validação[/bold]\n")
     print(
         {
-            "validation_passed": copyadaptation_result.get("validation_passed"),
-            "validation_errors": copyadaptation_result.get("validation_errors"),
-            "validation_warnings": copyadaptation_result.get("validation_warnings"),
-            "missing_proofs": copyadaptation_result.get("missing_proofs"),
+            "validation_passed": adapted_script.get("validation_passed"),
+            "validation_errors": adapted_script.get("validation_errors"),
+            "validation_warnings": adapted_script.get("validation_warnings"),
+            "missing_proofs": adapted_script.get("missing_proofs"),
         }
     )
 

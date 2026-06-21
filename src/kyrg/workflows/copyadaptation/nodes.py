@@ -2,6 +2,7 @@ from kyrg.workflows.copyadaptation.state import CopyAdaptationState
 from kyrg.workflows.copyadaptation.actions import (
     BuildCopyStrategy,
     CorrectScriptSections,
+    CorrectValidatedScript,
     ReviewAction,
     ValidateScriptAction,
     WriteScriptSection,
@@ -9,31 +10,16 @@ from kyrg.workflows.copyadaptation.actions import (
 from kyrg.workflows.copyadaptation.schemas import (
     AdaptedScriptOutput,
     CopyAdaptationWorkflowContext,
-    ScriptSectionOutput,
 )
 from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.core import WorkflowRuntime
-from kyrg.workflows.copyadaptation._utils import _resolve_final_sections
-
-
-SECTION_ADAPTATION_FIELDS = {
-    "hook": ["main_promise", "core_problem", "core_desire"],
-    "problem": ["core_problem"],
-    "pain": ["core_problem"],
-    "agitation": ["core_problem", "core_desire"],
-    "promise": ["main_promise"],
-    "mechanism": ["unique_mechanism"],
-    "proof": ["proof_assets"],
-    "story": ["proof_assets", "core_problem", "core_desire"],
-    "objection": ["objections"],
-    "offer": ["product_or_solution", "offer_details"],
-    "cta": ["call_to_action"],
-    "urgency": ["offer_details"],
-    "scarcity": ["offer_details"],
-    "education": ["product_or_solution", "unique_mechanism"],
-    "transition": ["target_audience", "main_promise"],
-    "payoff": ["main_promise", "core_desire", "call_to_action"],
-}
+from kyrg.workflows.copyadaptation._utils import (
+    _add_words_count_per_section,
+    _resolve_final_sections,
+    _calculate_time_estimated,
+    _BuildScriptOutput,
+)
+from kyrg.workflows.copyadaptation.constants import SECTION_ADAPTATION_FIELDS
 
 
 def prepare_adaptation_input(state: CopyAdaptationState) -> dict:
@@ -115,7 +101,6 @@ def prepare_adaptation_input(state: CopyAdaptationState) -> dict:
 
     return output
 
-
 def build_copy_strategy(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
@@ -172,7 +157,6 @@ def build_copy_strategy(
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
     }
-
 
 def write_script_sections(
     state: CopyAdaptationState,
@@ -239,27 +223,26 @@ def write_script_sections(
         objections_to_address=state.get("objections_to_address") or [],
         proof_plan=state.get("proof_plan") or {},
         unique_mechanism=unique_mechanism,
-        previous_sections=state.get("sections") or [],
-        flow_issues=state.get("flow_issues") or [],
-        retry_count=state.get("retry_count", 0),
     )
 
     script_sections = AIActionExecutor.run(action)
     token_usage = action.tokens_usage
-
+    sections = _add_words_count_per_section(script_sections)
+    
+    word_count = sum(
+        section["word_count"]
+        for section in sections
+    )
+    
     return {
-        "sections": [
-            section.model_dump()
-            for section in script_sections.sections
-        ],
+        "sections": sections,
         "missing_proofs": script_sections.missing_proofs,
         "adaptation_notes": script_sections.adaptation_notes,
-        "word_count": script_sections.word_count,
+        "word_count": word_count,
         "input_tokens": token_usage["input_tokens"],
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
     }
-
 
 def review_section_flow(
     state: CopyAdaptationState,
@@ -345,19 +328,39 @@ def review_section_flow(
         "total_tokens": token_usage["total_tokens"],
     }
 
-    if not review.flow_approved:
-        output["retry_count"] = state.get("retry_count", 0) + 1
-
     return output
 
-def primary_route(state: CopyAdaptationState):
-    MAX_RETRY = 1
+def primary_route(
+    state: CopyAdaptationState,
+    runtime: WorkflowRuntime[CopyAdaptationWorkflowContext]
+    ):
+    context = runtime.context
+    
+    max_retry = context.max_retry
     
     flow_approved = state.get('flow_approved')
-    retry_count = state.get("retry_count", 0)
+    retry_count = state.get("retry_count_correction_section", 0)
     
     if not flow_approved:  
-        if retry_count <= MAX_RETRY:
+        if retry_count < max_retry:
+            
+            return "retry"
+        return "continue"
+    
+    return "continue"
+
+def secondary_route(
+    state: CopyAdaptationState,
+    runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
+    ):
+    context = runtime.context
+    max_retry = context.max_retry
+    
+    validation_passed = state.get('validation_passed')
+    retry_count = state.get("retry_count_correction_script", 0)
+    
+    if not validation_passed:  
+        if retry_count < max_retry:
             
             return "retry"
         return "continue"
@@ -450,27 +453,23 @@ def correct_section(
 
     corrected_sections = AIActionExecutor.run(action)
     token_usage = action.tokens_usage
-
-    corrected_sections_output = [
-        section.model_dump()
-        for section in corrected_sections.sections
-    ]
+    sections = _add_words_count_per_section(corrected_sections)
+    
+    word_count = sum(
+        section["word_count"]
+        for section in sections
+    )
     
     return {
-        "sections": [
-            section.model_dump()
-            for section in corrected_sections.sections
-        ],
-        "sections_before_correction": previous_sections,
-        "sections_after_correction": corrected_sections_output,
+        "sections": sections,
         "missing_proofs": corrected_sections.missing_proofs,
         "adaptation_notes": corrected_sections.adaptation_notes,
-        "word_count": corrected_sections.word_count,
+        "word_count": word_count,
         "sections_revised": [],
         "input_tokens": token_usage["input_tokens"],
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
-        
+        "retry_count_correction_section": state.get("retry_count_correction_section", 0) + 1,
     }
 
 def validate_script(
@@ -514,6 +513,8 @@ def validate_script(
     if unique_mechanism is None:
         raise ValueError("unique_mechanism is required to validate script")
 
+    timing_metrics = _calculate_time_estimated(state)
+    
     action = ValidateScriptAction(
         llm=context.validation_llm,
         user_profile=user_profile,
@@ -527,71 +528,128 @@ def validate_script(
         main_promise=main_promise,
         unique_mechanism=unique_mechanism,
         proof_plan=state.get("proof_plan") or {},
-        word_count=state.get("word_count"),
+        timing_metrics=timing_metrics,
     )
 
     validation = AIActionExecutor.run(action)
     token_usage = action.tokens_usage
+    
+    output = {
+            "validation_passed": validation.validation_passed,
+            "validation_errors": validation.validation_errors,
+            "validation_warnings": validation.validation_warnings,
+            "timing_metrics": timing_metrics,
+            "input_tokens": token_usage["input_tokens"],
+            "output_tokens": token_usage["output_tokens"],
+            "total_tokens": token_usage["total_tokens"],
+    }
+
+    return output
+
+def correct_script(
+    state: CopyAdaptationState,
+    runtime: WorkflowRuntime[CopyAdaptationWorkflowContext]
+    ) -> dict:
+    context = runtime.context
+
+    if context is None:
+        raise RuntimeError("Copy adaptation workflow context is required.")
+
+    user_profile = state.get("user_profile")
+
+    if user_profile is None:
+        raise ValueError("user_profile is required to correct validated script")
+
+    sections = state.get("sections")
+
+    if not sections:
+        raise ValueError("sections is required to correct validated script")
+
+    validation_errors = state.get("validation_errors")
+
+    if not validation_errors:
+        raise ValueError("validation_errors is required to correct validated script")
+
+    target_language = state.get("target_language")
+
+    if target_language is None:
+        raise ValueError("target_language is required to correct validated script")
+
+    platform = state.get("platform")
+
+    if platform is None:
+        raise ValueError("platform is required to correct validated script")
+
+    main_angle = state.get("main_angle")
+
+    if main_angle is None:
+        raise ValueError("main_angle is required to correct validated script")
+
+    main_promise = state.get("main_promise")
+
+    if main_promise is None:
+        raise ValueError("main_promise is required to correct validated script")
+
+    unique_mechanism = state.get("unique_mechanism")
+
+    if unique_mechanism is None:
+        raise ValueError("unique_mechanism is required to correct validated script")
+
+    timing_metrics = state.get("timing_metrics") or _calculate_time_estimated(state)
+
+    action = CorrectValidatedScript(
+        llm=context.writing_llm,
+        user_profile=user_profile,
+        sections=sections,
+        validation_errors=validation_errors,
+        validation_warnings=state.get("validation_warnings") or [],
+        timing_metrics=timing_metrics,
+        missing_proofs=state.get("missing_proofs") or [],
+        target_language=target_language,
+        platform=platform,
+        desired_duration=state.get("desired_duration"),
+        main_angle=main_angle,
+        main_promise=main_promise,
+        proof_plan=state.get("proof_plan") or {},
+        unique_mechanism=unique_mechanism,
+        retry_count=state.get("retry_count_correction_script", 0),
+    )
+
+    corrected_script = AIActionExecutor.run(action)
+    token_usage = action.tokens_usage
+    corrected_sections = _add_words_count_per_section(corrected_script)
+
+    word_count = sum(section["word_count"] for section in corrected_sections)
 
     return {
-        "validation_passed": validation.validation_passed,
-        "validation_errors": validation.validation_errors,
-        "validation_warnings": validation.validation_warnings,
+        "sections": corrected_sections,
+        "sections_before_script_correction": sections,
+        "sections_after_script_correction": corrected_sections,
+        "missing_proofs": corrected_script.missing_proofs,
+        "adaptation_notes": corrected_script.adaptation_notes,
+        "word_count": word_count,
+        "retry_count_correction_script": state.get("retry_count_correction_script", 0) + 1,
         "input_tokens": token_usage["input_tokens"],
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
     }
-
+    
 def build_script_output(state: CopyAdaptationState) -> dict:
-    sections = _resolve_final_sections(state)
+    script_output = _BuildScriptOutput(state)
 
-    section_texts = [
-        section["text"].strip()
-        for section in sections
-        if section.get("text")
-    ]
+    final_sections = script_output._final_sections()
 
-    if not section_texts:
-        raise ValueError("section text is required to build script output")
+    script = script_output._script()
+    
+    voice_ready_text = script_output._voice_ready_text()
+    timing_metrics = _calculate_time_estimated(state)
+    word_count = timing_metrics["word_count"]
+    estimated_duration = timing_metrics["estimated_duration"]
 
-    final_sections = [
-        ScriptSectionOutput.model_validate(section)
-        for section in sections
-    ]
-
-    script = "\n\n".join(
-        f"## {section.get('section_type', 'section')}\n{section.get('text', '').strip()}"
-        for section in sections
-        if section.get("text")
-    )
-    voice_ready_text = "\n\n".join(section_texts)
-    word_count = sum(len(text.split()) for text in section_texts)
-    estimated_duration = round(word_count / 130, 2) if word_count else None
-
-    hooks = [
-        section["text"].strip()
-        for section in sections
-        if section.get("section_type") == "hook" and section.get("text")
-    ]
-
-    cta_sections = [
-        section["text"].strip()
-        for section in sections
-        if section.get("section_type") == "cta" and section.get("text")
-    ]
+    hooks = script_output._hooks()
+    
+    cta_sections = script_output._cta_sections()
     cta = cta_sections[-1] if cta_sections else None
-
-    scene_planning_input = [
-        {
-            "section_type": section.get("section_type"),
-            "text": section.get("text"),
-            "purpose": section.get("purpose"),
-            "word_count": section.get("word_count"),
-            "estimated_duration": round((section.get("word_count") or 0) / 130, 2),
-        }
-        for section in sections
-        if section.get("text")
-    ]
 
     adapted_script = AdaptedScriptOutput(
         script=script,
@@ -601,13 +659,12 @@ def build_script_output(state: CopyAdaptationState) -> dict:
         estimated_duration=estimated_duration,
         word_count=word_count,
         voice_ready_text=voice_ready_text,
-        scene_planning_input=scene_planning_input,
         adaptation_notes=state.get("adaptation_notes"),
         validation_warnings=state.get("validation_warnings") or [],
         validation_errors=state.get("validation_errors") or [],
         validation_passed=state.get("validation_passed", False),
         missing_proofs=state.get("missing_proofs") or [],
-    )
+    )   
 
     return {
         "adapted_script": adapted_script.model_dump(),

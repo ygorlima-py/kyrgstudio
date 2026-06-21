@@ -12,14 +12,24 @@ class CopyAnalysisPrompts:
 
     Analyze how the message is organized to sell, persuade, educate, or move the viewer toward an action.
 
-    Detected language:
+    <language>
     {language}
+    </language>
 
-    Clean transcription:
+    <clean_transcript>
     {clean_transcript}
+    </clean_transcript>
 
-    Structured transcription with timestamps:
+    <structured_transcription>
     {structured_transcription}
+    </structured_transcription>
+
+    Context usage:
+    - Use clean_transcript as the primary source for the exact message, wording, and section text.
+    - Use structured_transcription as the timing and segmentation source when timestamps are available.
+    - Do not treat clean_transcript and structured_transcription as two different messages; they represent the same transcription in different formats.
+    - If clean_transcript and structured_transcription differ slightly, preserve meaning from clean_transcript and use structured_transcription only to estimate section order, start, and end.
+    - If structured_transcription is empty or has no timestamps, still extract the structure from clean_transcript and leave timing fields empty or null according to the schema.
 
     Extract:
     - Content type, such as VSL, short ad, webinar, reel, organic video, sales presentation, tutorial, or educational content.
@@ -76,14 +86,23 @@ class CopyAnalysisPrompts:
     Write all textual analysis fields in the same language as the transcription.
     Keep schema field names unchanged.
 
-    Detected language:
+    <language>
     {language}
+    </language>
 
-    Clean transcription:
+    <clean_transcript>
     {clean_transcript}
+    </clean_transcript>
 
-    Previously extracted copy structure:
+    <copy_structure>
     {copy_structure}
+    </copy_structure>
+
+    Context usage:
+    - Use clean_transcript as the primary source for factual offer extraction.
+    - Use copy_structure as a navigation map to understand where the hook, problem, promise, mechanism, proof, offer, and CTA appear.
+    - Do not extract offer facts only because a section type exists in copy_structure; the fact must be present or strongly implied in clean_transcript.
+    - If clean_transcript and copy_structure appear to conflict, trust clean_transcript for factual details and use copy_structure only for organization.
 
     Extract:
     - Product, service, method, opportunity, or solution being promoted.
@@ -124,14 +143,23 @@ class CopyAnalysisPrompts:
     Write all textual analysis fields in the same language as the transcription.
     Keep schema field names unchanged.
 
-    Detected language:
+    <language>
     {language}
+    </language>
 
-    Previously extracted copy structure:
+    <copy_structure>
     {copy_structure}
+    </copy_structure>
 
-    Previously extracted offer analysis:
+    <offer_analysis>
     {offer_analysis}
+    </offer_analysis>
+
+    Context usage:
+    - Use copy_structure to analyze sequence, hook, section order, narrative flow, and where persuasive beats appear.
+    - Use offer_analysis to analyze promise clarity, proof strength, CTA strength, urgency, offer consistency, and commercial persuasion.
+    - Do not simply repeat copy_structure or offer_analysis; explain the persuasive effect created by those elements.
+    - If copy_structure and offer_analysis conflict, use copy_structure for structure-related judgments and offer_analysis for offer-related judgments.
 
     Analyze:
     - Dominant emotion created by the copy.

@@ -4,13 +4,16 @@ from operator import add
 from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput
 from kyrg.workflows.copyadaptation.schemas import UserProfileOutput
 
-
 class CopyAdaptationState(TypedDict):
+    
     # Analise estrategica da copy de referencia gerada pelo CopyAnalysisWorkflow.
     copy_analysis: CopyAnalysisOutput
     # Perfil da nova oferta do usuario: produto, publico, dores, provas, CTA e restricoes.
     user_profile: UserProfileOutput
 
+    max_words_per_minute: NotRequired[int]
+    min_words_per_minute: NotRequired[int]
+    
     # Tokens de entrada gastos pelas chamadas de LLM deste workflow.
     input_tokens: NotRequired[Annotated[int, add]]
     # Tokens de saida gerados pelas chamadas de LLM deste workflow.
@@ -53,7 +56,10 @@ class CopyAdaptationState(TypedDict):
     # Instrucoes estruturadas do review para orientar a proxima tentativa de escrita.
     revision_instructions: NotRequired[list[dict[str, Any]]]
     # Quantidade de tentativas de reescrita das secoes apos falha na revisao de fluxo.
-    retry_count: NotRequired[int]
+    retry_count_correction_section: NotRequired[int]
+    
+    retry_count_correction_script: NotRequired[int]
+    
     # Secoes revisadas depois da analise de fluxo.
     sections_revised: NotRequired[list[dict[str, Any]]]
     # Indica se o fluxo entre as secoes foi aprovado.
@@ -75,6 +81,8 @@ class CopyAdaptationState(TypedDict):
     # Output final consolidado do workflow.
     adapted_script: NotRequired[dict[str, Any]]
 
-    sections_before_correction: NotRequired[list[dict[str, Any]]]
+    sections_before_script_correction: NotRequired[list[dict[str, Any]]]
     
-    sections_after_correction: NotRequired[list[dict[str, Any]]]
+    sections_after_script_correction: NotRequired[list[dict[str, Any]]]
+    
+    timing_metrics: NotRequired[dict[str, Any]]

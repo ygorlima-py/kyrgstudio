@@ -6,7 +6,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
 
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, MessagesState
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.types import Command
@@ -34,4 +34,6 @@ WorkflowRunnableConfig = RunnableConfig
 WorkflowState = dict[str, Any]
 
 WorkflowOutput = dict[str, Any]
+
+WorkflowMessagesState = MessagesState
 
