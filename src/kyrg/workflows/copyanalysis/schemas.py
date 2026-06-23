@@ -2,15 +2,42 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from kyrg.llms.base import LLMBase
+
+
+SectionType = Literal[
+    "hook",
+    "problem",
+    "pain",
+    "agitation",
+    "promise",
+    "mechanism",
+    "proof",
+    "story",
+    "objection",
+    "offer",
+    "cta",
+    "urgency",
+    "scarcity",
+    "transition",
+    "education",
+    "payoff",
+]
 
 @dataclass(frozen=True)
 class CopyAnalysisWorkflowContext:
     analysis_llm: LLMBase = field(
         metadata={
             "description": "LLM used to extract copy structure, offer elements, and persuasion analysis."
+        }
+    )
+    
+    max_retry_errors: int = field(
+        default=2,
+        metadata={
+            "description": "maximum number of attempts to make after an error",
         }
     )
 
@@ -25,6 +52,22 @@ class StructuredTranscript(BaseModel):
     )
     text: str = Field(
         description="Transcript text spoken during this segment."
+    )
+
+
+class  SectionGap(BaseModel):
+    section_type: SectionType = Field(
+        description="Canonical English type of the affected copy section. Never translate this value."
+    )
+    gap_type: Literal["missing", "incomplete", "weak"] = Field(
+        description=(
+            "Nature of the structural gap: missing when the section does not exist, "
+            "incomplete when it exists but lacks necessary information, or weak when "
+            "it exists but has low persuasive effectiveness."
+        )
+    )
+    reason: str = Field(
+        description="Clear explanation of the structural gap in the same language as the transcription."
     )
     
 class CopyStructureOutput(BaseModel):
@@ -47,33 +90,16 @@ class CopyStructureOutput(BaseModel):
         default_factory=list,
         description="High-level sequence of how the message progresses from start to end."
     )
-    missing_sections: list[str] = Field(
+    section_gaps: list[SectionGap] = Field(
         default_factory=list,
-        description="Important copy sections that were expected but not found."
+        description="Structured list of missing, incomplete, or weak sections detected in the copy."
     )
     summary: str = Field(
         description="Short explanation of the overall copy structure."
     )
     
 class CopySection(BaseModel):
-    section_type: Literal[
-        "hook",
-        "problem",
-        "pain",
-        "agitation",
-        "promise",
-        "mechanism",
-        "proof",
-        "story",
-        "objection",
-        "offer",
-        "cta",
-        "urgency",
-        "scarcity",
-        "transition",
-        "education",
-        "payoff",
-    ] = Field(
+    section_type: SectionType = Field(
         description="Canonical English type of copy section. Never translate this value."
     )
     text: str = Field(

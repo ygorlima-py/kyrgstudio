@@ -3,7 +3,7 @@ from typing import Any
 
 from kyrg.llms.base import LLMBase
 from kyrg.workflows.base import AIActionBase
-from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput
+from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput, SectionType
 from kyrg.workflows.copyadaptation.prompts import CopyAdaptationPrompts
 from kyrg.workflows.copyadaptation.schemas import (
     BuildCopyStrategyOutput,
@@ -21,7 +21,7 @@ class BuildCopyStrategy(AIActionBase):
         user_profile: UserProfileOutput,
         copy_analysis: CopyAnalysisOutput,
         mapped_sections: list[dict[str, Any]],
-        sections_to_create: list[str],
+        sections_to_create: list[SectionType],
         gaps_to_fix: list[str],
         target_language: str,
         platform: str,
@@ -79,7 +79,7 @@ class WriteScriptSection(AIActionBase):
         llm: LLMBase,
         user_profile: UserProfileOutput,
         mapped_sections: list[dict[str, Any]],
-        sections_to_create: list[str],
+        sections_to_create: list[SectionType],
         gaps_to_fix: list[str],
         target_language: str,
         platform: str,

@@ -27,3 +27,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/kyrg"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "live_eval: executes paid, non-deterministic LLM quality evaluations",
+]

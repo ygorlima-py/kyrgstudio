@@ -104,6 +104,7 @@ if __name__ == "__main__":
         },
         context=CopyAnalysisWorkflowContext(
             analysis_llm=copy_analysis_llm,
+            max_retry_errors=2,
         ),
         checkpointer=SQLiteCheckpointer(database_path=database_path),
         thread_id=f"{run_id}:copyanalysis",

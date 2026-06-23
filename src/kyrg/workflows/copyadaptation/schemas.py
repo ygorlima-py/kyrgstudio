@@ -29,7 +29,7 @@ class CopyAdaptationWorkflowContext:
         }
     )
     max_retry: int = field(
-        default=0,
+        default=1,
         metadata={
             "description": "maximum attempts at correction"
         }
@@ -102,8 +102,7 @@ class UserProfileOutput(BaseModel):
         description="Distribution platform or placement for the adapted script."
     )
     # Duracao desejada do roteiro em minutos.
-    desired_duration: float | None = Field(
-        default=None,
+    desired_duration: float = Field(
         description="Desired script duration in minutes."
     )
     # Promessas, palavras, temas ou angulos que nao podem ser usados.
@@ -380,10 +379,10 @@ class AdaptedScriptOutput(BaseModel):
         default=None,
         description="Primary call to action extracted from the final script."
     )
-    # Duracao estimada em minutos incluindo fala e pausas entre secoes.
-    estimated_duration: float | None = Field(
+    # Duracao total estimada em segundos incluindo fala e pausas entre secoes.
+    estimated_duration_seconds: float | None = Field(
         default=None,
-        description="Estimated total duration in minutes, including spoken text and pauses between sections."
+        description="Estimated total duration in seconds, including spoken text and pauses between sections."
     )
     # Quantidade total de palavras do roteiro final.
     word_count: int = Field(

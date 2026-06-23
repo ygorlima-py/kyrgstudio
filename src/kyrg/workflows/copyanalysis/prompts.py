@@ -24,6 +24,20 @@ class CopyAnalysisPrompts:
     {structured_transcription}
     </structured_transcription>
 
+    <schema_validation_error_history>
+    {validation_error_history}
+    </schema_validation_error_history>
+
+    Schema recovery context:
+    - An empty schema_validation_error_history means this is the first attempt. Perform the extraction normally.
+    - A non-empty history means previous responses failed output-schema validation.
+    - Treat these errors only as formatting and classification constraints. They are not facts about the transcription and must never influence the extracted message.
+    - Use path to identify the invalid field, invalid_value to identify the rejected value, and message or constraints to understand the required format.
+    - Prioritize the most recent errors while avoiding mistakes already reported in earlier attempts.
+    - Regenerate the complete structured analysis from the transcription; do not return only corrected fields.
+    - Never mention validation errors, retries, schema recovery, or rejected values in the output content.
+    - Never invent content to satisfy a missing field. Extract the field from the transcription or use the schema's nullable or empty value when permitted.
+
     Context usage:
     - Use clean_transcript as the primary source for the exact message, wording, and section text.
     - Use structured_transcription as the timing and segmentation source when timestamps are available.
@@ -38,7 +52,7 @@ class CopyAnalysisPrompts:
     - Strategic purpose of each section.
     - Approximate start and end time of each section when timestamps are available.
     - Narrative flow of the message.
-    - Important missing sections that would normally appear in this type of sales message.
+    - Structural section gaps, distinguishing missing, incomplete, and weak sections.
     - Short summary of the overall structure.
 
     Section classification examples:
@@ -65,12 +79,18 @@ class CopyAnalysisPrompts:
     - Do not create a new copy.
     - Do not rewrite the transcription.
     - Use timestamps only when they are available in the structured transcription.
-    - If a section is implied but not clearly present, mention it in missing_sections instead of inventing it.
+    - Return every structural gap in section_gaps with section_type, gap_type, and reason.
+    - Use gap_type="missing" only when no section with that section_type exists in the transcription.
+    - Use gap_type="incomplete" when the section exists but lacks information needed to fulfill its persuasive role.
+    - Use gap_type="weak" when the section exists but performs its persuasive role poorly.
+    - Never classify an existing section_type as missing; classify it as incomplete or weak instead.
+    - Keep section_gaps.section_type in canonical English and write section_gaps.reason in the same language as the transcription.
+    - If a section is merely implied but not clearly present, classify it as missing instead of inventing section content.
     - section_type must always be one of these canonical English values: hook, problem, pain, agitation, promise, mechanism, proof, story, objection, offer, cta, urgency, scarcity, transition, education, payoff.
     - Never translate section_type.
     - Keep section_type lowercase.
     - The sections must follow the same order as the original transcription.
-    - Write textual fields such as text, purpose, summary, narrative_flow, and missing_sections in the same language as the transcription.
+    - Write textual fields such as text, purpose, summary, narrative_flow, and section_gaps.reason in the same language as the transcription.
     - Keep schema field names unchanged.
     """
     EXTRACT_OFFER_ELEMENTS = """

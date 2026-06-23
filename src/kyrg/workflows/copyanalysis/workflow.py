@@ -8,6 +8,7 @@ from kyrg.workflows.copyanalysis.nodes import (
     extract_offer_elements,
     analyse_persuasion,
     build_copy_analysis,
+    copy_structure_router,
 )
 
 class CopyAnalysisWorkflow(WorkflowBase):
@@ -23,7 +24,15 @@ class CopyAnalysisWorkflow(WorkflowBase):
        
        self.graph.add_edge(WORKFLOW_START, 'prepare_copy_input')
        self.graph.add_edge('prepare_copy_input', 'extract_copy_structure')
-       self.graph.add_edge('extract_copy_structure', 'extract_offer_elements')
+       self.graph.add_conditional_edges(
+           'extract_copy_structure',
+           copy_structure_router,
+           {
+               "continue": "extract_offer_elements",
+               "retry": "extract_copy_structure", 
+               "failed": WORKFLOW_END,
+           }
+       )
        self.graph.add_edge('extract_offer_elements', 'analyse_persuasion')
        self.graph.add_edge('analyse_persuasion', 'build_copy_analysis')
        self.graph.add_edge('build_copy_analysis', WORKFLOW_END)

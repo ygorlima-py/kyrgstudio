@@ -77,11 +77,18 @@ class WorkflowBase(ABC):
             compiled_graph = self.graph.compile(
                 checkpointer=checkpointer,
             )
+            config = self._config()
+            checkpoint = (
+                checkpointer.get_tuple(config)
+                if config is not None
+                else None
+            )
+            graph_input = None if checkpoint is not None else self.initial_state
             
             return compiled_graph.invoke(
-                input=self.initial_state,
+                input=graph_input,
                 context=self.context,
-                config=self._config(),
+                config=config,
             )
         
     async def astart(self):
@@ -96,10 +103,18 @@ class WorkflowBase(ABC):
             compiled_graph = self.graph.compile(
                 checkpointer=checkpointer,
             )
+            config = self._config()
+            checkpoint = (
+                await checkpointer.aget_tuple(config)
+                if config is not None
+                else None
+            )
+            graph_input = None if checkpoint is not None else self.initial_state
 
             return await compiled_graph.ainvoke(
-                input=self.initial_state,
+                input=graph_input,
                 context=self.context,
+                config=config,
             )
 
 class AgentBase(ABC):

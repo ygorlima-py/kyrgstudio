@@ -1,3 +1,4 @@
+from typing import Any
 from kyrg.workflows.copyadaptation.state import CopyAdaptationState
 from kyrg.workflows.copyadaptation.actions import (
     BuildCopyStrategy,
@@ -22,7 +23,7 @@ from kyrg.workflows.copyadaptation._utils import (
 from kyrg.workflows.copyadaptation.constants import SECTION_ADAPTATION_FIELDS
 
 
-def prepare_adaptation_input(state: CopyAdaptationState) -> dict:
+def prepare_adaptation_input(state: CopyAdaptationState) -> dict[str, Any]:
     copy_analysis = state.get("copy_analysis")
 
     if copy_analysis is None:
@@ -63,8 +64,27 @@ def prepare_adaptation_input(state: CopyAdaptationState) -> dict:
             }
         )
 
-    sections_to_create = list(copy_analysis.copy_structure.missing_sections)
+    sections_to_create = []
     gaps_to_fix = []
+
+    section_gaps = getattr(copy_analysis.copy_structure, "section_gaps", None)
+
+    if section_gaps is None:
+        raise ValueError(
+            "copy_analysis uses the legacy missing_sections format; "
+            "regenerate it with the current CopyAnalysisWorkflow schema"
+        )
+
+    for gap in section_gaps:
+        if gap.gap_type == "missing":
+            if gap.section_type not in sections_to_create:
+                sections_to_create.append(gap.section_type)
+            continue
+
+        gaps_to_fix.append(
+            f"{gap.gap_type} section "
+            f"'{gap.section_type}': {gap.reason}"
+        )
 
     persuasion_analysis = copy_analysis.persuasion_analysis
     strength_fields = {
@@ -87,6 +107,8 @@ def prepare_adaptation_input(state: CopyAdaptationState) -> dict:
 
     if user_profile.unique_mechanism is None:
         gaps_to_fix.append("User profile has no unique mechanism defined")
+
+    gaps_to_fix = list(dict.fromkeys(gaps_to_fix))
 
     output = {
         "mapped_sections": mapped_sections,
@@ -381,10 +403,7 @@ def correct_section(
     if user_profile is None:
         raise ValueError("user_profile is required to correct script sections")
 
-    previous_sections = state.get("sections")
-
-    if not previous_sections:
-        raise ValueError("sections is required to correct script sections")
+    previous_sections = _resolve_final_sections(state)
 
     flow_issues = state.get("flow_issues")
 
@@ -448,7 +467,7 @@ def correct_section(
         objections_to_address=state.get("objections_to_address") or [],
         proof_plan=state.get("proof_plan") or {},
         unique_mechanism=unique_mechanism,
-        retry_count=state.get("retry_count", 0),
+        retry_count=state.get("retry_count_correction_section", 0),
     )
 
     corrected_sections = AIActionExecutor.run(action)
@@ -560,7 +579,7 @@ def correct_script(
     if user_profile is None:
         raise ValueError("user_profile is required to correct validated script")
 
-    sections = state.get("sections")
+    sections = _resolve_final_sections(state)
 
     if not sections:
         raise ValueError("sections is required to correct validated script")
@@ -625,6 +644,7 @@ def correct_script(
         "sections": corrected_sections,
         "sections_before_script_correction": sections,
         "sections_after_script_correction": corrected_sections,
+        "sections_revised": [],
         "missing_proofs": corrected_script.missing_proofs,
         "adaptation_notes": corrected_script.adaptation_notes,
         "word_count": word_count,
@@ -644,7 +664,7 @@ def build_script_output(state: CopyAdaptationState) -> dict:
     voice_ready_text = script_output._voice_ready_text()
     timing_metrics = _calculate_time_estimated(state)
     word_count = timing_metrics["word_count"]
-    estimated_duration = timing_metrics["estimated_duration"]
+    estimated_duration_seconds = timing_metrics["estimated_duration_seconds"]
 
     hooks = script_output._hooks()
     
@@ -656,7 +676,7 @@ def build_script_output(state: CopyAdaptationState) -> dict:
         sections=final_sections,
         hooks=hooks,
         cta=cta,
-        estimated_duration=estimated_duration,
+        estimated_duration_seconds=estimated_duration_seconds,
         word_count=word_count,
         voice_ready_text=voice_ready_text,
         adaptation_notes=state.get("adaptation_notes"),

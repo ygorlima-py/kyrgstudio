@@ -1,4 +1,4 @@
-from typing import  NotRequired, TypedDict, Annotated
+from typing import  NotRequired, TypedDict, Annotated, Any
 
 from kyrg.transcribers import TranscriptionResult
 from kyrg.workflows.copyanalysis.schemas import (
@@ -25,4 +25,12 @@ class CopyAnalysisState(TypedDict):
     offer_analysis: NotRequired[OfferAnalysisOutput]
     persuasion_analysis: NotRequired[PersuasionAnalysisOutput]
     analysis: NotRequired[CopyAnalysisOutput]
+    
+    # errors
+    copy_structure_error_history: NotRequired[list[dict[str, Any]]]
+    
+    # retry
+    copy_structure_retry_count: NotRequired[int]
+    
+    
     

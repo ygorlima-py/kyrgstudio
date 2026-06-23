@@ -1,7 +1,7 @@
 from typing import Annotated, Any, NotRequired, TypedDict
 from operator import add
 
-from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput
+from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput, SectionType
 from kyrg.workflows.copyadaptation.schemas import UserProfileOutput
 
 class CopyAdaptationState(TypedDict):
@@ -24,7 +24,7 @@ class CopyAdaptationState(TypedDict):
     # Secoes da copy de referencia mapeadas para a nova oferta do usuario.
     mapped_sections: NotRequired[list[dict[str, Any]]]
     # Secoes que nao existem na referencia e precisam ser criadas do zero.
-    sections_to_create: NotRequired[list[str]]
+    sections_to_create: NotRequired[list[SectionType]]
     # Pontos fracos ou lacunas que precisam ser corrigidos na nova copy.
     gaps_to_fix: NotRequired[list[str]]
     # Idioma final em que o roteiro adaptado deve ser escrito.

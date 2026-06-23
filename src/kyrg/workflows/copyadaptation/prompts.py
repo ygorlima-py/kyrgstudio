@@ -537,7 +537,7 @@ Important:
 - timing_metrics.speech_seconds is the estimated spoken text duration before pauses.
 - timing_metrics.pause_seconds is the total pause duration inserted between sections.
 - timing_metrics.total_seconds is the estimated final runtime including spoken text and pauses.
-- timing_metrics.estimated_duration is the estimated final runtime in minutes, including spoken text and pauses.
+- timing_metrics.estimated_duration_seconds is the estimated final runtime in seconds, including spoken text and pauses.
 - timing_metrics.min_words is the minimum acceptable word count for desired_duration.
 - timing_metrics.max_words is the maximum acceptable word count after reserving time for pauses.
 - timing_metrics.duration_status is the system decision for duration and can be: "too_short", "ok", "too_long", or "unknown".

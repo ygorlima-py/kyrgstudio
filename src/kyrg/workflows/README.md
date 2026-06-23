@@ -684,15 +684,16 @@ se flow_approved == false e retry_count excedeu o limite:
 
 **O que deve fazer:**
 - Mapear cada `CopySection` da referência para o contexto da nova oferta
-- Identificar quais seções têm equivalente direto e quais precisam ser criadas do zero
+- Consumir `section_gaps` da análise e distinguir seções ausentes, incompletas e fracas
+- Criar do zero apenas seções com `gap_type="missing"` que ainda não existam na referência
 - Extrair os scores fracos da `PersuasionAnalysisOutput` (urgência, objeções, prova) para sinalizar gaps a corrigir
 - Normalizar o `target_language` — se a referência está em espanhol e a nova oferta é em português, registrar isso explicitamente
 
 **Campos de saída do estado:**
 ```
 mapped_sections       # seções da referência mapeadas para a nova oferta
-sections_to_create    # seções que precisam ser criadas do zero
-gaps_to_fix           # dimensões com score baixo na análise original
+sections_to_create    # tipos canônicos das seções realmente ausentes
+gaps_to_fix           # seções incompletas/fracas e dimensões persuasivas a corrigir
 target_language       # idioma do roteiro final
 platform              # onde a VSL vai rodar (YouTube, página de vendas, etc.)
 desired_duration      # duração estimada em minutos
@@ -863,7 +864,7 @@ script                # roteiro completo em markdown
 sections              # list[ScriptSection] com metadados
 hooks                 # list[str] — variações do hook para teste A/B
 cta                   # texto final do CTA
-estimated_duration    # duração estimada em minutos
+estimated_duration_seconds # duração total estimada em segundos
 word_count            # total de palavras
 voice_ready_text      # texto limpo para TTS, sem formatação
 scene_planning_input  # roteiro segmentado por cena

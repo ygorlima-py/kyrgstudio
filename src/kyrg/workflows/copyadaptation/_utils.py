@@ -22,8 +22,8 @@ class _BuildScriptOutput:
 
         self.sections = sections
         self.desired_duration = desired_duration
-        self.max_words_per_minute = state.get("max_words_per_minute", 140)
-        self.min_words_per_minute = state.get("min_words_per_minute", 150)
+        self.max_words_per_minute = state.get("max_words_per_minute", 160)
+        self.min_words_per_minute = state.get("min_words_per_minute", 140)
         self.mean_words_per_minutes = (
             self.max_words_per_minute + self.min_words_per_minute
         ) / 2
@@ -122,8 +122,8 @@ def _resolve_pause(section_type: str, pause_intent: str = "medium") -> float:
     return round(min(max(base * coefficient, 0.1), 1.8), 2)
     
 def _calculate_time_estimated(state) -> dict[str, Any]:
-    MAX_WORDS_PER_MINUTE = state.get("max_words_per_minute", 140)
-    MIN_WORDS_PER_MINUTE = state.get("min_words_per_minute", 150)
+    MAX_WORDS_PER_MINUTE = state.get("max_words_per_minute", 160)
+    MIN_WORDS_PER_MINUTE = state.get("min_words_per_minute", 140)
     MEAN_WORDS_PER_MINUTE = (MAX_WORDS_PER_MINUTE + MIN_WORDS_PER_MINUTE) / 2
 
     sections = _resolve_final_sections(state)
@@ -150,7 +150,7 @@ def _calculate_time_estimated(state) -> dict[str, Any]:
             )
 
     total_seconds = speech_seconds + pause_seconds
-    estimated_duration = round(total_seconds / 60, 2) if word_count else None
+    estimated_duration_seconds = round(total_seconds, 2) if word_count else None
 
     min_words = None
     max_words = None
@@ -174,7 +174,7 @@ def _calculate_time_estimated(state) -> dict[str, Any]:
         "speech_seconds": round(speech_seconds, 2),
         "pause_seconds": round(pause_seconds, 2),
         "total_seconds": round(total_seconds, 2),
-        "estimated_duration": estimated_duration,
+        "estimated_duration_seconds": estimated_duration_seconds,
         "min_words": min_words,
         "max_words": max_words,
         "duration_status": duration_status,
