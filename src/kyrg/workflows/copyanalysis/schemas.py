@@ -2,42 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Literal
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
 from kyrg.llms.base import LLMBase
-
-
-SectionType = Literal[
-    "hook",
-    "problem",
-    "pain",
-    "agitation",
-    "promise",
-    "mechanism",
-    "proof",
-    "story",
-    "objection",
-    "offer",
-    "cta",
-    "urgency",
-    "scarcity",
-    "transition",
-    "education",
-    "payoff",
-]
+from kyrg.workflows.domain_types import SectionType
 
 @dataclass(frozen=True)
 class CopyAnalysisWorkflowContext:
     analysis_llm: LLMBase = field(
         metadata={
             "description": "LLM used to extract copy structure, offer elements, and persuasion analysis."
-        }
-    )
-    
-    max_retry_errors: int = field(
-        default=2,
-        metadata={
-            "description": "maximum number of attempts to make after an error",
         }
     )
 

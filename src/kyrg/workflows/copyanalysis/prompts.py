@@ -24,20 +24,6 @@ class CopyAnalysisPrompts:
     {structured_transcription}
     </structured_transcription>
 
-    <schema_validation_error_history>
-    {validation_error_history}
-    </schema_validation_error_history>
-
-    Schema recovery context:
-    - An empty schema_validation_error_history means this is the first attempt. Perform the extraction normally.
-    - A non-empty history means previous responses failed output-schema validation.
-    - Treat these errors only as formatting and classification constraints. They are not facts about the transcription and must never influence the extracted message.
-    - Use path to identify the invalid field, invalid_value to identify the rejected value, and message or constraints to understand the required format.
-    - Prioritize the most recent errors while avoiding mistakes already reported in earlier attempts.
-    - Regenerate the complete structured analysis from the transcription; do not return only corrected fields.
-    - Never mention validation errors, retries, schema recovery, or rejected values in the output content.
-    - Never invent content to satisfy a missing field. Extract the field from the transcription or use the schema's nullable or empty value when permitted.
-
     Context usage:
     - Use clean_transcript as the primary source for the exact message, wording, and section text.
     - Use structured_transcription as the timing and segmentation source when timestamps are available.

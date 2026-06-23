@@ -1,14 +1,21 @@
 from abc import ABC, abstractmethod
 from typing import TypeVar
+from pydantic import BaseModel, ValidationError
 
-from pydantic import BaseModel
+from kyrg.llms.error import (
+    StructuredOutputError,
+    StructuredOutputParsingError,
+    format_structured_error,
+    build_retry_prompt,
+)
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
 
 class LLMBase(ABC):
     
-    def __init__(self):
+    def __init__(self, max_attempts: int = 2):
+        self.max_attempts = max_attempts
         self._input_tokens = 0
         self._output_tokens = 0
     
@@ -20,16 +27,80 @@ class LLMBase(ABC):
     async def ainvoke(self, prompt: str) -> str:
         ...
 
-    @abstractmethod
+   
     def structured(
         self,
         prompt: str,
         output_schema: type[OutputT],
     ) -> OutputT:
-        ...
+        
+        current_prompt = prompt
+        last_error: ValidationError | StructuredOutputParsingError | None = None
     
-    @abstractmethod
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                return self._structured_once(
+                    current_prompt,
+                    output_schema,
+                )
+            except (ValidationError, StructuredOutputParsingError) as error:
+                last_error = error
+
+                if attempt == self.max_attempts:
+                    break
+
+                current_prompt=build_retry_prompt(
+                    original_prompt=prompt,
+                    errors=format_structured_error(error),
+                )
+
+        raise StructuredOutputError(
+            f"{output_schema.__name__} remained invalid after "
+            f"{self.max_attempts} attempts"
+        ) from last_error
+    
     async def astructured(
+        self,
+        prompt: str,
+        output_schema: type[OutputT],
+    ) -> OutputT:
+        
+        current_prompt = prompt
+        last_error: ValidationError | StructuredOutputParsingError | None = None
+    
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                return await self._astructured_once(
+                    current_prompt,
+                    output_schema,
+                )
+            except (ValidationError, StructuredOutputParsingError) as error:
+                last_error = error
+
+                if attempt == self.max_attempts:
+                    break
+
+                current_prompt=build_retry_prompt(
+                    original_prompt=prompt,
+                    errors=format_structured_error(error),
+                )
+
+        raise StructuredOutputError(
+            f"{output_schema.__name__} remained invalid after "
+            f"{self.max_attempts} attempts"
+        ) from last_error
+    
+        
+    @abstractmethod
+    def _structured_once(
+        self,
+        prompt: str,
+        output_schema: type[OutputT],
+    ) -> OutputT:
+        ...
+        
+    @abstractmethod
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],

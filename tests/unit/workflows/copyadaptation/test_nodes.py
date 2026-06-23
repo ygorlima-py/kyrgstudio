@@ -27,6 +27,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     ScriptSectionOutput,
     SectionRevisionInstruction,
     UserProfileOutput,
+    ValidationIssue,
     ValidateScriptOutput,
     WriteScriptSectionsOutput,
 )
@@ -66,14 +67,14 @@ class StaticLLM(LLMBase):
     async def ainvoke(self, prompt: str) -> str:
         raise AssertionError("Copy adaptation nodes must use structured output.")
 
-    def structured(
+    def _structured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._respond(prompt, output_schema)
 
-    async def astructured(
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
@@ -267,8 +268,25 @@ def _review_output() -> ReviewSectionFlowOutput:
 def _validation_output() -> ValidateScriptOutput:
     return ValidateScriptOutput(
         validation_passed=False,
-        validation_errors=["The script contains an unsupported claim."],
-        validation_warnings=["The script is shorter than the target duration."],
+        validation_errors=[
+            ValidationIssue(
+                category="claim",
+                code="unsupported_claim",
+                section_order=1,
+                section_type="hook",
+                field="text",
+                message="The script contains an unsupported claim.",
+                correction_action="soften",
+            )
+        ],
+        validation_warnings=[
+            ValidationIssue(
+                category="duration",
+                code="script_too_short",
+                message="The script is shorter than the target duration.",
+                correction_action="expand",
+            )
+        ],
     )
 
 
@@ -313,7 +331,17 @@ def _base_state() -> CopyAdaptationState:
                 "priority": "high",
             }
         ],
-        "validation_errors": ["The script contains an unsupported claim."],
+        "validation_errors": [
+            ValidationIssue(
+                category="claim",
+                code="unsupported_claim",
+                section_order=1,
+                section_type="hook",
+                field="text",
+                message="The script contains an unsupported claim.",
+                correction_action="soften",
+            ).model_dump()
+        ],
         "validation_warnings": [],
     }
 

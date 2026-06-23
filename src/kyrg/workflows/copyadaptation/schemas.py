@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any, Literal
-
 from pydantic import BaseModel, Field
 
 from kyrg.llms.base import LLMBase
+from kyrg.workflows.domain_types import SectionType
 
 
 @dataclass(frozen=True)
@@ -341,23 +343,86 @@ class ReviewSectionFlowOutput(BaseModel):
         description="Only the sections that were actually revised during the flow review."
     )
 
-
 class ValidateScriptOutput(BaseModel):
     # Indica se o roteiro passou sem erros criticos.
     validation_passed: bool = Field(
         description="Whether the adapted script passed validation without critical blocking errors."
     )
     # Erros criticos que impedem o roteiro de ser entregue como pronto.
-    validation_errors: list[str] = Field(
+    validation_errors: list[ValidationIssue] = Field(
         default_factory=list,
         description="Critical validation errors that block the script from being production-ready."
     )
     # Avisos nao bloqueantes que devem ser exibidos ou considerados antes do uso.
-    validation_warnings: list[str] = Field(
+    validation_warnings: list[ValidationIssue] = Field(
         default_factory=list,
         description="Non-blocking validation warnings that should be reviewed before production."
     )
+    
+class ValidationIssue(BaseModel):
+    category: Literal[
+        "claim",
+        "proof",
+        "offer",
+        "cta",
+        "scarcity",
+        "duration",
+        "language",
+        "structure",
+        "copy_similarity",
+        "other",
+    ] = Field(
+        description="Broad category used to classify the validation issue."
+    )
 
+    code: str = Field(
+        description=(
+            "Specific machine-readable issue identifier in lowercase snake_case, "
+            "such as unsupported_claim or missing_cta."
+        )
+    )
+
+    section_order: int | None = Field(
+        default=None,
+        description="Order of the affected script section, when identifiable."
+    )
+
+    section_type: SectionType | None = Field(
+        default=None,
+        description="Canonical type of the affected script section, when identifiable."
+    )
+
+    field: str | None = Field(
+        default=None,
+        description="Name of the affected section field, such as text or proof_used."
+    )
+
+    message: str = Field(
+        description=(
+            "Clear explanation of what is wrong and why it affects script quality "
+            "or production readiness."
+        )
+    )
+
+    correction_action: Literal[
+        "remove",
+        "soften",
+        "rewrite",
+        "shorten",
+        "expand",
+        "align_with_profile",
+        "custom",
+    ] = Field(
+        description="Primary operation required to resolve the validation issue."
+    )
+
+    custom_instruction: str | None = Field(
+        default=None,
+        description=(
+            "Explicit correction instruction when correction_action is custom; "
+            "otherwise this field must be null."
+        )
+    )
 
 class AdaptedScriptOutput(BaseModel):
     # Roteiro completo em formato legivel para revisao humana.
@@ -398,12 +463,12 @@ class AdaptedScriptOutput(BaseModel):
         description="Notes explaining what was adapted from the reference and what changed."
     )
     # Avisos de validacao nao bloqueantes.
-    validation_warnings: list[str] = Field(
+    validation_warnings: list[ValidationIssue] = Field(
         default_factory=list,
         description="Non-blocking validation warnings inherited from script validation."
     )
     # Erros criticos de validacao, se existirem.
-    validation_errors: list[str] = Field(
+    validation_errors: list[ValidationIssue] = Field(
         default_factory=list,
         description="Critical validation errors inherited from script validation."
     )

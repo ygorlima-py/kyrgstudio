@@ -20,10 +20,10 @@ class UnusedLLM(LLMBase):
     async def ainvoke(self, prompt: str) -> str:
         raise AssertionError("Routers must not call an LLM.")
 
-    def structured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
         raise AssertionError("Routers must not call an LLM.")
 
-    async def astructured(
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
@@ -124,4 +124,3 @@ def test_router_treats_missing_decision_and_counter_as_first_failure(
 
     state = cast(CopyAdaptationState, {})
     assert router(state, _runtime(max_retry=1)) == expected
-

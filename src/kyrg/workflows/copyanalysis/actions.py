@@ -1,5 +1,4 @@
 import json
-from typing import Any
 
 from kyrg.workflows.base import AIActionBase
 from kyrg.workflows.copyanalysis.schemas import StructuredTranscript
@@ -18,13 +17,11 @@ class ExtractCopyStructure(AIActionBase):
         clean_transcript: str,
         structured_transcription: list[StructuredTranscript],
         language: str | None,
-        validation_error_history: list[dict[str, Any]],
     ) -> None:
         
         self.clean_transcript = clean_transcript
         self.structured_transcription = structured_transcription
         self.language = language
-        self.validation_error_history = validation_error_history
         super().__init__(llm)
         
     def execute(self) -> CopyStructureOutput:
@@ -48,11 +45,6 @@ class ExtractCopyStructure(AIActionBase):
                     item.model_dump()
                     for item in self.structured_transcription
                 ],
-                ensure_ascii=False,
-                indent=2,
-            ),
-            validation_error_history=json.dumps(
-                self.validation_error_history,
                 ensure_ascii=False,
                 indent=2,
             ),

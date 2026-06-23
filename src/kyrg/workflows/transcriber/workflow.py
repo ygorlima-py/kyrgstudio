@@ -18,15 +18,6 @@ class TranscriberWorkflow(WorkflowBase):
     STATE_SCHEMA = TranscriberState
     CONTEXT_SCHEMA = TranscriberWorkflowContext
     
-    def __init__(
-        self,
-        initial_state: dict | None,
-        context: TranscriberWorkflowContext,
-        checkpointer: CheckpointerBase | None = None,
-        thread_id: str | None = None,
-        ):
-        super().__init__(initial_state, context, checkpointer, thread_id)
-    
     def _build(self) -> None:
         
         self.graph.add_node('extract_audio', extract_audio)
@@ -61,32 +52,7 @@ class TranscriberWorkflow(WorkflowBase):
         self.graph.add_edge('correction_transcriber', WORKFLOW_END)
             
 
-# if __name__ == "__main__":
-#     from langchain_core.language_models.chat_models import BaseChatModel
-#     from kyrg.workflows.transcriber.tools import (
-#         accept_transcription_tool,
-#         correct_transcription_tool,
-#         request_human_review_tool,
-#     )
+if __name__ == "__main__":
     
-#     from langchain_openai import ChatOpenAI
-#     from dotenv import load_dotenv
-#     import os 
-    
-#     load_dotenv()
-    
-#     agent = TranscriptionAgent(
-#         llm=ChatOpenAI(
-#             api_key=os.getenv("OPENROUTER_API_KEY"),
-#             model="deepseek/deepseek-v4-flash"
-#             ),
-#         tools=[
-#             accept_transcription_tool,
-#             correct_transcription_tool,
-#             request_human_review_tool,
-#         ],
-#         debug=True,
-#     )
-
-#     workflow = TranscriberWorkflow(initial_state={}, agent=agent)
-#     workflow.draw_workflow()
+    workflow = TranscriberWorkflow(initial_state={})
+    workflow.draw_workflow()

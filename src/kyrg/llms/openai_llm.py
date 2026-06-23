@@ -4,6 +4,7 @@ from loguru import logger
 from openai import AsyncOpenAI, OpenAI, OpenAIError
 
 from kyrg.llms.base import LLMBase, OutputT
+from kyrg.llms.error import StructuredOutputParsingError
 
 
 class OpenAILLM(LLMBase):
@@ -38,7 +39,7 @@ class OpenAILLM(LLMBase):
             
         return response.output_text
 
-    def structured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
         logger.info(
             f"Calling OpenAI LLM provider: model={self.model}, method=structured"
         )
@@ -63,7 +64,9 @@ class OpenAILLM(LLMBase):
             self._add_token(input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
         
         if parsed is None:
-            raise RuntimeError("OpenAI returned no structured output.")
+            raise StructuredOutputParsingError(
+                "OpenAI returned no structured output."
+            )
 
         logger.info(
             f"OpenAI LLM provider succeeded: model={self.model}, method=structured"
@@ -91,7 +94,7 @@ class OpenAILLM(LLMBase):
             
         return response.output_text
     
-    async def astructured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    async def _astructured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
         logger.info(
             f"Calling OpenAI LLM provider: model={self.model}, method=astructured"
         )
@@ -116,7 +119,9 @@ class OpenAILLM(LLMBase):
         parsed = response.output_parsed
         
         if parsed is None:
-            raise RuntimeError("OpenAI returned no structured output.")
+            raise StructuredOutputParsingError(
+                "OpenAI returned no structured output."
+            )
 
         logger.info(
             f"OpenAI LLM provider succeeded: model={self.model}, method=astructured"

@@ -68,9 +68,9 @@ class CopyAdaptationState(TypedDict):
     # Indica se o roteiro passou nas validacoes finais.
     validation_passed: NotRequired[bool]
     # Erros criticos que impedem o uso do roteiro.
-    validation_errors: NotRequired[list[str]]
+    validation_errors: NotRequired[list[dict[str, Any]]]
     # Avisos nao bloqueantes que devem ser mostrados ao usuario.
-    validation_warnings: NotRequired[list[str]]
+    validation_warnings: NotRequired[list[dict[str, Any]]]
 
     # Quantidade total de palavras do roteiro.
     word_count: NotRequired[int]

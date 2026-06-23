@@ -1,8 +1,10 @@
 from loguru import logger
+from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.chat_models import BaseChatModel
 from typing import Any, cast
 
 from kyrg.llms.base import LLMBase, OutputT
+from kyrg.llms.error import StructuredOutputParsingError
 
 
 class LangChainLLM(LLMBase):
@@ -15,6 +17,8 @@ class LangChainLLM(LLMBase):
 
         try:
             response = self.llm.invoke(prompt)
+        except OutputParserException as error:
+            raise StructuredOutputParsingError(str(error)) from error
         except Exception as error:
             logger.exception("LangChain LLM provider failed: method=invoke")
             raise RuntimeError(f"Error calling LangChain LLM provider: {error}") from error
@@ -32,7 +36,7 @@ class LangChainLLM(LLMBase):
 
         return str(content)
 
-    def structured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
         logger.info("Calling LangChain LLM provider: method=structured")
 
         try:
@@ -44,6 +48,7 @@ class LangChainLLM(LLMBase):
             
             raw = response["raw"]
             parsed = response["parsed"]
+            parsing_error = response.get("parsing_error")
             usage = getattr(raw, "usage_metadata", None)
 
         except Exception as error:
@@ -55,6 +60,11 @@ class LangChainLLM(LLMBase):
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
             )
+
+        if parsing_error is not None:
+            raise StructuredOutputParsingError(
+                str(parsing_error)
+            ) from parsing_error
         
         if isinstance(parsed, output_schema):
             logger.info("LangChain LLM provider succeeded: method=structured")
@@ -65,13 +75,17 @@ class LangChainLLM(LLMBase):
             logger.info("LangChain LLM provider succeeded: method=structured")
             return result
 
-        raise RuntimeError("LangChain returned structured output in an invalid format.")
+        raise StructuredOutputParsingError(
+            "LangChain returned structured output in an invalid format."
+        )
 
     async def ainvoke(self, prompt: str) -> str:
         logger.info("Calling LangChain LLM provider: method=ainvoke")
 
         try:
             response = await self.llm.ainvoke(prompt)
+        except OutputParserException as error:
+            raise StructuredOutputParsingError(str(error)) from error
         except Exception as error:
             logger.exception("LangChain LLM provider failed: method=ainvoke")
             raise RuntimeError(f"Error calling LangChain LLM provider: {error}") from error
@@ -89,7 +103,7 @@ class LangChainLLM(LLMBase):
 
         return str(content)
 
-    async def astructured(
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
@@ -100,11 +114,12 @@ class LangChainLLM(LLMBase):
             structured_llm = self.llm.with_structured_output(output_schema, include_raw=True)
             response = cast(
                         dict[str, Any],
-                        structured_llm.invoke(prompt),
+                        await structured_llm.ainvoke(prompt),
                     )
             
             raw = response["raw"]
             parsed = response["parsed"]
+            parsing_error = response.get("parsing_error")
             usage = getattr(raw, "usage_metadata", None)
             
         except Exception as error:
@@ -116,6 +131,11 @@ class LangChainLLM(LLMBase):
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
             )
+
+        if parsing_error is not None:
+            raise StructuredOutputParsingError(
+                str(parsing_error)
+            ) from parsing_error
             
         if isinstance(parsed, output_schema):
             logger.info("LangChain LLM provider succeeded: method=astructured")
@@ -126,4 +146,6 @@ class LangChainLLM(LLMBase):
             logger.info("LangChain LLM provider succeeded: method=astructured")
             return result
 
-        raise RuntimeError("LangChain returned structured output in an invalid format.")
+        raise StructuredOutputParsingError(
+            "LangChain returned structured output in an invalid format."
+        )

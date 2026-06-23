@@ -260,7 +260,7 @@ class CorrectValidatedScript(AIActionBase):
         llm: LLMBase,
         user_profile: UserProfileOutput,
         sections: list[dict[str, Any]],
-        validation_errors: list[str],
+        validation_errors: list[dict[str, Any]],
         validation_warnings: list[str],
         timing_metrics: dict[str, Any],
         missing_proofs: list[str],

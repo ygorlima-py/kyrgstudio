@@ -599,13 +599,34 @@ Validation rules:
 - Missing a core structural element is a critical error if it makes the script incomplete.
 - Weak but present sections should be warnings, not critical errors.
 
+Validation issue contract:
+- Represent every critical error and warning as a complete ValidationIssue object.
+- category must identify the broad diagnostic family. Use only: claim, proof, offer, cta, scarcity, duration, language, structure, copy_similarity, or other.
+- code must be a concise, specific, machine-readable identifier in lowercase snake_case. Examples include invented_proof, unsupported_claim, offer_mismatch, cta_mismatch, artificial_scarcity, script_too_long, wrong_language, missing_core_section, and literal_copy. These are examples, not an exhaustive list; use a precise new code when necessary.
+- section_order must contain the exact order value of the affected section when the issue can be located in one section. Use null only for genuinely global issues or missing sections that do not yet exist.
+- section_type must contain the canonical English section type when identifiable. Never translate section_type.
+- field must identify the exact affected field when possible, such as text, proof_used, missing_proof, section_type, or pause_intent. Use null only when the issue affects the whole section or script.
+- message must explain the diagnosis and its impact in the target language. It is supporting explanation, not the machine-readable correction command.
+- correction_action must define the primary operation required to resolve the issue. Use only: remove, soften, rewrite, shorten, expand, align_with_profile, or custom.
+- custom_instruction must be null unless correction_action is custom.
+- When correction_action is custom, custom_instruction must state a concrete, executable correction that does not violate the offer profile, proof restrictions, or strategy.
+- Do not create duplicate issues for the same section, field, and underlying problem.
+
+Correction action selection:
+- Use remove when unsupported content must be deleted, such as invented proof, unauthorized scarcity, or fabricated offer details.
+- Use soften when a claim must remain but its certainty, magnitude, or guarantee must be reduced.
+- Use rewrite when the affected text must be materially rephrased, translated, or differentiated from the reference.
+- Use shorten or expand only for duration or structural-length corrections supported by timing_metrics.
+- Use align_with_profile when product, audience, mechanism, offer, proof, or CTA conflicts with user_profile.
+- Use custom only when none of the standard actions accurately describes the required correction.
+
 Critical error rules:
-- Add an item to validation_errors when the script should not be delivered as production-ready.
+- Add a ValidationIssue to validation_errors when the script should not be delivered as production-ready.
 - Critical errors must be specific and actionable.
 - Each critical error must explain what failed and why it matters.
 
 Warning rules:
-- Add an item to validation_warnings when the script can proceed but needs attention.
+- Add a ValidationIssue to validation_warnings when the script can proceed but needs attention.
 - Warnings should not block final output by themselves.
 - Use warnings for weak proof, mild duration mismatch, weak CTA, generic mechanism, tone drift, or missing proof already flagged.
 
@@ -623,8 +644,11 @@ What you must NOT do:
 
 Output requirements:
 - Return only data that matches the output schema.
-- validation_errors must contain only critical blockers.
-- validation_warnings must contain non-blocking issues.
+- validation_errors must contain only critical blockers represented as complete ValidationIssue objects.
+- validation_warnings must contain only non-blocking issues represented as complete ValidationIssue objects.
+- Every issue must include category, code, message, and correction_action.
+- Populate section_order, section_type, and field whenever the source sections make the location identifiable.
+- Set custom_instruction only when correction_action is custom; otherwise return null.
 - Do not include commentary outside the structured output.
 """
 
@@ -699,15 +723,38 @@ Correction contract:
 - Rewrite only the sections needed to remove validation failures.
 - Return the full corrected sections list, not only the changed sections.
 
-Validation error handling:
-- If validation_errors mention invented proof, remove the unsupported proof and set proof_used to null.
-- If validation_errors mention invented offer details, remove those details and keep only what exists in user_profile.
-- If validation_errors mention artificial scarcity, remove deadline, limited access, limited spots, urgency, or scarcity language not present in user_profile.
-- If validation_errors mention overpromise, soften the claim so it becomes educational, conditional, and aligned with user_profile.main_promise.
-- If validation_errors mention CTA mismatch, rewrite the CTA to match user_profile.call_to_action exactly in meaning.
-- If validation_errors mention wrong language, rewrite affected section text in target_language.
-- If validation_errors mention literal copying, rewrite the affected section without copying reference wording while preserving the adapted intent.
-- If validation_errors mention no_literal_copy or literal copying, do not preserve the same metaphor, sentence skeleton, rhythm, or opening structure. Create a materially different phrasing for the affected section.
+Structured issue execution:
+- Process every validation error as a structured command, not as free-form text to interpret.
+- Use correction_action as the mandatory primary operation. Do not replace it with an operation inferred from message.
+- Use section_order to locate the exact section. Match it against the order field in sections.
+- Use section_type to verify that the located section is the intended section when section_type is provided.
+- Use field to identify the exact property that must change. Preserve unrelated fields whenever possible.
+- Use category and code to understand the diagnostic class and enforce the relevant safety rule.
+- Use message only as supporting explanation of why the correction is required. Do not use message as the primary correction command.
+- If correction_action is custom, execute custom_instruction exactly within the limits of user_profile, copy_strategy, proof_plan, and the safety rules in this prompt.
+- If correction_action is not custom, ignore custom_instruction when it is present.
+- If section_order is null because the required section is missing, use section_type, code, and correction_action to create only the minimum necessary section.
+- If section_order points to no existing section, use section_type and field to identify the safest target; if no safe target exists, preserve the script and explain the unresolved issue in adaptation_notes instead of modifying an unrelated section.
+
+Action semantics:
+- remove: delete only the unsupported content identified by field, code, and category. Remove an entire section only when the whole section is invalid and cannot be preserved safely.
+- soften: reduce certainty, magnitude, guarantee, or unsupported specificity while preserving the section's persuasive purpose.
+- rewrite: materially rewrite the affected field or section while preserving valid strategy and offer facts.
+- shorten: compress the affected section or script according to timing_metrics without removing essential offer meaning or CTA.
+- expand: add only the minimum content required for clarity, structure, or duration, without inventing proof, claims, offer details, examples, or scarcity.
+- align_with_profile: replace conflicting content with facts explicitly supported by user_profile and copy_strategy.
+- custom: follow custom_instruction, subject to all source-of-truth and safety restrictions.
+
+Category safeguards:
+- proof: never create replacement proof. Remove unsupported proof, set proof_used to null when appropriate, and preserve or add the truthful missing_proof indication.
+- claim: never strengthen the claim during correction. Keep it within user_profile.main_promise and available proof.
+- offer: user_profile is authoritative for product, audience, mechanism, commercial details, and delivery details.
+- cta: preserve the meaning of user_profile.call_to_action.
+- scarcity: retain urgency or scarcity only when explicitly supported by user_profile.offer_details.
+- duration: follow timing_metrics and the timing correction rules below.
+- language: rewrite affected text in target_language while preserving product names and necessary borrowed terms.
+- structure: preserve the reference-informed persuasive sequence unless the issue explicitly requires adding, removing, or moving a section.
+- copy_similarity: create materially different wording, metaphor, sentence structure, rhythm, and opening construction while preserving adapted intent.
 
 Timing correction rules:
 - Use timing_metrics as deterministic context.

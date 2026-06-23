@@ -30,6 +30,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     ReviewSectionFlowOutput,
     ScriptSectionOutput,
     UserProfileOutput,
+    ValidationIssue,
     ValidateScriptOutput,
     WriteScriptSectionsOutput,
 )
@@ -69,14 +70,14 @@ class RecordingLLM(LLMBase):
     async def ainvoke(self, prompt: str) -> str:
         raise AssertionError("Copy adaptation actions must use structured output.")
 
-    def structured(
+    def _structured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._record_structured_call("sync", prompt, output_schema)
 
-    async def astructured(
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
@@ -323,11 +324,21 @@ def _correct_sections_action(llm: RecordingLLM) -> CorrectScriptSections:
 
 
 def _correct_validated_action(llm: RecordingLLM) -> CorrectValidatedScript:
+    validation_error = ValidationIssue(
+        category="claim",
+        code="unsupported_return_guarantee",
+        section_order=1,
+        section_type="hook",
+        field="text",
+        message="The script contains an unsupported return guarantee.",
+        correction_action="soften",
+    )
+
     return CorrectValidatedScript(
         llm=llm,
         user_profile=_user_profile(),
         sections=[_section()],
-        validation_errors=["The script contains an unsupported return guarantee."],
+        validation_errors=[validation_error.model_dump()],
         validation_warnings=["The script is shorter than the target duration."],
         timing_metrics=_timing_metrics(),
         missing_proofs=["proof"],

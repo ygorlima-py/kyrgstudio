@@ -12,6 +12,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     AdaptedScriptOutput,
     CopyAdaptationWorkflowContext,
 )
+from kyrg.workflows.guards import require_context, require_non_empty, require_value
 from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.core import WorkflowRuntime
 from kyrg.workflows.copyadaptation._utils import (
@@ -20,137 +21,50 @@ from kyrg.workflows.copyadaptation._utils import (
     _calculate_time_estimated,
     _BuildScriptOutput,
 )
+
+from kyrg.workflows.copyadaptation._preparation import _build_adaptation_input
 from kyrg.workflows.copyadaptation.constants import SECTION_ADAPTATION_FIELDS
 
 
 def prepare_adaptation_input(state: CopyAdaptationState) -> dict[str, Any]:
-    copy_analysis = state.get("copy_analysis")
-
-    if copy_analysis is None:
-        raise ValueError("copy_analysis is required to prepare adaptation input")
-
-    user_profile = state.get("user_profile")
-
-    if user_profile is None:
-        raise ValueError("user_profile is required to prepare adaptation input")
-
-    target_language = (
-        user_profile.target_language
-        or copy_analysis.language
-        or copy_analysis.copy_structure.language
+    copy_analysis = require_value(
+        state.get("copy_analysis"),
+        "copy_analysis",
+        "prepare adaptation input",
+    )
+    user_profile = require_value(
+        state.get("user_profile"),
+        "user_profile",
+        "prepare adaptation input",
     )
 
-    if target_language is None:
-        raise ValueError("target_language is required to prepare adaptation input")
-
-    mapped_sections = []
-
-    for section in copy_analysis.copy_structure.sections:
-        section_type = section.section_type.strip().lower()
-        adaptation_fields = SECTION_ADAPTATION_FIELDS.get(
-            section_type,
-            ["product_or_solution", "target_audience", "main_promise"],
-        )
-
-        mapped_sections.append(
-            {
-                "reference_section_type": section.section_type,
-                "reference_text": section.text,
-                "reference_purpose": section.purpose,
-                "start": section.start,
-                "end": section.end,
-                "has_direct_equivalent": section_type in SECTION_ADAPTATION_FIELDS,
-                "user_profile_fields": adaptation_fields,
-            }
-        )
-
-    sections_to_create = []
-    gaps_to_fix = []
-
-    section_gaps = getattr(copy_analysis.copy_structure, "section_gaps", None)
-
-    if section_gaps is None:
-        raise ValueError(
-            "copy_analysis uses the legacy missing_sections format; "
-            "regenerate it with the current CopyAnalysisWorkflow schema"
-        )
-
-    for gap in section_gaps:
-        if gap.gap_type == "missing":
-            if gap.section_type not in sections_to_create:
-                sections_to_create.append(gap.section_type)
-            continue
-
-        gaps_to_fix.append(
-            f"{gap.gap_type} section "
-            f"'{gap.section_type}': {gap.reason}"
-        )
-
-    persuasion_analysis = copy_analysis.persuasion_analysis
-    strength_fields = {
-        "hook_strength": persuasion_analysis.hook_strength,
-        "promise_clarity": persuasion_analysis.promise_clarity,
-        "proof_strength": persuasion_analysis.proof_strength,
-        "urgency_strength": persuasion_analysis.urgency_strength,
-        "cta_strength": persuasion_analysis.cta_strength,
-    }
-
-    for field_name, strength in strength_fields.items():
-        if strength == "low":
-            gaps_to_fix.append(f"Low persuasion score: {field_name}")
-
-    for weakness in persuasion_analysis.weaknesses:
-        gaps_to_fix.append(weakness.issue)
-
-    if not user_profile.proof_assets:
-        gaps_to_fix.append("User profile has no proof assets available")
-
-    if user_profile.unique_mechanism is None:
-        gaps_to_fix.append("User profile has no unique mechanism defined")
-
-    gaps_to_fix = list(dict.fromkeys(gaps_to_fix))
-
-    output = {
-        "mapped_sections": mapped_sections,
-        "sections_to_create": sections_to_create,
-        "gaps_to_fix": gaps_to_fix,
-        "target_language": target_language,
-        "platform": user_profile.platform or "generic",
-    }
-
-    if user_profile.desired_duration is not None:
-        output["desired_duration"] = user_profile.desired_duration
-
-    return output
+    return _build_adaptation_input(copy_analysis, user_profile)
 
 def build_copy_strategy(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
-    context = runtime.context
-
-    if context is None:
-        raise RuntimeError("Copy adaptation workflow context is required.")
-
-    copy_analysis = state.get("copy_analysis")
-
-    if copy_analysis is None:
-        raise ValueError("copy_analysis is required to build copy strategy")
-
-    user_profile = state.get("user_profile")
-
-    if user_profile is None:
-        raise ValueError("user_profile is required to build copy strategy")
-
-    target_language = state.get("target_language")
-
-    if target_language is None:
-        raise ValueError("target_language is required to build copy strategy")
-
-    platform = state.get("platform")
-
-    if platform is None:
-        raise ValueError("platform is required to build copy strategy")
+    context = require_context(runtime.context, "Copy adaptation")
+    copy_analysis = require_value(
+        state.get("copy_analysis"),
+        "copy_analysis",
+        "build copy strategy",
+    )
+    user_profile = require_value(
+        state.get("user_profile"),
+        "user_profile",
+        "build copy strategy",
+    )
+    target_language = require_value(
+        state.get("target_language"),
+        "target_language",
+        "build copy strategy",
+    )
+    platform = require_value(
+        state.get("platform"),
+        "platform",
+        "build copy strategy",
+    )
 
     action = BuildCopyStrategy(
         llm=context.strategy_llm,
@@ -184,50 +98,47 @@ def write_script_sections(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
-    context = runtime.context
-
-    if context is None:
-        raise RuntimeError("Copy adaptation workflow context is required.")
-
-    user_profile = state.get("user_profile")
-
-    if user_profile is None:
-        raise ValueError("user_profile is required to write script sections")
-
-    target_language = state.get("target_language")
-
-    if target_language is None:
-        raise ValueError("target_language is required to write script sections")
-
-    platform = state.get("platform")
-
-    if platform is None:
-        raise ValueError("platform is required to write script sections")
-
-    main_angle = state.get("main_angle")
-
-    if main_angle is None:
-        raise ValueError("main_angle is required to write script sections")
-
-    awareness_level = state.get("awareness_level")
-
-    if awareness_level is None:
-        raise ValueError("awareness_level is required to write script sections")
-
-    main_promise = state.get("main_promise")
-
-    if main_promise is None:
-        raise ValueError("main_promise is required to write script sections")
-
-    persuasion_pattern = state.get("persuasion_pattern")
-
-    if persuasion_pattern is None:
-        raise ValueError("persuasion_pattern is required to write script sections")
-
-    unique_mechanism = state.get("unique_mechanism")
-
-    if unique_mechanism is None:
-        raise ValueError("unique_mechanism is required to write script sections")
+    context = require_context(runtime.context, "Copy adaptation")
+    user_profile = require_value(
+        state.get("user_profile"),
+        "user_profile",
+        "write script sections",
+    )
+    target_language = require_value(
+        state.get("target_language"),
+        "target_language",
+        "write script sections",
+    )
+    platform = require_value(
+        state.get("platform"),
+        "platform",
+        "write script sections",
+    )
+    main_angle = require_value(
+        state.get("main_angle"),
+        "main_angle",
+        "write script sections",
+    )
+    awareness_level = require_value(
+        state.get("awareness_level"),
+        "awareness_level",
+        "write script sections",
+    )
+    main_promise = require_value(
+        state.get("main_promise"),
+        "main_promise",
+        "write script sections",
+    )
+    persuasion_pattern = require_value(
+        state.get("persuasion_pattern"),
+        "persuasion_pattern",
+        "write script sections",
+    )
+    unique_mechanism = require_value(
+        state.get("unique_mechanism"),
+        "unique_mechanism",
+        "write script sections",
+    )
 
     action = WriteScriptSection(
         llm=context.writing_llm,
@@ -270,50 +181,47 @@ def review_section_flow(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
-    context = runtime.context
-
-    if context is None:
-        raise RuntimeError("Copy adaptation workflow context is required.")
-
-    sections = state.get("sections")
-
-    if not sections:
-        raise ValueError("sections is required to review section flow")
-
-    target_language = state.get("target_language")
-
-    if target_language is None:
-        raise ValueError("target_language is required to review section flow")
-
-    platform = state.get("platform")
-
-    if platform is None:
-        raise ValueError("platform is required to review section flow")
-
-    main_angle = state.get("main_angle")
-
-    if main_angle is None:
-        raise ValueError("main_angle is required to review section flow")
-
-    awareness_level = state.get("awareness_level")
-
-    if awareness_level is None:
-        raise ValueError("awareness_level is required to review section flow")
-
-    main_promise = state.get("main_promise")
-
-    if main_promise is None:
-        raise ValueError("main_promise is required to review section flow")
-
-    persuasion_pattern = state.get("persuasion_pattern")
-
-    if persuasion_pattern is None:
-        raise ValueError("persuasion_pattern is required to review section flow")
-
-    unique_mechanism = state.get("unique_mechanism")
-
-    if unique_mechanism is None:
-        raise ValueError("unique_mechanism is required to review section flow")
+    context = require_context(runtime.context, "Copy adaptation")
+    sections = require_non_empty(
+        state.get("sections"),
+        "sections",
+        "review section flow",
+    )
+    target_language = require_value(
+        state.get("target_language"),
+        "target_language",
+        "review section flow",
+    )
+    platform = require_value(
+        state.get("platform"),
+        "platform",
+        "review section flow",
+    )
+    main_angle = require_value(
+        state.get("main_angle"),
+        "main_angle",
+        "review section flow",
+    )
+    awareness_level = require_value(
+        state.get("awareness_level"),
+        "awareness_level",
+        "review section flow",
+    )
+    main_promise = require_value(
+        state.get("main_promise"),
+        "main_promise",
+        "review section flow",
+    )
+    persuasion_pattern = require_value(
+        state.get("persuasion_pattern"),
+        "persuasion_pattern",
+        "review section flow",
+    )
+    unique_mechanism = require_value(
+        state.get("unique_mechanism"),
+        "unique_mechanism",
+        "review section flow",
+    )
 
     action = ReviewAction(
         llm=context.review_llm,
@@ -393,62 +301,60 @@ def correct_section(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
-    context = runtime.context
-
-    if context is None:
-        raise RuntimeError("Copy adaptation workflow context is required.")
-
-    user_profile = state.get("user_profile")
-
-    if user_profile is None:
-        raise ValueError("user_profile is required to correct script sections")
+    context = require_context(runtime.context, "Copy adaptation")
+    user_profile = require_value(
+        state.get("user_profile"),
+        "user_profile",
+        "correct script sections",
+    )
 
     previous_sections = _resolve_final_sections(state)
 
-    flow_issues = state.get("flow_issues")
-
-    if not flow_issues:
-        raise ValueError("flow_issues is required to correct script sections")
-
-    revision_instructions = state.get("revision_instructions")
-
-    if not revision_instructions:
-        raise ValueError("revision_instructions is required to correct script sections")
-
-    target_language = state.get("target_language")
-
-    if target_language is None:
-        raise ValueError("target_language is required to correct script sections")
-
-    platform = state.get("platform")
-
-    if platform is None:
-        raise ValueError("platform is required to correct script sections")
-
-    main_angle = state.get("main_angle")
-
-    if main_angle is None:
-        raise ValueError("main_angle is required to correct script sections")
-
-    awareness_level = state.get("awareness_level")
-
-    if awareness_level is None:
-        raise ValueError("awareness_level is required to correct script sections")
-
-    main_promise = state.get("main_promise")
-
-    if main_promise is None:
-        raise ValueError("main_promise is required to correct script sections")
-
-    persuasion_pattern = state.get("persuasion_pattern")
-
-    if persuasion_pattern is None:
-        raise ValueError("persuasion_pattern is required to correct script sections")
-
-    unique_mechanism = state.get("unique_mechanism")
-
-    if unique_mechanism is None:
-        raise ValueError("unique_mechanism is required to correct script sections")
+    flow_issues = require_non_empty(
+        state.get("flow_issues"),
+        "flow_issues",
+        "correct script sections",
+    )
+    revision_instructions = require_non_empty(
+        state.get("revision_instructions"),
+        "revision_instructions",
+        "correct script sections",
+    )
+    target_language = require_value(
+        state.get("target_language"),
+        "target_language",
+        "correct script sections",
+    )
+    platform = require_value(
+        state.get("platform"),
+        "platform",
+        "correct script sections",
+    )
+    main_angle = require_value(
+        state.get("main_angle"),
+        "main_angle",
+        "correct script sections",
+    )
+    awareness_level = require_value(
+        state.get("awareness_level"),
+        "awareness_level",
+        "correct script sections",
+    )
+    main_promise = require_value(
+        state.get("main_promise"),
+        "main_promise",
+        "correct script sections",
+    )
+    persuasion_pattern = require_value(
+        state.get("persuasion_pattern"),
+        "persuasion_pattern",
+        "correct script sections",
+    )
+    unique_mechanism = require_value(
+        state.get("unique_mechanism"),
+        "unique_mechanism",
+        "correct script sections",
+    )
 
     action = CorrectScriptSections(
         llm=context.writing_llm,
@@ -495,42 +401,40 @@ def validate_script(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
-    context = runtime.context
-
-    if context is None:
-        raise RuntimeError("Copy adaptation workflow context is required.")
-
-    user_profile = state.get("user_profile")
-
-    if user_profile is None:
-        raise ValueError("user_profile is required to validate script")
+    context = require_context(runtime.context, "Copy adaptation")
+    user_profile = require_value(
+        state.get("user_profile"),
+        "user_profile",
+        "validate script",
+    )
 
     sections = _resolve_final_sections(state)
 
-    target_language = state.get("target_language")
-
-    if target_language is None:
-        raise ValueError("target_language is required to validate script")
-
-    platform = state.get("platform")
-
-    if platform is None:
-        raise ValueError("platform is required to validate script")
-
-    main_angle = state.get("main_angle")
-
-    if main_angle is None:
-        raise ValueError("main_angle is required to validate script")
-
-    main_promise = state.get("main_promise")
-
-    if main_promise is None:
-        raise ValueError("main_promise is required to validate script")
-
-    unique_mechanism = state.get("unique_mechanism")
-
-    if unique_mechanism is None:
-        raise ValueError("unique_mechanism is required to validate script")
+    target_language = require_value(
+        state.get("target_language"),
+        "target_language",
+        "validate script",
+    )
+    platform = require_value(
+        state.get("platform"),
+        "platform",
+        "validate script",
+    )
+    main_angle = require_value(
+        state.get("main_angle"),
+        "main_angle",
+        "validate script",
+    )
+    main_promise = require_value(
+        state.get("main_promise"),
+        "main_promise",
+        "validate script",
+    )
+    unique_mechanism = require_value(
+        state.get("unique_mechanism"),
+        "unique_mechanism",
+        "validate script",
+    )
 
     timing_metrics = _calculate_time_estimated(state)
     
@@ -555,7 +459,10 @@ def validate_script(
     
     output = {
             "validation_passed": validation.validation_passed,
-            "validation_errors": validation.validation_errors,
+            "validation_errors": [
+                issue.model_dump()
+                for issue in validation.validation_errors
+            ],
             "validation_warnings": validation.validation_warnings,
             "timing_metrics": timing_metrics,
             "input_tokens": token_usage["input_tokens"],
@@ -569,50 +476,47 @@ def correct_script(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext]
     ) -> dict:
-    context = runtime.context
-
-    if context is None:
-        raise RuntimeError("Copy adaptation workflow context is required.")
-
-    user_profile = state.get("user_profile")
-
-    if user_profile is None:
-        raise ValueError("user_profile is required to correct validated script")
-
-    sections = _resolve_final_sections(state)
-
-    if not sections:
-        raise ValueError("sections is required to correct validated script")
-
-    validation_errors = state.get("validation_errors")
-
-    if not validation_errors:
-        raise ValueError("validation_errors is required to correct validated script")
-
-    target_language = state.get("target_language")
-
-    if target_language is None:
-        raise ValueError("target_language is required to correct validated script")
-
-    platform = state.get("platform")
-
-    if platform is None:
-        raise ValueError("platform is required to correct validated script")
-
-    main_angle = state.get("main_angle")
-
-    if main_angle is None:
-        raise ValueError("main_angle is required to correct validated script")
-
-    main_promise = state.get("main_promise")
-
-    if main_promise is None:
-        raise ValueError("main_promise is required to correct validated script")
-
-    unique_mechanism = state.get("unique_mechanism")
-
-    if unique_mechanism is None:
-        raise ValueError("unique_mechanism is required to correct validated script")
+    context = require_context(runtime.context, "Copy adaptation")
+    user_profile = require_value(
+        state.get("user_profile"),
+        "user_profile",
+        "correct validated script",
+    )
+    sections = require_non_empty(
+        _resolve_final_sections(state),
+        "sections",
+        "correct validated script",
+    )
+    validation_errors = require_non_empty(
+        state.get("validation_errors"),
+        "validation_errors",
+        "correct validated script",
+    )
+    target_language = require_value(
+        state.get("target_language"),
+        "target_language",
+        "correct validated script",
+    )
+    platform = require_value(
+        state.get("platform"),
+        "platform",
+        "correct validated script",
+    )
+    main_angle = require_value(
+        state.get("main_angle"),
+        "main_angle",
+        "correct validated script",
+    )
+    main_promise = require_value(
+        state.get("main_promise"),
+        "main_promise",
+        "correct validated script",
+    )
+    unique_mechanism = require_value(
+        state.get("unique_mechanism"),
+        "unique_mechanism",
+        "correct validated script",
+    )
 
     timing_metrics = state.get("timing_metrics") or _calculate_time_estimated(state)
 

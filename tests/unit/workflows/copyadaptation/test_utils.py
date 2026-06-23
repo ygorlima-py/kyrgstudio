@@ -1,6 +1,6 @@
 """Unit tests for deterministic copy adaptation utilities."""
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -51,7 +51,7 @@ def _state(
 ) -> CopyAdaptationState:
     """Build the timing subset of workflow state required by utility functions."""
 
-    state: CopyAdaptationState = {
+    state_data: dict[str, Any] = {
         "sections": sections
         if sections is not None
         else [
@@ -65,8 +65,9 @@ def _state(
         ],
     }
     if desired_duration is not None:
-        state["desired_duration"] = desired_duration
-    return state
+        state_data["desired_duration"] = desired_duration
+
+    return cast(CopyAdaptationState, state_data)
 
 
 def test_add_words_count_recalculates_each_section_from_text() -> None:
@@ -232,7 +233,10 @@ def test_resolve_final_sections_does_not_mutate_original_sections() -> None:
 
     _resolve_final_sections(state)
 
-    assert state["sections"][0]["text"] == "Original immutable section."
+    source_sections = state.get("sections")
+
+    assert source_sections is not None
+    assert source_sections[0]["text"] == "Original immutable section."
 
 
 def test_build_script_output_creates_a_continuous_timeline() -> None:
@@ -241,10 +245,14 @@ def test_build_script_output_creates_a_continuous_timeline() -> None:
     builder = _BuildScriptOutput(_state())
 
     sections = builder._final_sections()
+    first_end = sections[0].end_seconds
+    first_pause = sections[0].pause_after_seconds
 
     assert sections[0].start_seconds == 0.0
+    assert first_end is not None
+    assert first_pause is not None
     assert sections[1].start_seconds == round(
-        sections[0].end_seconds + sections[0].pause_after_seconds,
+        first_end + first_pause,
         2,
     )
     assert sections[-1].pause_after_seconds == 0.0
@@ -270,4 +278,3 @@ def test_build_script_output_extracts_hooks_ctas_and_rendered_text() -> None:
         "## hook\nSecond hook.\n\n"
         "## cta\nJoin now."
     )
-

@@ -5,6 +5,7 @@ from google.genai import errors, types
 from loguru import logger
 
 from kyrg.llms.base import LLMBase, OutputT
+from kyrg.llms.error import StructuredOutputParsingError
 
 
 class GoogleLLM(LLMBase):
@@ -42,7 +43,7 @@ class GoogleLLM(LLMBase):
         logger.info(f"Google LLM provider succeeded: model={self.model}, method=invoke")
         return response.text
 
-    def structured(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
         logger.info(
             f"Calling Google LLM provider: model={self.model}, method=structured"
         )
@@ -73,7 +74,9 @@ class GoogleLLM(LLMBase):
         parsed = response.parsed
 
         if parsed is None:
-            raise RuntimeError("Google returned no structured output.")
+            raise StructuredOutputParsingError(
+                "Google returned no structured output."
+            )
 
         if isinstance(parsed, output_schema):
             logger.info(
@@ -88,7 +91,9 @@ class GoogleLLM(LLMBase):
             )
             return result
 
-        raise RuntimeError("Google returned structured output in an invalid format.")
+        raise StructuredOutputParsingError(
+            "Google returned structured output in an invalid format."
+        )
 
     async def ainvoke(self, prompt: str) -> str:
         logger.info(f"Calling Google LLM provider: model={self.model}, method=ainvoke")
@@ -118,7 +123,7 @@ class GoogleLLM(LLMBase):
         logger.info(f"Google LLM provider succeeded: model={self.model}, method=ainvoke")
         return response.text
 
-    async def astructured(
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
@@ -153,7 +158,9 @@ class GoogleLLM(LLMBase):
         parsed = response.parsed
 
         if parsed is None:
-            raise RuntimeError("Google returned no structured output.")
+            raise StructuredOutputParsingError(
+                "Google returned no structured output."
+            )
 
         if isinstance(parsed, output_schema):
             logger.info(
@@ -168,4 +175,6 @@ class GoogleLLM(LLMBase):
             )
             return result
 
-        raise RuntimeError("Google returned structured output in an invalid format.")
+        raise StructuredOutputParsingError(
+            "Google returned structured output in an invalid format."
+        )

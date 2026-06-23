@@ -17,6 +17,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     ScriptSectionOutput,
     SectionRevisionInstruction,
     UserProfileOutput,
+    ValidationIssue,
     ValidateScriptOutput,
     WriteScriptSectionsOutput,
 )
@@ -58,14 +59,14 @@ class SequenceLLM(LLMBase, Generic[ResponseT]):
     async def ainvoke(self, prompt: str) -> str:
         raise AssertionError("Copy adaptation workflow must use structured output.")
 
-    def structured(
+    def _structured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._next(output_schema)
 
-    async def astructured(
+    async def _astructured_once(
         self,
         prompt: str,
         output_schema: type[OutputT],
@@ -258,7 +259,17 @@ def _review_output(approved: bool) -> ReviewSectionFlowOutput:
 def _validation_output(passed: bool) -> ValidateScriptOutput:
     return ValidateScriptOutput(
         validation_passed=passed,
-        validation_errors=[] if passed else ["The promise is unsupported."],
+        validation_errors=[] if passed else [
+            ValidationIssue(
+                category="claim",
+                code="unsupported_promise",
+                section_order=1,
+                section_type="hook",
+                field="text",
+                message="The promise is unsupported.",
+                correction_action="soften",
+            )
+        ],
         validation_warnings=[],
     )
 

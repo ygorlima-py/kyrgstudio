@@ -16,6 +16,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     SectionRevisionInstruction,
     TimedScriptSectionOutput,
     UserProfileOutput,
+    ValidationIssue,
 )
 
 
@@ -245,7 +246,15 @@ def test_adapted_script_round_trips_through_json() -> None:
         word_count=9,
         voice_ready_text=section.text,
         adaptation_notes="The hook was adapted to the new audience.",
-        validation_warnings=["Review the final narration pace."],
+        validation_warnings=[
+            ValidationIssue(
+                category="duration",
+                code="review_narration_pace",
+                message="Review the final narration pace.",
+                correction_action="custom",
+                custom_instruction="Review pacing before production.",
+            )
+        ],
         validation_errors=[],
         validation_passed=True,
         missing_proofs=[],
