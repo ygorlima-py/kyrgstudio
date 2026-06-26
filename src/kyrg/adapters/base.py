@@ -20,7 +20,6 @@ class APIAdapterBase(ABC, Generic[OutPutT]):
         response = self._request()
         return self._normalize_response(response)
     
-    
 class APIAdapterSDKBase(APIAdapterBase[OutPutT], Generic[OutPutT, ClientT]):
     def __init__(self, client: ClientT):
         self.client = client

@@ -261,7 +261,7 @@ class CorrectValidatedScript(AIActionBase):
         user_profile: UserProfileOutput,
         sections: list[dict[str, Any]],
         validation_errors: list[dict[str, Any]],
-        validation_warnings: list[str],
+        validation_warnings: list[dict[str, Any]],
         timing_metrics: dict[str, Any],
         missing_proofs: list[str],
         target_language: str,

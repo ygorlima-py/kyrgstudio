@@ -8,6 +8,8 @@ from kyrg.workflows.transcriber.prompts import TranscriptionPrompts
 from kyrg.workflows.core import WorkflowRuntime
 
 
+# ----- Nodes Syncronos --------------------
+
 def primary_router(state: TranscriberState):
     source_type = state.get('source_type')
     
@@ -17,6 +19,7 @@ def primary_router(state: TranscriberState):
     else:
         return "extract_audio"
         
+
 def prepare_audio(state: TranscriberState) -> dict:
     context = MediaContext(
         input_path=state["source_path"],
@@ -32,6 +35,7 @@ def prepare_audio(state: TranscriberState) -> dict:
         "audio_path": state["audio_path"]
     }
     
+
 def extract_audio(state: TranscriberState)-> dict: 
     context = MediaContext(input_path=state["source_path"], output_path=state["audio_path"])
     extractor = ExtractAudio(context=context, runner=CommandRunner())
@@ -80,6 +84,7 @@ def audio_text_converter(state: TranscriberState, runtime: WorkflowRuntime) -> d
         'result': result
     }
     
+
 def measure_audio(state: TranscriberState):
     context = MediaContext(
         input_path=state["source_path"],
@@ -95,6 +100,7 @@ def measure_audio(state: TranscriberState):
         "audio_duration_in_seconds": duration_seconds,
     }
     
+
 def secondary_router(state: TranscriberState):
     audio_duration_in_seconds = state.get("audio_duration_in_seconds")
     need_correction = state.get("need_correction", False)
@@ -108,6 +114,7 @@ def secondary_router(state: TranscriberState):
     else:
         return "not_correction"
         
+
 def extract_hybrid_context(state: TranscriberState, runtime: WorkflowRuntime) -> dict:
     context = runtime.context
     
@@ -142,6 +149,7 @@ def extract_hybrid_context(state: TranscriberState, runtime: WorkflowRuntime) ->
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
     }
+
 
 def correction_transcriber(state: TranscriberState, runtime: WorkflowRuntime) -> dict:
     context = runtime.context
@@ -191,3 +199,5 @@ def correction_transcriber(state: TranscriberState, runtime: WorkflowRuntime) ->
         "total_tokens": token_usage["total_tokens"],
     }
 
+
+    

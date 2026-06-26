@@ -7,7 +7,7 @@ from contextlib import AbstractAsyncContextManager, AbstractContextManager
 import time
 
 from kyrg.llms.base import LLMBase
-from kyrg.workflows.decorator import save_output_json
+from kyrg.workflows.decorators import save_output_json
 from kyrg.workflows.core import create_workflow_flow_agent
 from kyrg.workflows.workflow_types import (
     WorkflowCheckpointer,

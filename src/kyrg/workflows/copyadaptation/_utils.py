@@ -4,6 +4,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     ScriptSectionOutput,
     TimedScriptSectionOutput,
     WriteScriptSectionsOutput,
+    ValidationIssue,
 )
 from kyrg.workflows.copyadaptation.constants import PAUSE_INTENT_COEFFICIENT, SECTION_PAUSE_SECONDS
 
@@ -27,6 +28,8 @@ class _BuildScriptOutput:
         self.mean_words_per_minutes = (
             self.max_words_per_minute + self.min_words_per_minute
         ) / 2
+        self.issues = state.get("validation_errors")
+        self.warnings = state.get("validation_warnings")
     
     def _voice_ready_text(self) -> str:
         section_texts = [
@@ -103,6 +106,20 @@ class _BuildScriptOutput:
             cursor = round(end + pause, 2)
                 
         return final_sections
+    
+    @property
+    def _validation_issues_from_state(self) -> list[ValidationIssue]:
+            return [
+                ValidationIssue.model_validate(issue)
+                for issue in self.issues or []
+            ]
+            
+    @property
+    def _validation_warnings_from_state(self) -> list[ValidationIssue]:
+            return [
+                ValidationIssue.model_validate(warnings)
+                for warnings in self.warnings or []
+            ]
 
 def _add_words_count_per_section(script_sections: WriteScriptSectionsOutput) -> list[dict[str, Any]]:
     sections = [
@@ -212,6 +229,7 @@ def _resolve_final_sections(state: CopyAdaptationState) -> list[dict]:
         key=lambda section: section.get("order", 0),
     )
     
+ 
 if __name__ == "__main__":
     from rich import print
     

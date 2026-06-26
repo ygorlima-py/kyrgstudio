@@ -11,7 +11,9 @@ from kyrg.workflows.copyanalysis.actions import (
 )
 from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.core import WorkflowRuntime
+from kyrg.workflows.decorators import async_node
 
+# ----- Nodes Sync --------------------
 def prepare_copy_input(state: CopyAnalysisState) -> dict:
     
     transcription = state.get("transcription")
@@ -41,6 +43,7 @@ def prepare_copy_input(state: CopyAnalysisState) -> dict:
         "structured_transcription": structured_transcription,
         "language": transcription.language,
     }
+
 
 def extract_copy_structure(
         state: CopyAnalysisState,
@@ -73,6 +76,7 @@ def extract_copy_structure(
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
     }
+
 
 def extract_offer_elements(
     state: CopyAnalysisState,
@@ -111,6 +115,7 @@ def extract_offer_elements(
         "total_tokens": token_usage["total_tokens"],
     }
 
+
 def analyse_persuasion(
     state: CopyAnalysisState,
     runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
@@ -147,6 +152,7 @@ def analyse_persuasion(
         "output_tokens": token_usage["output_tokens"],
         "total_tokens": token_usage["total_tokens"],
     }
+
     
 def build_copy_analysis(state: CopyAnalysisState) -> dict:
     copy_structure = state.get("copy_structure")
@@ -172,5 +178,111 @@ def build_copy_analysis(state: CopyAnalysisState) -> dict:
     return {
         "analysis": analysis,
     }
-        
-        
+    
+# ----- Nodes Async --------------------
+
+async def aextract_copy_structure(
+        state: CopyAnalysisState,
+        runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
+    ) -> dict:
+    
+    context = runtime.context
+    
+    if context is None:
+        raise RuntimeError("Copy analysis workflow context is required.")
+    
+    clean_transcript = state.get("clean_transcript")
+    
+    if not clean_transcript:
+        raise ValueError("clean_transcript is required to extract copy structure.")
+    
+    action = ExtractCopyStructure(
+        llm=context.analysis_llm,
+        clean_transcript=clean_transcript,
+        structured_transcription=state.get("structured_transcription") or [],
+        language=state.get("language"),
+    )
+
+    copy_structure = await AIActionExecutor.arun(action)
+    token_usage = action.tokens_usage
+
+    return {
+        "copy_structure": copy_structure,
+        "input_tokens": token_usage["input_tokens"],
+        "output_tokens": token_usage["output_tokens"],
+        "total_tokens": token_usage["total_tokens"],
+    }
+
+async def aextract_offer_elements(
+    state: CopyAnalysisState,
+    runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
+    ) -> dict:
+    
+    context = runtime.context
+    
+    if context is None:
+        raise RuntimeError("Copy analysis workflow context is required.")
+    
+    clean_transcript = state.get("clean_transcript")
+    
+    if not clean_transcript:
+        raise ValueError("clean_transcript is required to extract offer analysis.")
+
+    copy_structure = state.get("copy_structure")
+    
+    if not copy_structure:
+        raise ValueError("copy structure is required to extract offer analysis")
+    
+    action = ExtractOfferElements(
+        llm=context.analysis_llm,
+        clean_transcript=clean_transcript,
+        copy_structure=copy_structure,
+        language=state.get("language")
+    )
+    
+    offer_analysis = await AIActionExecutor.run(action)
+    token_usage = action.tokens_usage
+    
+    return {
+        "offer_analysis": offer_analysis,
+        "input_tokens": token_usage["input_tokens"],
+        "output_tokens": token_usage["output_tokens"],
+        "total_tokens": token_usage["total_tokens"],
+    }
+
+async def aanalyse_persuasion(
+    state: CopyAnalysisState,
+    runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
+    ) -> dict:
+    context = runtime.context
+    
+    if context is None:
+        raise RuntimeError("Copy analysis workflow context is required.")
+
+    
+    copy_structure = state.get("copy_structure")
+    
+    if not copy_structure:
+        raise ValueError("copy structure is required to analyse persuasion")
+    
+    offer_analysis = state.get("offer_analysis")
+    
+    if not offer_analysis:
+        raise ValueError("Offer structure is required to analyse persuasion")
+    
+    action = AnalysePersuasion(
+        llm=context.analysis_llm,
+        copy_structure=copy_structure,
+        offer_analysis=offer_analysis,
+        language=state.get("language"),
+    )
+    
+    persuasion_analysis = await AIActionExecutor.run(action)
+    token_usage = action.tokens_usage
+
+    return {
+        "persuasion_analysis": persuasion_analysis,
+        "input_tokens": token_usage["input_tokens"],
+        "output_tokens": token_usage["output_tokens"],
+        "total_tokens": token_usage["total_tokens"],
+    }
