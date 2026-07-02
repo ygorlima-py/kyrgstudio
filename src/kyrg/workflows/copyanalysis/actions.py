@@ -1,3 +1,5 @@
+"""LLM-backed actions for extracting structured copy analysis outputs."""
+
 import json
 
 from kyrg.workflows.base import AIActionBase
@@ -11,6 +13,8 @@ from kyrg.workflows.copyanalysis.schemas import (
 from kyrg.workflows.copyanalysis.prompts import CopyAnalysisPrompts
 
 class ExtractCopyStructure(AIActionBase):
+    """Extract the persuasive structure and section sequence from a transcript."""
+
     def __init__(
         self,
         llm: LLMBase,
@@ -25,12 +29,14 @@ class ExtractCopyStructure(AIActionBase):
         super().__init__(llm)
         
     def execute(self) -> CopyStructureOutput:
+        """Run the copy structure extraction synchronously."""
         return self.llm.structured(
             prompt=self._build_prompt(),
             output_schema=CopyStructureOutput,
         )
         
     async def aexecute(self) -> CopyStructureOutput:
+        """Run the copy structure extraction asynchronously."""
         return await self.llm.astructured(
             prompt=self._build_prompt(),
             output_schema=CopyStructureOutput
@@ -51,6 +57,8 @@ class ExtractCopyStructure(AIActionBase):
         )
         
 class ExtractOfferElements(AIActionBase):
+    """Extract offer, audience, proof, objection, and CTA elements from copy."""
+
     def __init__(
         self,
         llm: LLMBase,
@@ -65,12 +73,14 @@ class ExtractOfferElements(AIActionBase):
         super().__init__(llm)
         
     def execute(self) -> OfferAnalysisOutput:
+        """Run the offer element extraction synchronously."""
         return self.llm.structured(
             prompt=self._build_prompt(),
             output_schema=OfferAnalysisOutput,
         )
         
     async def aexecute(self) -> OfferAnalysisOutput:
+        """Run the offer element extraction asynchronously."""
         return await self.llm.astructured(
             prompt=self._build_prompt(),
             output_schema=OfferAnalysisOutput
@@ -84,6 +94,8 @@ class ExtractOfferElements(AIActionBase):
         )
         
 class AnalysePersuasion(AIActionBase):
+    """Diagnose persuasion patterns, strengths, signals, and weaknesses."""
+
     def __init__(
         self,
         llm: LLMBase,
@@ -98,12 +110,14 @@ class AnalysePersuasion(AIActionBase):
         super().__init__(llm)
         
     def execute(self) -> PersuasionAnalysisOutput:
+        """Run the persuasion analysis synchronously."""
         return self.llm.structured(
             prompt=self._build_prompt(),
             output_schema=PersuasionAnalysisOutput,
         )
         
     async def aexecute(self) -> PersuasionAnalysisOutput:
+        """Run the persuasion analysis asynchronously."""
         return await self.llm.astructured(
             prompt=self._build_prompt(),
             output_schema=PersuasionAnalysisOutput,

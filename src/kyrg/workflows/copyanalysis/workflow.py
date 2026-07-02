@@ -1,3 +1,5 @@
+"""Graph definition for the copy analysis workflow."""
+
 from kyrg.workflows.core import WORKFLOW_START, WORKFLOW_END
 from kyrg.workflows.base import WorkflowBase
 from kyrg.workflows.adapter import RunnableNode
@@ -16,10 +18,13 @@ from kyrg.workflows.copyanalysis.nodes import (
 )
 
 class CopyAnalysisWorkflow(WorkflowBase):
+   """Orchestrates transcript preparation, LLM analysis stages, and final output."""
+
    STATE_SCHEMA = CopyAnalysisState
    CONTEXT_SCHEMA = CopyAnalysisWorkflowContext
    
    def _build(self):
+       """Build the directed workflow graph for copy analysis."""
        self.graph.add_node('prepare_copy_input', prepare_copy_input)
        
        self.graph.add_node(

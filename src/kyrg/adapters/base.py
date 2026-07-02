@@ -13,6 +13,10 @@ class APIAdapterBase(ABC, Generic[OutPutT]):
         pass
     
     @abstractmethod
+    async def _arequest(self) -> Any:
+        pass
+    
+    @abstractmethod
     def _normalize_response(self, raw_result: Any) -> OutPutT:
         pass
     
@@ -20,6 +24,10 @@ class APIAdapterBase(ABC, Generic[OutPutT]):
         response = self._request()
         return self._normalize_response(response)
     
+    async def arun(self) -> OutPutT:
+        response = await self._arequest()
+        return self._normalize_response(response)
+     
 class APIAdapterSDKBase(APIAdapterBase[OutPutT], Generic[OutPutT, ClientT]):
     def __init__(self, client: ClientT):
         self.client = client

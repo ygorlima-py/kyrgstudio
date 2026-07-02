@@ -22,14 +22,4 @@ def save_output_json(func):
 
     return wrapper
 
-def async_node(context: type[ContextT]):
-    def _decorator(func: Callable) -> Callable:
-        
-        @wraps(func)
-        async def wrapper(state: Any, config: WorkflowRunnableConfig):
-            runtime = get_workflow_runtime(context)
-            
-            return await func(state, runtime)
-        return wrapper
-    return _decorator
-        
+

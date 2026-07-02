@@ -1,3 +1,11 @@
+"""Node implementations for the copy adaptation workflow graph.
+
+Each node reads the current graph state, validates required inputs with guard
+helpers, runs either an LLM action or deterministic helper, and returns a partial
+state update. Sync and async variants intentionally mirror one another so the
+same graph can run in either execution mode.
+"""
+
 from typing import Any
 
 from kyrg.workflows.copyadaptation.state import CopyAdaptationState
@@ -28,6 +36,8 @@ from kyrg.workflows.copyadaptation.constants import SECTION_ADAPTATION_FIELDS
 
 # ----- Nodes Sync --------------------
 def prepare_adaptation_input(state: CopyAdaptationState) -> dict[str, Any]:
+    """Derive mapped sections, gaps, language, platform, and duration inputs."""
+
     copy_analysis = require_value(
         state.get("copy_analysis"),
         "copy_analysis",
@@ -45,6 +55,8 @@ def build_copy_strategy(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Generate strategy fields that become constraints for script writing."""
+
     context = require_context(runtime.context, "Copy adaptation")
     copy_analysis = require_value(
         state.get("copy_analysis"),
@@ -99,6 +111,8 @@ def write_script_sections(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Write the first section draft and attach deterministic word counts."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -182,6 +196,8 @@ def review_section_flow(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Review continuity and return approval, revisions, or retry instructions."""
+
     context = require_context(runtime.context, "Copy adaptation")
     sections = require_non_empty(
         state.get("sections"),
@@ -265,6 +281,13 @@ def primary_route(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext]
     ):
+    """Choose whether flow-review failures should trigger section correction.
+
+    Returns ``"retry"`` while the flow is not approved and the section-correction
+    retry budget remains; otherwise returns ``"continue"`` to proceed to final
+    validation.
+    """
+
     context = runtime.context
     
     max_retry = context.max_retry
@@ -284,6 +307,12 @@ def secondary_route(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
     ):
+    """Choose whether validation failures should trigger full-script correction.
+
+    Returns ``"retry"`` while validation failed and the script-correction retry
+    budget remains; otherwise returns ``"continue"`` to assemble final output.
+    """
+
     context = runtime.context
     max_retry = context.max_retry
     
@@ -302,6 +331,8 @@ def correct_section(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Rewrite sections according to flow-review issues and retry instructions."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -402,6 +433,8 @@ def validate_script(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Validate final-readiness and persist deterministic timing diagnostics."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -480,6 +513,8 @@ def correct_script(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext]
     ) -> dict:
+    """Rewrite the latest sections to resolve validation errors and warnings."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -563,6 +598,8 @@ def correct_script(
     }
     
 def build_script_output(state: CopyAdaptationState) -> dict:
+    """Assemble the public adapted-script payload returned by the workflow."""
+
     script_output = _BuildScriptOutput(state)
 
     final_sections = script_output._final_sections()
@@ -603,6 +640,8 @@ async def abuild_copy_strategy(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Async variant of ``build_copy_strategy``."""
+
     context = require_context(runtime.context, "Copy adaptation")
     copy_analysis = require_value(
         state.get("copy_analysis"),
@@ -657,6 +696,8 @@ async def awrite_script_sections(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Async variant of ``write_script_sections``."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -740,6 +781,8 @@ async def areview_section_flow(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Async variant of ``review_section_flow``."""
+
     context = require_context(runtime.context, "Copy adaptation")
     sections = require_non_empty(
         state.get("sections"),
@@ -823,6 +866,8 @@ async def acorrect_section(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Async variant of ``correct_section``."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -923,6 +968,8 @@ async def avalidate_script(
     state: CopyAdaptationState,
     runtime: WorkflowRuntime[CopyAdaptationWorkflowContext],
 ) -> dict:
+    """Async variant of ``validate_script``."""
+
     context = require_context(runtime.context, "Copy adaptation")
     user_profile = require_value(
         state.get("user_profile"),
@@ -1001,6 +1048,8 @@ async def acorrect_script(
         state: CopyAdaptationState,
         runtime: WorkflowRuntime[CopyAdaptationWorkflowContext]
         ) -> dict:
+        """Async variant of ``correct_script``."""
+
         context = require_context(runtime.context, "Copy adaptation")
         user_profile = require_value(
             state.get("user_profile"),

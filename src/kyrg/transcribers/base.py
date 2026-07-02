@@ -54,6 +54,16 @@ class TranscriberBase(ABC):
         """
 
         pass
+    
+    @abstractmethod
+    async def atranscribe(self) -> TranscriptionResult:
+        """
+        Transcribe async the configured audio file.
+        
+        Returns:
+            A normalized ``TranscriptionResult``.
+        """
+        pass
 
 
 class TranscriberAPIBase(TranscriberBase, APIAdapterBase[TranscriptionResult]):
@@ -98,3 +108,6 @@ class TranscriberAPIBase(TranscriberBase, APIAdapterBase[TranscriptionResult]):
         """
 
         return self.run()
+
+    async def atranscribe(self) -> TranscriptionResult:
+        return await self.arun()

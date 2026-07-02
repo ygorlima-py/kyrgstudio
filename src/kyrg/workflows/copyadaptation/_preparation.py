@@ -1,3 +1,11 @@
+"""Normalize analysis and offer data before copy adaptation.
+
+The preparation step bridges two domains: the reference copy analysis and the
+new user offer profile. It maps reference sections to profile fields, identifies
+structural and persuasion gaps, resolves the target language, and returns the
+state fragment required by the strategy and writing nodes.
+"""
+
 from typing import Any
 
 from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput
@@ -5,11 +13,15 @@ from kyrg.workflows.copyadaptation.constants import SECTION_ADAPTATION_FIELDS
 from kyrg.workflows.copyadaptation.schemas import UserProfileOutput
 
 def _deduplicate(values: list[str]) -> list[str]:
+    """Return unique values while preserving the original priority order."""
+
     return list(dict.fromkeys(values))
 
 def _collect_profile_gaps(
     user_profile: UserProfileOutput,
 ) -> list[str]:
+    """Identify missing offer inputs that limit safe persuasive adaptation."""
+
     gaps = []
 
     if not user_profile.proof_assets:
@@ -23,6 +35,8 @@ def _collect_profile_gaps(
 def _collect_persuasion_gaps(
     copy_analysis: CopyAnalysisOutput,
 ) -> list[str]:
+    """Convert weak persuasion analysis results into actionable gap labels."""
+
     persuasion = copy_analysis.persuasion_analysis
     gaps = []
 
@@ -44,6 +58,8 @@ def _collect_persuasion_gaps(
 def _classify_section_gaps(
     copy_analysis: CopyAnalysisOutput,
 ) -> tuple[list[str], list[str]]:
+    """Separate missing sections from existing sections that need improvement."""
+
     sections_to_create = []
     gaps_to_fix = []
 
@@ -62,6 +78,12 @@ def _classify_section_gaps(
 def _map_reference_sections(
     copy_analysis: CopyAnalysisOutput,
 ) -> list[dict[str, Any]]:
+    """Describe how each reference section can be adapted to the new offer.
+
+    The mapping keeps reference text available for strategic context while
+    naming the user-profile fields that should replace source-specific details.
+    """
+
     mapped_sections = []
 
     for section in copy_analysis.copy_structure.sections:
@@ -94,6 +116,8 @@ def _resolve_target_language(
     copy_analysis: CopyAnalysisOutput,
     user_profile: UserProfileOutput,
 ) -> str:
+    """Resolve the output language using user preference before source defaults."""
+
     language = (
         user_profile.target_language
         or copy_analysis.language
@@ -110,6 +134,8 @@ def _build_adaptation_input(
     copy_analysis: CopyAnalysisOutput,
     user_profile: UserProfileOutput,
 ) -> dict[str, Any]:
+    """Build the normalized adaptation state consumed by downstream nodes."""
+
     target_language = _resolve_target_language(copy_analysis, user_profile)
     mapped_sections = _map_reference_sections(copy_analysis)
     sections_to_create, structural_gaps = _classify_section_gaps(copy_analysis)
@@ -134,4 +160,3 @@ def _build_adaptation_input(
         output["desired_duration"] = user_profile.desired_duration
 
     return output
-

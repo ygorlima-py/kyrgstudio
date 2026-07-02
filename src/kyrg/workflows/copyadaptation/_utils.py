@@ -1,4 +1,12 @@
+"""Deterministic assembly and timing helpers for adapted scripts.
+
+LLM nodes produce section content, but final script assembly, word counts,
+timing estimates, pauses, and review-revision merging are deterministic. Keeping
+that logic here makes the workflow output reproducible and easier to validate.
+"""
+
 from __future__ import annotations
+
 from kyrg.workflows.copyadaptation.state import CopyAdaptationState
 from kyrg.workflows.copyadaptation.schemas import (
     ScriptSectionOutput,
@@ -12,6 +20,13 @@ import json
 from typing import Any
 
 class _BuildScriptOutput:
+    """Build final output projections from the latest workflow state.
+
+    The builder resolves the final section list, exposes human-readable and
+    voice-ready script text, extracts hooks and CTA content, and enriches
+    sections with deterministic timing metadata.
+    """
+
     def __init__(self, state: CopyAdaptationState):
         sections = _resolve_final_sections(state)
         desired_duration = state.get("desired_duration")
@@ -32,6 +47,8 @@ class _BuildScriptOutput:
         self.warnings = state.get("validation_warnings")
     
     def _voice_ready_text(self) -> str:
+        """Return narration text without markdown headings or metadata."""
+
         section_texts = [
             section["text"].strip()
             for section in self.sections
@@ -41,6 +58,8 @@ class _BuildScriptOutput:
         return "\n\n".join(section_texts)
     
     def _script(self) -> str:
+        """Return review-friendly script text grouped by section heading."""
+
         script = "\n\n".join(
         f"## {section.get('section_type', 'section')}\n{section.get('text', '').strip()}"
         for section in self.sections
@@ -49,6 +68,8 @@ class _BuildScriptOutput:
         return script
 
     def _hooks(self) -> list[Any]:
+        """Return hook texts that can be surfaced as script openers."""
+
         
         return [
             section["text"].strip()
@@ -57,6 +78,8 @@ class _BuildScriptOutput:
         ]
         
     def _cta_sections(self) -> list[Any]:
+        """Return all CTA section texts, preserving final section order."""
+
         return  [
             section["text"].strip()
             for section in self.sections
@@ -64,6 +87,8 @@ class _BuildScriptOutput:
         ]
         
     def _final_sections(self) -> list[TimedScriptSectionOutput]:
+        """Validate sections and attach word count, duration, and cue timing."""
+
         sections = [
             ScriptSectionOutput.model_validate(section)
             for section in self.sections
@@ -109,6 +134,8 @@ class _BuildScriptOutput:
     
     @property
     def _validation_issues_from_state(self) -> list[ValidationIssue]:
+            """Return validation errors from state as typed issue objects."""
+
             return [
                 ValidationIssue.model_validate(issue)
                 for issue in self.issues or []
@@ -116,12 +143,16 @@ class _BuildScriptOutput:
             
     @property
     def _validation_warnings_from_state(self) -> list[ValidationIssue]:
+            """Return validation warnings from state as typed issue objects."""
+
             return [
                 ValidationIssue.model_validate(warnings)
                 for warnings in self.warnings or []
             ]
 
 def _add_words_count_per_section(script_sections: WriteScriptSectionsOutput) -> list[dict[str, Any]]:
+    """Return generated sections as dictionaries with deterministic word counts."""
+
     sections = [
         section.model_dump()
         for section in script_sections.sections
@@ -133,12 +164,16 @@ def _add_words_count_per_section(script_sections: WriteScriptSectionsOutput) -> 
     return sections
 
 def _resolve_pause(section_type: str, pause_intent: str = "medium") -> float:
+    """Resolve semantic pause intent into a bounded pause duration in seconds."""
+
     base = SECTION_PAUSE_SECONDS.get(section_type, 0.4)
     coefficient = PAUSE_INTENT_COEFFICIENT.get(pause_intent, 1.0)
 
     return round(min(max(base * coefficient, 0.1), 1.8), 2)
     
 def _calculate_time_estimated(state) -> dict[str, Any]:
+    """Estimate script duration and target-duration fit from current sections."""
+
     MAX_WORDS_PER_MINUTE = state.get("max_words_per_minute", 160)
     MIN_WORDS_PER_MINUTE = state.get("min_words_per_minute", 140)
     MEAN_WORDS_PER_MINUTE = (MAX_WORDS_PER_MINUTE + MIN_WORDS_PER_MINUTE) / 2
@@ -198,6 +233,13 @@ def _calculate_time_estimated(state) -> dict[str, Any]:
     }
     
 def _resolve_final_sections(state: CopyAdaptationState) -> list[dict]:
+    """Merge reviewer-adjusted sections into the latest generated section list.
+
+    Review nodes may return only the sections they adjusted. This helper applies
+    those replacements by section order, appends new revised sections when
+    needed, and returns a stable order for final validation or assembly.
+    """
+
     sections = state.get("sections")
 
     if not sections:

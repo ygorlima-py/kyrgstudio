@@ -404,7 +404,10 @@ def test_prepare_copy_input_returns_empty_segments_when_provider_has_none() -> N
 def test_prepare_copy_input_rejects_missing_transcription() -> None:
     """Preparation must fail before text access when transcription is absent."""
 
-    with pytest.raises(RuntimeError, match="required to this workflow"):
+    with pytest.raises(
+        ValueError,
+        match="transcription is required to prepare copy input",
+    ):
         prepare_copy_input(cast(CopyAnalysisState, {}))
 
 
@@ -414,7 +417,7 @@ def test_prepare_copy_input_rejects_blank_transcription_text(text: str) -> None:
 
     with pytest.raises(
         ValueError,
-        match="transcription text is required for copy analysis",
+        match="transcription text is required to prepare copy input",
     ):
         state: CopyAnalysisState = {
             "transcription": _transcription(text=text),

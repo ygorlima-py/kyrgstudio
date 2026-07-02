@@ -7,11 +7,10 @@ from langgraph.runtime import get_runtime
 from langchain.agents import create_agent
 from langchain_core.tools import tool
 from langchain_core.messages import ToolMessage
-from typing import TypeVar, Any
+from typing import Any
 
-ContextT = TypeVar("ContextT")
+from kyrg.workflows.workflow_types import WorkflowRuntime, ContextT
 
-WorkflowRuntime = Runtime
 
 WorkflowToolRuntime = ToolRuntime
 

@@ -570,7 +570,10 @@ def test_missing_transcription_fails_before_first_llm_call() -> None:
     llm = _llm()
     workflow = _workflow(llm, transcription=None)
 
-    with pytest.raises(RuntimeError, match="required to this workflow"):
+    with pytest.raises(
+        ValueError,
+        match="transcription is required to prepare copy input",
+    ):
         workflow.start()
 
     assert llm.calls == []

@@ -57,6 +57,23 @@ class GeminiImageGenerator(ImageGeneratorBase):
             raise RuntimeError(
                 f'Error calling {self.PROVIDER} image provider: {error}'
             )
+
+    async def _arequest(self) -> types.GenerateImagesResponse:
+        """Call Gemini's image generation endpoint asynchronously."""
+
+        try:
+            config = self.image_input.config
+            response = await self.client.aio.models.generate_images(
+                model=self.image_input.model,
+                prompt=self.image_input.prompt,
+                config=types.GenerateImagesConfig(**config),
+            )
+
+            return response
+        except errors.APIError as error:
+            raise RuntimeError(
+                f'Error calling {self.PROVIDER} image provider: {error}'
+            )
         
     def _normalize_response(self, raw_result: Any) -> ImageGeneratorOutput:
         """Convert Gemini byte images into Kyrg's normalized image output."""

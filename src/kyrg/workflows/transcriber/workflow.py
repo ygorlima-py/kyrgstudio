@@ -1,5 +1,6 @@
 from kyrg.workflows.core import WORKFLOW_START, WORKFLOW_END
 from kyrg.workflows.base import WorkflowBase
+from kyrg.workflows.adapter import RunnableNode
 from kyrg.workflows.transcriber.state import TranscriberState
 from kyrg.workflows.transcriber.schemas import TranscriberWorkflowContext
 from kyrg.workflows.transcriber.nodes import (
@@ -11,6 +12,9 @@ from kyrg.workflows.transcriber.nodes import (
     extract_hybrid_context,
     prepare_audio,
     correction_transcriber,
+    aaudio_text_converter,
+    aextract_hybrid_context,
+    acorrection_transcriber,
 )
 from kyrg.workflows.base import CheckpointerBase
 
@@ -22,9 +26,30 @@ class TranscriberWorkflow(WorkflowBase):
         
         self.graph.add_node('extract_audio', extract_audio)
         self.graph.add_node('prepare_audio', prepare_audio)
-        self.graph.add_node('audio_text_converter', audio_text_converter)
-        self.graph.add_node('extract_hybrid_context', extract_hybrid_context)
-        self.graph.add_node('correction_transcriber', correction_transcriber)
+        self.graph.add_node(
+            'audio_text_converter',
+            RunnableNode(
+                sync=audio_text_converter,
+                async_=aaudio_text_converter,
+                context_schema=self.CONTEXT_SCHEMA,
+                ),
+            )
+        self.graph.add_node(
+            'extract_hybrid_context',
+            RunnableNode(
+                sync=extract_hybrid_context,
+                async_=aextract_hybrid_context,
+                context_schema=self.CONTEXT_SCHEMA,
+                )
+            )
+        self.graph.add_node(
+            'correction_transcriber',
+            RunnableNode(
+                sync=correction_transcriber,
+                async_=acorrection_transcriber,
+                context_schema=self.CONTEXT_SCHEMA
+                ),
+            )
         self.graph.add_node('measure_audio', measure_audio)
         
         self.graph.add_conditional_edges(

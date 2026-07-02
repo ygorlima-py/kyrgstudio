@@ -1,4 +1,14 @@
+"""Prompt templates used by copy adaptation actions.
+
+Prompts are centralized here so action classes can focus on input formatting and
+structured response handling. The prompt text defines the workflow contracts for
+strategy, writing, flow review, validation, and correction passes.
+"""
+
+
 class CopyAdaptationPrompts:
+    """Immutable prompt catalog for each LLM-backed workflow step."""
+
     BUILD_COPY_STRATEGY = """
 You are a senior direct-response strategist specialized in VSLs, paid creatives, offers, and conversion copy.
 

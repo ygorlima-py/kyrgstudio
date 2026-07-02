@@ -1,5 +1,8 @@
+"""Prompt templates used by copy analysis LLM actions."""
 
 class CopyAnalysisPrompts:
+    """Centralized prompt templates for copy structure, offer, and persuasion tasks."""
+
     EXTRACT_COPY_STRUCTURE = """
     You are a senior direct-response copy analyst.
 

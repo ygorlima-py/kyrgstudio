@@ -1,3 +1,11 @@
+"""Graph wiring for the copy adaptation workflow.
+
+The workflow turns a reference-copy analysis and user offer profile into an
+adapted script. It prepares inputs, creates a strategy, writes sections, reviews
+flow, validates production readiness, applies bounded correction retries, and
+assembles the final script output.
+"""
+
 from kyrg.workflows.core import WORKFLOW_END, WORKFLOW_START
 from kyrg.workflows.base import WorkflowBase
 from kyrg.workflows.adapter import RunnableNode
@@ -24,10 +32,14 @@ from kyrg.workflows.copyadaptation.nodes import (
 
 
 class CopyAdaptationWorkflow(WorkflowBase):
+    """Executable graph for adapting analyzed copy to a new offer profile."""
+
     STATE_SCHEMA = CopyAdaptationState
     CONTEXT_SCHEMA = CopyAdaptationWorkflowContext
 
     def _build(self) -> None:
+        """Register nodes, sync/async adapters, retry routes, and final edge."""
+
         self.graph.add_node("prepare_adaptation_input", prepare_adaptation_input)
         self.graph.add_node(
             "build_copy_strategy",

@@ -1,3 +1,5 @@
+"""Workflow nodes that transform transcription input into copy analysis output."""
+
 from kyrg.workflows.copyanalysis.state import CopyAnalysisState
 from kyrg.workflows.copyanalysis.schemas import (
     StructuredTranscript,
@@ -11,20 +13,23 @@ from kyrg.workflows.copyanalysis.actions import (
 )
 from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.core import WorkflowRuntime
-from kyrg.workflows.decorators import async_node
+from kyrg.workflows import guards
 
 # ----- Nodes Sync --------------------
 def prepare_copy_input(state: CopyAnalysisState) -> dict:
+    """Normalize transcription text and expose timestamped segments for analysis."""
     
-    transcription = state.get("transcription")
+    transcription = guards.require_value(
+        state.get("transcription"),
+        "transcription",
+        "prepare copy input",
+    )
     
-    if transcription is None:
-        raise RuntimeError("trancription is required to this workflow")
-
-    text = transcription.text.strip()
-    
-    if not text:
-        raise ValueError("transcription text is required for copy analysis")
+    text = guards.require_non_empty(
+        transcription.text.strip(),
+        "transcription text",
+        "prepare copy input"
+    )
     
     clean_transcript = " ".join(text.split())
          
@@ -49,16 +54,17 @@ def extract_copy_structure(
         state: CopyAnalysisState,
         runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
     ) -> dict:
+    """Run the structural copy analysis step and merge token usage into state."""
     
-    context = runtime.context
-    
-    if context is None:
-        raise RuntimeError("Copy analysis workflow context is required.")
-    
-    clean_transcript = state.get("clean_transcript")
-    
-    if not clean_transcript:
-        raise ValueError("clean_transcript is required to extract copy structure.")
+    context = guards.require_context(
+        runtime.context,
+        "Copy analysis",
+    )
+    clean_transcript = guards.require_non_empty(
+        state.get("clean_transcript"),
+        "clean_transcript",
+        "extract copy structure",
+    )
     
     action = ExtractCopyStructure(
         llm=context.analysis_llm,
@@ -82,21 +88,22 @@ def extract_offer_elements(
     state: CopyAnalysisState,
     runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
     ) -> dict:
+    """Run the offer extraction step using the prepared transcript and structure."""
     
-    context = runtime.context
-    
-    if context is None:
-        raise RuntimeError("Copy analysis workflow context is required.")
-    
-    clean_transcript = state.get("clean_transcript")
-    
-    if not clean_transcript:
-        raise ValueError("clean_transcript is required to extract offer analysis.")
-
-    copy_structure = state.get("copy_structure")
-    
-    if not copy_structure:
-        raise ValueError("copy structure is required to extract offer analysis")
+    context = guards.require_context(
+        runtime.context,
+        "Copy analysis",
+    )
+    clean_transcript = guards.require_non_empty(
+        state.get("clean_transcript"),
+        "clean_transcript",
+        "extract offer analysis",
+    )
+    copy_structure = guards.require_value(
+        state.get("copy_structure"),
+        "copy structure",
+        "extract offer analysis",
+    )
     
     action = ExtractOfferElements(
         llm=context.analysis_llm,
@@ -120,21 +127,21 @@ def analyse_persuasion(
     state: CopyAnalysisState,
     runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
     ) -> dict:
-    context = runtime.context
-    
-    if context is None:
-        raise RuntimeError("Copy analysis workflow context is required.")
-
-    
-    copy_structure = state.get("copy_structure")
-    
-    if not copy_structure:
-        raise ValueError("copy structure is required to analyse persuasion")
-    
-    offer_analysis = state.get("offer_analysis")
-    
-    if not offer_analysis:
-        raise ValueError("Offer structure is required to analyse persuasion")
+    """Run the persuasion diagnosis step from structure and offer analysis."""
+    context = guards.require_context(
+        runtime.context,
+        "Copy analysis",
+    )
+    copy_structure = guards.require_value(
+        state.get("copy_structure"),
+        "copy structure",
+        "analyse persuasion",
+    )
+    offer_analysis = guards.require_value(
+        state.get("offer_analysis"),
+        "Offer structure",
+        "analyse persuasion",
+    )
     
     action = AnalysePersuasion(
         llm=context.analysis_llm,
@@ -155,18 +162,22 @@ def analyse_persuasion(
 
     
 def build_copy_analysis(state: CopyAnalysisState) -> dict:
-    copy_structure = state.get("copy_structure")
-    offer_analysis = state.get("offer_analysis")
-    persuasion_analysis = state.get("persuasion_analysis")
-
-    if copy_structure is None:
-        raise ValueError("copy_structure is required to build copy analysis.")
-
-    if offer_analysis is None:
-        raise ValueError("offer_analysis is required to build copy analysis.")
-
-    if persuasion_analysis is None:
-        raise ValueError("persuasion_analysis is required to build copy analysis.")
+    """Assemble the final copy analysis payload from completed workflow stages."""
+    copy_structure = guards.require_value(
+        state.get("copy_structure"),
+        "copy_structure",
+        "build copy analysis",
+    )
+    offer_analysis = guards.require_value(
+        state.get("offer_analysis"),
+        "offer_analysis",
+        "build copy analysis",
+    )
+    persuasion_analysis = guards.require_value(
+        state.get("persuasion_analysis"),
+        "persuasion_analysis",
+        "build copy analysis",
+    )
 
     analysis = CopyAnalysisOutput(
         language=state.get("language"),
@@ -185,16 +196,17 @@ async def aextract_copy_structure(
         state: CopyAnalysisState,
         runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
     ) -> dict:
+    """Run the structural copy analysis step asynchronously."""
     
-    context = runtime.context
-    
-    if context is None:
-        raise RuntimeError("Copy analysis workflow context is required.")
-    
-    clean_transcript = state.get("clean_transcript")
-    
-    if not clean_transcript:
-        raise ValueError("clean_transcript is required to extract copy structure.")
+    context = guards.require_context(
+        runtime.context,
+        "Copy analysis",
+    )
+    clean_transcript = guards.require_non_empty(
+        state.get("clean_transcript"),
+        "clean_transcript",
+        "extract copy structure",
+    )
     
     action = ExtractCopyStructure(
         llm=context.analysis_llm,
@@ -217,21 +229,22 @@ async def aextract_offer_elements(
     state: CopyAnalysisState,
     runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
     ) -> dict:
+    """Run the offer extraction step asynchronously."""
     
-    context = runtime.context
-    
-    if context is None:
-        raise RuntimeError("Copy analysis workflow context is required.")
-    
-    clean_transcript = state.get("clean_transcript")
-    
-    if not clean_transcript:
-        raise ValueError("clean_transcript is required to extract offer analysis.")
-
-    copy_structure = state.get("copy_structure")
-    
-    if not copy_structure:
-        raise ValueError("copy structure is required to extract offer analysis")
+    context = guards.require_context(
+        runtime.context,
+        "Copy analysis",
+    )
+    clean_transcript = guards.require_non_empty(
+        state.get("clean_transcript"),
+        "clean_transcript",
+        "extract offer analysis",
+    )
+    copy_structure = guards.require_value(
+        state.get("copy_structure"),
+        "copy structure",
+        "extract offer analysis",
+    )
     
     action = ExtractOfferElements(
         llm=context.analysis_llm,
@@ -254,21 +267,21 @@ async def aanalyse_persuasion(
     state: CopyAnalysisState,
     runtime: WorkflowRuntime[CopyAnalysisWorkflowContext],
     ) -> dict:
-    context = runtime.context
-    
-    if context is None:
-        raise RuntimeError("Copy analysis workflow context is required.")
-
-    
-    copy_structure = state.get("copy_structure")
-    
-    if not copy_structure:
-        raise ValueError("copy structure is required to analyse persuasion")
-    
-    offer_analysis = state.get("offer_analysis")
-    
-    if not offer_analysis:
-        raise ValueError("Offer structure is required to analyse persuasion")
+    """Run the persuasion diagnosis step asynchronously."""
+    context = guards.require_context(
+        runtime.context,
+        "Copy analysis",
+    )
+    copy_structure = guards.require_value(
+        state.get("copy_structure"),
+        "copy structure",
+        "analyse persuasion",
+    )
+    offer_analysis = guards.require_value(
+        state.get("offer_analysis"),
+        "Offer structure",
+        "analyse persuasion",
+    )
     
     action = AnalysePersuasion(
         llm=context.analysis_llm,

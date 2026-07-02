@@ -167,10 +167,10 @@ def test_audio_text_converter_builds_and_calls_remote_transcriber(
     assert result["result"] is expected_result
 
 
-def test_audio_text_converter_accepts_none_options_and_empty_api_key(
+def test_audio_text_converter_defaults_none_temperature_and_accepts_empty_api_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Forward None options and accept an empty remote API key."""
+    """Default None temperature to 0.0 and accept an empty remote API key."""
     _patch_remote_marker(monkeypatch)
     RemoteTranscriberFake.reset()
     config = _config(
@@ -191,7 +191,7 @@ def test_audio_text_converter_accepts_none_options_and_empty_api_key(
             "audio_path": "audio.wav",
             "model_name": "remote-model",
             "language": None,
-            "temperature": None,
+            "temperature": 0.0,
             "api_key": "",
         }
     ]

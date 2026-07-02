@@ -1,3 +1,11 @@
+"""OpenAI Responses API implementation of the project LLM interface.
+
+The adapter wraps the official OpenAI SDK behind ``LLMBase`` so workflows can
+call OpenAI models through the same interface used by every other provider.
+It supports plain text generation, structured Pydantic output, async calls, and
+latest-call token usage tracking.
+"""
+
 from typing import Optional
 
 from loguru import logger
@@ -8,9 +16,25 @@ from kyrg.llms.error import StructuredOutputParsingError
 
 
 class OpenAILLM(LLMBase):
+    """LLM adapter backed by the OpenAI Responses API.
+
+    The class uses ``responses.create`` for plain text calls and
+    ``responses.parse`` for structured Pydantic output. Provider-specific
+    ``OpenAIError`` exceptions are wrapped as ``RuntimeError`` to keep the
+    public provider contract consistent.
+    """
+
     BASE_URL = "https://api.openai.com/v1"
     
     def __init__(self, api_key: str | None, model: str, temperature: Optional[float] = None):   
+        """Create synchronous and asynchronous OpenAI clients.
+
+        Args:
+            api_key: OpenAI API key. ``None`` allows the SDK to resolve
+                credentials from its normal environment configuration.
+            model: Model name accepted by the OpenAI Responses API.
+            temperature: Optional sampling temperature forwarded to each call.
+        """
         self.client = OpenAI(api_key=api_key, base_url=self.BASE_URL)
         self.async_client = AsyncOpenAI(api_key=api_key, base_url=self.BASE_URL)
         self.model = model
@@ -18,6 +42,17 @@ class OpenAILLM(LLMBase):
         super().__init__()
 
     def invoke(self, prompt: str) -> str:
+        """Generate plain text with ``responses.create``.
+
+        Args:
+            prompt: Complete input prompt.
+
+        Returns:
+            ``response.output_text`` from the OpenAI SDK.
+
+        Raises:
+            RuntimeError: If the OpenAI SDK raises ``OpenAIError``.
+        """
         logger.info(f"Calling OpenAI LLM provider: model={self.model}, method=invoke")
 
         try:
@@ -40,6 +75,19 @@ class OpenAILLM(LLMBase):
         return response.output_text
 
     def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+        """Execute one structured-output attempt with ``responses.parse``.
+
+        Args:
+            prompt: Prompt for this attempt.
+            output_schema: Pydantic model passed as ``text_format``.
+
+        Returns:
+            Parsed Pydantic object returned by ``response.output_parsed``.
+
+        Raises:
+            RuntimeError: If the OpenAI SDK raises ``OpenAIError``.
+            StructuredOutputParsingError: If OpenAI returns no parsed object.
+        """
         logger.info(
             f"Calling OpenAI LLM provider: model={self.model}, method=structured"
         )
@@ -74,6 +122,17 @@ class OpenAILLM(LLMBase):
         return parsed
     
     async def ainvoke(self, prompt: str) -> str:
+        """Asynchronously generate plain text with ``responses.create``.
+
+        Args:
+            prompt: Complete input prompt.
+
+        Returns:
+            ``response.output_text`` from the OpenAI SDK.
+
+        Raises:
+            RuntimeError: If the OpenAI SDK raises ``OpenAIError``.
+        """
         logger.info(f"Calling OpenAI LLM provider: model={self.model}, method=ainvoke")
 
         try:
@@ -95,6 +154,19 @@ class OpenAILLM(LLMBase):
         return response.output_text
     
     async def _astructured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+        """Execute one asynchronous structured-output attempt.
+
+        Args:
+            prompt: Prompt for this attempt.
+            output_schema: Pydantic model passed as ``text_format``.
+
+        Returns:
+            Parsed Pydantic object returned by ``response.output_parsed``.
+
+        Raises:
+            RuntimeError: If the OpenAI SDK raises ``OpenAIError``.
+            StructuredOutputParsingError: If OpenAI returns no parsed object.
+        """
         logger.info(
             f"Calling OpenAI LLM provider: model={self.model}, method=astructured"
         )

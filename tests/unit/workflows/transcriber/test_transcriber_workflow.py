@@ -8,6 +8,7 @@ import pytest
 from pytest import MonkeyPatch
 
 import kyrg.workflows.base as workflow_base_module
+from kyrg.workflows.adapter import RunnableNode
 from kyrg.workflows.base import CheckpointerBase
 from kyrg.workflows.core import WORKFLOW_END, WORKFLOW_START
 from kyrg.workflows.transcriber.nodes import (
@@ -145,21 +146,27 @@ def test_workflow_declares_state_and_context_schemas(
 def test_workflow_registers_exactly_six_current_nodes(
     built_workflow: tuple[TranscriberWorkflow, GraphBuilderSpy],
 ) -> None:
-    """Register exactly the six active nodes with their current callables."""
+    """Register direct nodes and runnable nodes for sync/async stages."""
     _, graph = built_workflow
     registered_nodes = {
         registration.name: registration.action
         for registration in graph.nodes
     }
 
-    assert registered_nodes == {
-        "extract_audio": extract_audio,
-        "prepare_audio": prepare_audio,
-        "audio_text_converter": audio_text_converter,
-        "measure_audio": measure_audio,
-        "extract_hybrid_context": extract_hybrid_context,
-        "correction_transcriber": correction_transcriber,
+    assert set(registered_nodes) == {
+        "extract_audio",
+        "prepare_audio",
+        "audio_text_converter",
+        "measure_audio",
+        "extract_hybrid_context",
+        "correction_transcriber",
     }
+    assert registered_nodes["extract_audio"] is extract_audio
+    assert registered_nodes["prepare_audio"] is prepare_audio
+    assert registered_nodes["measure_audio"] is measure_audio
+    assert isinstance(registered_nodes["audio_text_converter"], RunnableNode)
+    assert isinstance(registered_nodes["extract_hybrid_context"], RunnableNode)
+    assert isinstance(registered_nodes["correction_transcriber"], RunnableNode)
     assert len(graph.nodes) == 6
 
 

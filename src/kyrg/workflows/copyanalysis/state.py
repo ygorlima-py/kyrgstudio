@@ -1,3 +1,5 @@
+"""State shape shared by copy analysis workflow nodes."""
+
 from typing import Annotated, NotRequired, TypedDict
 
 from kyrg.transcribers import TranscriptionResult
@@ -11,6 +13,8 @@ from kyrg.workflows.copyanalysis.schemas import (
 from operator import add
 
 class CopyAnalysisState(TypedDict):
+    """Mutable workflow state carrying inputs, intermediate analyses, and output."""
+
     transcription: TranscriptionResult
 
     clean_transcript: NotRequired[str]

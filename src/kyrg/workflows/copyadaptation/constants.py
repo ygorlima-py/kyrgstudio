@@ -1,3 +1,10 @@
+"""Configuration constants for copy section adaptation and narration pacing.
+
+``SECTION_ADAPTATION_FIELDS`` links canonical section types to the user-profile
+fields most relevant for rewriting that persuasive beat. The pause constants
+translate semantic pause intent into deterministic timing estimates for final
+script assembly.
+"""
 
 SECTION_ADAPTATION_FIELDS = {
     "hook": ["main_promise", "core_problem", "core_desire"],
@@ -43,4 +50,3 @@ PAUSE_INTENT_COEFFICIENT = {
     "long": 1.35,
     "dramatic": 1.75,
 }
-

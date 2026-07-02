@@ -1,3 +1,11 @@
+"""LangChain chat model implementation of the project LLM interface.
+
+This module lets workflows use any LangChain ``BaseChatModel`` through the
+same ``LLMBase`` contract used by direct provider SDK adapters. It is useful
+when callers want LangChain model configuration, routing, tracing, or provider
+abstraction while keeping the rest of the project provider-neutral.
+"""
+
 from loguru import logger
 from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -8,11 +16,39 @@ from kyrg.llms.error import StructuredOutputParsingError
 
 
 class LangChainLLM(LLMBase):
+    """LLM adapter backed by a LangChain ``BaseChatModel``.
+
+    Plain calls delegate to ``llm.invoke`` / ``llm.ainvoke``. Structured calls
+    use LangChain's ``with_structured_output`` with ``include_raw=True`` so the
+    adapter can read both parsed output and raw token usage metadata.
+    """
+
     def __init__(self, llm: BaseChatModel):
+        """Create a LangChain-backed LLM adapter.
+
+        Args:
+            llm: Configured LangChain chat model. The model must support
+                ``invoke`` / ``ainvoke`` and, for structured output,
+                ``with_structured_output``.
+        """
         self.llm = llm
         super().__init__()
 
     def invoke(self, prompt: str) -> str:
+        """Generate plain text through the wrapped LangChain model.
+
+        Args:
+            prompt: Complete input prompt.
+
+        Returns:
+            Message content as a string. Non-string content is converted with
+            ``str`` to keep the project contract stable.
+
+        Raises:
+            StructuredOutputParsingError: If LangChain raises
+                ``OutputParserException``.
+            RuntimeError: If any other LangChain call failure occurs.
+        """
         logger.info("Calling LangChain LLM provider: method=invoke")
 
         try:
@@ -37,6 +73,24 @@ class LangChainLLM(LLMBase):
         return str(content)
 
     def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+        """Execute one structured-output attempt through LangChain.
+
+        Args:
+            prompt: Prompt for this attempt.
+            output_schema: Pydantic model requested from
+                ``with_structured_output``.
+
+        Returns:
+            Parsed output as an instance of ``output_schema``.
+
+        Raises:
+            RuntimeError: If the LangChain structured runnable fails before a
+                structured response can be inspected.
+            ValidationError: If parsed dictionary output fails Pydantic
+                validation.
+            StructuredOutputParsingError: If LangChain reports
+                ``parsing_error`` or returns an unsupported parsed type.
+        """
         logger.info("Calling LangChain LLM provider: method=structured")
 
         try:
@@ -80,6 +134,20 @@ class LangChainLLM(LLMBase):
         )
 
     async def ainvoke(self, prompt: str) -> str:
+        """Asynchronously generate plain text through LangChain.
+
+        Args:
+            prompt: Complete input prompt.
+
+        Returns:
+            Message content as a string. Non-string content is converted with
+            ``str`` to keep the project contract stable.
+
+        Raises:
+            StructuredOutputParsingError: If LangChain raises
+                ``OutputParserException``.
+            RuntimeError: If any other LangChain call failure occurs.
+        """
         logger.info("Calling LangChain LLM provider: method=ainvoke")
 
         try:
@@ -108,6 +176,24 @@ class LangChainLLM(LLMBase):
         prompt: str,
         output_schema: type[OutputT],
     ) -> OutputT:
+        """Execute one asynchronous structured-output attempt.
+
+        Args:
+            prompt: Prompt for this attempt.
+            output_schema: Pydantic model requested from
+                ``with_structured_output``.
+
+        Returns:
+            Parsed output as an instance of ``output_schema``.
+
+        Raises:
+            RuntimeError: If the LangChain structured runnable fails before a
+                structured response can be inspected.
+            ValidationError: If parsed dictionary output fails Pydantic
+                validation.
+            StructuredOutputParsingError: If LangChain reports
+                ``parsing_error`` or returns an unsupported parsed type.
+        """
         logger.info("Calling LangChain LLM provider: method=astructured")
 
         try:

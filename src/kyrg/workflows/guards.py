@@ -25,6 +25,24 @@ def require_value(
 
     return value
 
+def require_value_with_message(
+    value: ValueT | None,
+    message: str,
+) -> ValueT:
+    if value is None:
+        raise ValueError(message)
+
+    return value
+
+def require_runtime_value(
+    value: ValueT | None,
+    message: str,
+) -> ValueT:
+    if value is None:
+        raise RuntimeError(message)
+
+    return value
+
 def require_non_empty(
     value: ValueT | None,
     field_name: str,

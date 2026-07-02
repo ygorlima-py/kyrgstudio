@@ -1,3 +1,9 @@
+"""Data contracts for the copy adaptation workflow.
+
+The models in this module define user input, structured LLM outputs, validation
+issues, and the final assembled script returned by the workflow.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -10,6 +16,8 @@ from kyrg.workflows.domain_types import SectionType
 
 @dataclass(frozen=True)
 class CopyAdaptationWorkflowContext:
+    """LLM dependencies and retry policy injected into workflow nodes."""
+
     strategy_llm: LLMBase = field(
         metadata={
             "description": "LLM used to define the copy adaptation strategy before writing the script."
@@ -39,75 +47,77 @@ class CopyAdaptationWorkflowContext:
 
 
 class UserProfileOutput(BaseModel):
-    # Produto, servico, metodo ou solucao que o novo roteiro vai vender.
+    """User offer profile used as the source of truth for adaptation."""
+
+    # Product, service, method, or solution promoted by the new script.
     product_or_solution: str = Field(
         description="Product, service, method, opportunity, or solution being promoted."
     )
-    # Publico que o roteiro deve atingir.
+    # Audience the script should address.
     target_audience: str = Field(
         description="Audience the adapted script should speak to."
     )
-    # Principal dor, problema ou obstaculo desse publico.
+    # Main pain, problem, or obstacle this audience faces.
     core_problem: str = Field(
         description="Main problem, pain, frustration, or obstacle the audience has."
     )
-    # Principal desejo ou transformacao que esse publico quer alcancar.
+    # Main desire or transformation this audience wants to achieve.
     core_desire: str = Field(
         description="Main desired outcome, aspiration, or transformation."
     )
-    # Promessa principal permitida para a oferta.
+    # Main promise allowed for the offer.
     main_promise: str = Field(
         description="Main promise the adapted script is allowed to make."
     )
-    # Mecanismo, metodo ou explicacao que torna a oferta diferente e crivel.
+    # Mechanism, method, or explanation that makes the offer credible and different.
     unique_mechanism: str | None = Field(
         default=None,
         description="Mechanism, method, angle, or explanation that makes the offer credible and different."
     )
-    # Beneficios reais que podem ser usados no roteiro.
+    # Real benefits that may be used in the script.
     benefits: list[str] = Field(
         default_factory=list,
         description="Benefits that can be used in the adapted script."
     )
-    # Objecoes, medos ou duvidas que o roteiro precisa responder.
+    # Objections, fears, or doubts the script should answer.
     objections: list[str] = Field(
         default_factory=list,
         description="Objections, doubts, fears, or barriers the script should address."
     )
-    # Provas reais disponiveis, como depoimentos, dados, estudos, prints ou demonstracoes.
+    # Available proof, such as testimonials, data, studies, screenshots, or demonstrations.
     proof_assets: list[str] = Field(
         default_factory=list,
         description="Real proof available for the script, such as testimonials, data, cases, demonstrations, or credentials."
     )
-    # Detalhes comerciais da oferta, como preco, garantia, bonus, prazo ou condicoes.
+    # Commercial offer details, such as price, guarantee, bonuses, deadline, or terms.
     offer_details: str | None = Field(
         default=None,
         description="Commercial details such as price, guarantee, bonuses, deadline, or payment terms."
     )
-    # Acao que o espectador deve tomar ao final do roteiro.
+    # Action the viewer should take at the end of the script.
     call_to_action: str = Field(
         description="Action the viewer should take after watching the script."
     )
-    # Tom de voz desejado para o roteiro.
+    # Desired tone of voice for the script.
     tone: str | None = Field(
         default=None,
         description="Desired tone of voice for the adapted script."
     )
-    # Idioma em que o roteiro adaptado deve ser escrito.
+    # Language the adapted script should be written in.
     target_language: str | None = Field(
         default=None,
         description="Language the adapted script should be written in."
     )
-    # Plataforma ou canal onde o roteiro sera usado.
+    # Platform or channel where the script will be used.
     platform: str | None = Field(
         default=None,
         description="Distribution platform or placement for the adapted script."
     )
-    # Duracao desejada do roteiro em minutos.
+    # Desired script duration in minutes.
     desired_duration: float = Field(
         description="Desired script duration in minutes."
     )
-    # Promessas, palavras, temas ou angulos que nao podem ser usados.
+    # Promises, words, topics, or angles that must not be used.
     restrictions: list[str] = Field(
         default_factory=list,
         description="Claims, words, promises, or angles that must not be used."
@@ -115,11 +125,13 @@ class UserProfileOutput(BaseModel):
 
 
 class BuildCopyStrategyOutput(BaseModel):
-    # Angulo principal que vai guiar toda a nova copy.
+    """Strategic plan generated before script writing begins."""
+
+    # Main angle that guides the new copy.
     main_angle: str = Field(
         description="Primary strategic angle that should drive the adapted copy."
     )
-    # Nivel de consciencia do publico; define se a copy deve educar mais ou vender mais direto.
+    # Audience awareness level; determines how educational or direct the copy should be.
     awareness_level: Literal[
         "unaware",
         "problem_aware",
@@ -129,11 +141,11 @@ class BuildCopyStrategyOutput(BaseModel):
     ] = Field(
         description="Audience awareness level that determines how direct or educational the opening strategy should be."
     )
-    # Promessa central do roteiro, limitada ao que o briefing permite.
+    # Central script promise, limited by the brief.
     main_promise: str = Field(
         description="Central promise of the adapted script, constrained by the user profile."
     )
-    # Estrutura persuasiva escolhida para organizar a copy.
+    # Persuasive structure selected to organize the copy.
     persuasion_pattern: Literal[
         "PAS",
         "AIDA",
@@ -145,32 +157,34 @@ class BuildCopyStrategyOutput(BaseModel):
     ] = Field(
         description="Persuasive structure selected for the adapted script."
     )
-    # Objecoes prioritarias que o roteiro precisa quebrar.
+    # Priority objections the script needs to overcome.
     objections_to_address: list[str] = Field(
         default_factory=list,
         description="Prioritized objections the adapted script should address."
     )
-    # Plano de quais provas usar em cada parte importante do roteiro.
+    # Plan for which proof to use in each important part of the script.
     proof_plan: dict[str, str] = Field(
         default_factory=dict,
         description="Plan describing which proof asset or proof type should support each relevant section."
     )
-    # Mecanismo ou explicacao que torna a oferta crivel e diferente.
+    # Mechanism or explanation that makes the offer credible and different.
     unique_mechanism: str = Field(
         description="Mechanism, method, or explanation that makes the adapted offer feel credible and different."
     )
-    # Explicacao curta do motivo da estrategia escolhida.
+    # Short explanation of why the strategy was selected.
     strategy_notes: str = Field(
         description="Short explanation of why this strategy was chosen and how it uses the reference copy analysis."
     )
 
 
 class ScriptSectionOutput(BaseModel):
-    # Ordem da secao dentro do roteiro adaptado.
+    """Single written section of the adapted script before timing enrichment."""
+
+    # Section order within the adapted script.
     order: int = Field(
         description="Position of this section inside the adapted script."
     )
-    # Tipo canonico da secao. Esse valor deve continuar em ingles.
+    # Canonical section type. This value must remain in English.
     section_type: Literal[
         "hook",
         "problem",
@@ -191,42 +205,42 @@ class ScriptSectionOutput(BaseModel):
     ] = Field(
         description="Canonical English type of the written script section. Never translate this value."
     )
-    # Texto final escrito para essa secao, pronto para revisao de fluxo.
+    # Final written text for this section, ready for flow review.
     text: str = Field(
         description="Written script copy for this section, in the target language."
     )
-    # Papel persuasivo dessa secao dentro do roteiro.
+    # Persuasive role of this section within the script.
     purpose: str = Field(
         description="Strategic persuasive role of this section in the adapted script."
     )
-    # Indica se a secao veio de uma referencia ou foi criada do zero.
+    # Whether the section came from a reference or was created from scratch.
     adaptation_mode: Literal[
         "adapted_from_reference",
         "created_from_scratch",
     ] = Field(
         description="Whether this section was adapted from a mapped reference section or created from scratch."
     )
-    # Tipo da secao original usada como referencia, quando existir.
+    # Original reference section type, when one exists.
     source_reference_section_type: str | None = Field(
         default=None,
         description="Reference section type used as inspiration, when this section was adapted from the original copy."
     )
-    # Prova real usada nesta secao, se houver.
+    # Real proof used in this section, when available.
     proof_used: str | None = Field(
         default=None,
         description="Real proof asset or proof instruction used in this section, when available."
     )
-    # Indica se esta secao precisaria de prova, mas nao havia prova disponivel.
+    # Whether this section needs proof but no proof was available.
     missing_proof: bool = Field(
         default=False,
         description="Whether this section needs proof but no valid proof asset was available."
     )
-    # Observacao curta para ajudar o proximo node a revisar a transicao.
+    # Short note to help the next node review the transition.
     transition_hint: str | None = Field(
         default=None,
         description="Short note explaining how this section should connect to the next one."
     )
-    # Intencao narrativa da pausa posterior; o tempo exato e calculado pelo codigo.
+    # Narrative intent of the following pause; exact timing is calculated by code.
     pause_intent: Literal[
         "short",
         "medium",
@@ -242,64 +256,70 @@ class ScriptSectionOutput(BaseModel):
     )
    
 class TimedScriptSectionOutput(ScriptSectionOutput):
-    # Estimativa de palavras desta secao.
+    """Final script section enriched with deterministic timing metadata."""
+
+    # Estimated word count for this section.
     word_count: int = Field(
         description="Estimated number of words in this section."
     )
-    # Duracao estimada da fala desta secao em segundos, sem contar a pausa posterior.
+    # Estimated spoken duration for this section in seconds, excluding the following pause.
     estimated_duration_seconds: float | None = Field(
         default=None,
         description="Estimated spoken duration for this section in seconds, excluding the pause after it."
     )
-    # Pausa estimada depois desta secao em segundos.
+    # Estimated pause after this section in seconds.
     pause_after_seconds: float | None = Field(
         default=None,
         description="Estimated pause after this section in seconds."
     )
-    # Momento estimado em que esta secao comeca na narracao final.
+    # Estimated time when this section starts in the final narration.
     start_seconds: float | None = Field(
         default=None,
         description="Estimated start time of this section in the final narration."
     )
-    # Momento estimado em que esta secao termina na narracao final, sem incluir a pausa posterior.
+    # Estimated time when this section ends, excluding the following pause.
     end_seconds: float | None = Field(
         default=None,
         description="Estimated end time of this section in the final narration, excluding the pause after it."
     )
     
 class WriteScriptSectionsOutput(BaseModel):
-    # Secoes escritas do roteiro adaptado, ainda sem revisao final de fluxo.
+    """Structured output produced by writing and correction steps."""
+
+    # Written adapted-script sections before final flow review.
     sections: list[ScriptSectionOutput] = Field(
         default_factory=list,
         description="Ordered written sections of the adapted script."
     )
-    # Secoes ou momentos que precisam de prova real antes de usar em producao.
+    # Sections or moments that need real proof before production use.
     missing_proofs: list[str] = Field(
         default_factory=list,
         description="Sections or claims that need real proof before the script can be safely used."
     )
-    # Explicacao curta do que foi adaptado, criado do zero ou protegido por restricoes.
+    # Short explanation of what was adapted, created from scratch, or constrained.
     adaptation_notes: str = Field(
         description="Short explanation of how the reference copy was adapted to the user offer."
     )
 
 
 class SectionRevisionInstruction(BaseModel):
-    # Ordem da secao que precisa de revisao, quando o problema for localizado.
+    """Actionable instruction for correcting section flow issues."""
+
+    # Order of the section needing revision, when the issue is localized.
     section_order: int | None = Field(
         default=None,
         description="Order of the section that needs revision, when the issue is tied to a specific section."
     )
-    # Tipo da secao afetada, quando aplicavel.
+    # Type of the affected section, when applicable.
     section_type: str | None = Field(
         default=None,
         description="Type of the section that needs revision, such as hook, promise, mechanism, objection, offer, or cta."
     )
-    # Problema especifico encontrado no fluxo.
+    # Specific problem found in the flow.
     issue: str = Field(
         description="Specific flow, continuity, sequence, or transition problem found in the script."
     )
-    # Acao concreta que o node de escrita deve executar no retry.
+    # Concrete action the writing node should perform on retry.
     action: Literal[
         "rewrite_section",
         "move_section",
@@ -312,54 +332,60 @@ class SectionRevisionInstruction(BaseModel):
     ] = Field(
         description="Concrete revision action required to fix the issue."
     )
-    # Instrucao clara para o node de escrita seguir no retry.
+    # Clear instruction for the writing node to follow on retry.
     instruction: str = Field(
         description="Clear instruction that write_script_sections must follow on retry."
     )
-    # Prioridade da revisao.
+    # Revision priority.
     priority: Literal["low", "medium", "high"] = Field(
         description="Priority of the revision instruction."
     )
 
 
 class ReviewSectionFlowOutput(BaseModel):
-    # Indica se as secoes formam uma sequencia coerente e pronta para validacao.
+    """Result of reviewing continuity and persuasive sequence between sections."""
+
+    # Whether the sections form a coherent sequence ready for validation.
     flow_approved: bool = Field(
         description="Whether the section sequence is coherent enough to proceed to final validation."
     )
-    # Problemas especificos de continuidade, ordem, contradicao ou transicao.
+    # Specific continuity, ordering, contradiction, or transition issues.
     flow_issues: list[str] = Field(
         default_factory=list,
         description="Specific and actionable flow issues that should be fixed if the script is not approved."
     )
-    # Instrucoes estruturadas para orientar o retry do node de escrita.
+    # Structured instructions to guide the writing-node retry.
     revision_instructions: list[SectionRevisionInstruction] = Field(
         default_factory=list,
         description="Structured revision instructions for write_script_sections when retry is needed."
     )
-    # Apenas as secoes que tiveram ajustes pequenos de transicao ou continuidade.
+    # Only sections with small transition or continuity adjustments.
     sections_revised: list[ScriptSectionOutput] = Field(
         default_factory=list,
         description="Only the sections that were actually revised during the flow review."
     )
 
 class ValidateScriptOutput(BaseModel):
-    # Indica se o roteiro passou sem erros criticos.
+    """Final validation result for production readiness checks."""
+
+    # Whether the script passed without critical errors.
     validation_passed: bool = Field(
         description="Whether the adapted script passed validation without critical blocking errors."
     )
-    # Erros criticos que impedem o roteiro de ser entregue como pronto.
+    # Critical errors that block the script from being delivered as ready.
     validation_errors: list[ValidationIssue] = Field(
         default_factory=list,
         description="Critical validation errors that block the script from being production-ready."
     )
-    # Avisos nao bloqueantes que devem ser exibidos ou considerados antes do uso.
+    # Non-blocking warnings to show or consider before use.
     validation_warnings: list[ValidationIssue] = Field(
         default_factory=list,
         description="Non-blocking validation warnings that should be reviewed before production."
     )
     
 class ValidationIssue(BaseModel):
+    """Structured validation problem or warning found in the adapted script."""
+
     category: Literal[
         "claim",
         "proof",
@@ -425,58 +451,60 @@ class ValidationIssue(BaseModel):
     )
 
 class AdaptedScriptOutput(BaseModel):
-    # Roteiro completo em formato legivel para revisao humana.
+    """Final workflow output assembled from validated script sections."""
+
+    # Complete script in a human-readable review format.
     script: str = Field(
         description="Complete adapted script assembled from the approved sections."
     )
-    # Secoes finais usadas para montar o roteiro.
+    # Final sections used to assemble the script.
     sections: list[TimedScriptSectionOutput] = Field(
         default_factory=list,
         description="Final ordered sections enriched with deterministic timing data."
     )
-    # Variacoes ou textos de hook encontrados no roteiro final.
+    # Hook variations or hook texts found in the final script.
     hooks: list[str] = Field(
         default_factory=list,
         description="Hook texts extracted from the final script sections."
     )
-    # Chamada para acao principal do roteiro.
+    # Main call to action in the script.
     cta: str | None = Field(
         default=None,
         description="Primary call to action extracted from the final script."
     )
-    # Duracao total estimada em segundos incluindo fala e pausas entre secoes.
+    # Estimated total duration in seconds, including speech and section pauses.
     estimated_duration_seconds: float | None = Field(
         default=None,
         description="Estimated total duration in seconds, including spoken text and pauses between sections."
     )
-    # Quantidade total de palavras do roteiro final.
+    # Total word count of the final script.
     word_count: int = Field(
         description="Total estimated word count of the final adapted script."
     )
-    # Texto limpo para TTS, sem markdown ou metadados.
+    # Clean TTS text without markdown or metadata.
     voice_ready_text: str = Field(
         description="Clean narration text ready for text-to-speech generation."
     )
-    # Explicacao do que foi adaptado e quais cuidados foram aplicados.
+    # Explanation of what was adapted and which safeguards were applied.
     adaptation_notes: str | None = Field(
         default=None,
         description="Notes explaining what was adapted from the reference and what changed."
     )
-    # Avisos de validacao nao bloqueantes.
+    # Non-blocking validation warnings.
     validation_warnings: list[ValidationIssue] = Field(
         default_factory=list,
         description="Non-blocking validation warnings inherited from script validation."
     )
-    # Erros criticos de validacao, se existirem.
+    # Critical validation errors, if any.
     validation_errors: list[ValidationIssue] = Field(
         default_factory=list,
         description="Critical validation errors inherited from script validation."
     )
-    # Indica se o roteiro passou na validacao final.
+    # Whether the script passed final validation.
     validation_passed: bool = Field(
         description="Whether the final adapted script passed validation."
     )
-    # Secoes ou claims que precisam de prova real antes de uso em producao.
+    # Sections or claims that need real proof before production use.
     missing_proofs: list[str] = Field(
         default_factory=list,
         description="Proof gaps that should be reviewed before production."

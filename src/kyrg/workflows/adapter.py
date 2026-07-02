@@ -4,10 +4,11 @@ from typing import Any, Generic, TypeVar, override
 from kyrg.workflows.workflow_types import (
     WorkflowRunnableConfig,
     WorkflowRunnable,
+    WorkflowRuntime,
     ContextT, 
     StateT
 )
-from kyrg.workflows.core import get_workflow_runtime, WorkflowRuntime
+from kyrg.workflows.core import get_workflow_runtime
 
 OutputT = TypeVar("OutputT")
 

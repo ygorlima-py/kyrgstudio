@@ -1,3 +1,5 @@
+"""Typed data contracts for the copy analysis workflow."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -9,6 +11,8 @@ from kyrg.workflows.domain_types import SectionType
 
 @dataclass(frozen=True)
 class CopyAnalysisWorkflowContext:
+    """Runtime dependencies required by copy analysis workflow nodes."""
+
     analysis_llm: LLMBase = field(
         metadata={
             "description": "LLM used to extract copy structure, offer elements, and persuasion analysis."
@@ -16,6 +20,8 @@ class CopyAnalysisWorkflowContext:
     )
 
 class StructuredTranscript(BaseModel):
+    """Transcript segment normalized for structure extraction."""
+
     start: float | None = Field(
         default=None,
         description="Start time of the transcript segment in seconds, when available."
@@ -30,6 +36,8 @@ class StructuredTranscript(BaseModel):
 
 
 class  SectionGap(BaseModel):
+    """Missing, incomplete, or weak structural section detected in the copy."""
+
     section_type: SectionType = Field(
         description="Canonical English type of the affected copy section. Never translate this value."
     )
@@ -45,6 +53,8 @@ class  SectionGap(BaseModel):
     )
     
 class CopyStructureOutput(BaseModel):
+    """Structured description of how the analyzed copy is organized."""
+
     language: str | None = Field(
         default=None,
         description="Detected language of the copy."
@@ -73,6 +83,8 @@ class CopyStructureOutput(BaseModel):
     )
     
 class CopySection(BaseModel):
+    """Single persuasive section identified in the copy transcript."""
+
     section_type: SectionType = Field(
         description="Canonical English type of copy section. Never translate this value."
     )
@@ -92,6 +104,8 @@ class CopySection(BaseModel):
     )
 
 class OfferElement(BaseModel):
+    """Evidence-backed offer component extracted from the copy."""
+
     name: str = Field(
         description="Name or short label of the offer element."
     )
@@ -105,6 +119,8 @@ class OfferElement(BaseModel):
 
 
 class OfferAnalysisOutput(BaseModel):
+    """Offer-level analysis extracted from the sales message."""
+
     product_or_solution: str | None = Field(
         default=None,
         description="Product, service, method, opportunity, or solution being promoted."
@@ -162,6 +178,8 @@ class OfferAnalysisOutput(BaseModel):
     )
     
 class PersuasionSignal(BaseModel):
+    """Persuasion technique or emotional mechanism detected in the copy."""
+
     name: str = Field(
         description="Name of the persuasion signal, trigger, technique, or pattern detected."
     )
@@ -178,6 +196,8 @@ class PersuasionSignal(BaseModel):
 
 
 class PersuasionWeakness(BaseModel):
+    """Persuasive gap or risk that may reduce conversion effectiveness."""
+
     issue: str = Field(
         description="Persuasive weakness, gap, risk, or unclear element found in the copy."
     )
@@ -191,6 +211,8 @@ class PersuasionWeakness(BaseModel):
 
 
 class PersuasionAnalysisOutput(BaseModel):
+    """Diagnosis of the persuasive mechanics used by the analyzed copy."""
+
     dominant_emotion: str | None = Field(
         default=None,
         description="Main emotion the copy tries to create, such as fear, desire, curiosity, urgency, hope, frustration, relief, aspiration, or trust."
@@ -232,6 +254,8 @@ class PersuasionAnalysisOutput(BaseModel):
     )
     
 class CopyAnalysisOutput(BaseModel):
+    """Final aggregate result produced by the copy analysis workflow."""
+
     language: str | None = Field(
         default=None,
         description="Language detected in the analyzed copy."
