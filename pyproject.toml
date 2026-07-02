@@ -8,10 +8,17 @@ dependencies = [
     "elevenlabs>=2.49.0",
     "faster-whisper>=1.2.1",
     "google-genai>=2.7.0",
+    "langchain>=1.3.4",
+    "langchain-openai>=1.2.2",
+    "langgraph>=1.2.4",
+    "langgraph-checkpoint-sqlite>=3.1.0",
+    "loguru>=0.7.3",
     "openai>=2.38.0",
     "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
     "requests>=2.34.2",
     "runwayml>=4.15.0",
+    "weasyprint>=69.0",
 ]
 
 [build-system]
@@ -20,3 +27,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/kyrg"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "live_eval: executes paid, non-deterministic LLM quality evaluations",
+]

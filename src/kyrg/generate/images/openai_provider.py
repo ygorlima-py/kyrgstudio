@@ -6,7 +6,7 @@ returned image payload into ``GeneratedImage`` objects containing bytes.
 """
 
 from typing import Any
-from openai import OpenAI, APIError
+from openai import OpenAI, AsyncOpenAI, APIError
 import base64
 
 from kyrg.generate.images.base import ImageGeneratorBase
@@ -28,6 +28,7 @@ class OpenAIImageGenerator(ImageGeneratorBase):
         """
 
         self.client = OpenAI(api_key=api_key, base_url=self.URL)
+        self.async_client = AsyncOpenAI(api_key=api_key, base_url=self.URL)
         self.image_input = image_input
     
     def _request(self) -> Any:
@@ -48,6 +49,22 @@ class OpenAIImageGenerator(ImageGeneratorBase):
                     )   
             return response
         
+        except APIError as error:
+            raise RuntimeError(
+                f"Error calling {self.PROVIDER} image provider: {error}"
+            ) from error
+
+    async def _arequest(self) -> Any:
+        """Call OpenAI's image generation endpoint asynchronously."""
+
+        try:
+            response = await self.async_client.images.generate(
+                    model=self.image_input.model,
+                    prompt=self.image_input.prompt,
+                    **self.image_input.config,
+                    )
+            return response
+
         except APIError as error:
             raise RuntimeError(
                 f"Error calling {self.PROVIDER} image provider: {error}"

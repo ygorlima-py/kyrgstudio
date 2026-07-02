@@ -1,141 +1,398 @@
 # kyrgstudio
 
-kyrgstudio is a Python media toolkit for editing, generating, and transcribing
-audio, images, and video. It is organized as a library: each domain exposes a
-small public contract, provider-specific behavior stays inside adapters, and
-external results are normalized before they reach application code.
+kyrgstudio is a Python 3.12 library for AI-assisted media and marketing-copy
+workflows. Its current center of gravity is the LangGraph workflow layer that
+turns source media or transcripts into structured copy analysis and an adapted
+script. The repository also includes reusable FFmpeg editor operations,
+generation adapters, LLM adapters, and transcription providers that support
+those workflows.
 
-The project is still evolving, but its core direction is clear:
-
-- Build FFmpeg-backed audio and video editor operations.
-- Generate images, voices, and videos through provider adapters.
-- Transcribe audio locally or through remote APIs.
-- Normalize provider responses into stable Pydantic schemas.
-- Keep command execution, provider calls, and application-level data contracts
-  cleanly separated.
+The package is exposed under the `kyrg` import namespace.
 
 ## Current Status
 
-kyrgstudio is under active development. The foundations are in place, but
-tests, orchestration workflows, CLI entry points, richer error handling, and
-production runtime behavior are still expected to evolve.
+kyrgstudio is an active MVP/library project. It has working internal building
+blocks and workflow graphs, but it is not yet a packaged product runtime.
 
 Implemented today:
 
-- Audio editor command builders for conversion, cleanup, dynamics, filters,
-  timing, mixing, analysis, and effects.
-- Video editor command builders for streams, cutting, conversion, geometry,
-  timing, color, overlays, subtitles, composition, frames, metadata, and
-  stabilization.
-- Shared editor infrastructure with context objects, a base operation contract,
-  and a subprocess-backed command runner.
-- Image generation adapters for OpenAI, OpenRouter, and Gemini.
-- Voice generation and voice identity adapters for OpenAI-compatible providers
-  and ElevenLabs.
-- Video generation adapters for Gemini, OpenRouter, and Runway.
+- LangGraph workflows for transcription, copy analysis, and copy adaptation.
+- LLM adapters for OpenAI, Google Gemini, and LangChain chat models.
+- Structured-output retry and latest-call token usage tracking in the shared
+  LLM contract.
 - Local transcription with Faster Whisper.
 - Remote transcription adapters for OpenRouter, OpenAI, and ElevenLabs.
+- FFmpeg and ffprobe command builders for audio and video editing operations.
+- Generation adapters for images, voices, and videos.
+- Memory, SQLite, and Postgres checkpointer abstractions for workflows.
+- Unit, integration, and opt-in evaluation tests around the LLM and workflow
+  layers.
+
+Not implemented as stable product surfaces yet:
+
+- No stable CLI.
+- No web API.
+- No queue or worker runtime.
+- No frontend.
+- No stable end-user application entry point.
+
+`src/kyrg/workflows/main.py` is a hardcoded demo script, not a general-purpose
+runtime.
 
 ## Architecture
 
-kyrgstudio follows a few explicit architectural patterns. These patterns are
-small on purpose: they keep the codebase understandable while leaving room for
-new providers and workflows.
+kyrgstudio is organized around small, explicit contracts:
 
-### Command-Based Editor Operations
+- `workflows`: LangGraph orchestration for transcription, copy analysis, and
+  copy adaptation.
+- `llms`: provider-neutral LLM interface plus OpenAI, Gemini, and LangChain
+  adapters.
+- `transcribers`: local and remote transcription providers that return a common
+  `TranscriptionResult` schema.
+- `editor`: FFmpeg and ffprobe command builders for audio/video operations.
+- `generate`: provider adapters for image, voice, and video generation.
+- `adapters`: shared API adapter lifecycle utilities.
 
-Editor operations are command builders. They receive a context object, build a
-command-line argument list, and delegate process execution to a shared runner.
+Provider-specific behavior stays inside adapters. Workflow state is kept
+serializable where possible, while non-serializable dependencies such as LLMs,
+transcriber classes, SDK clients, and provider configuration are injected
+through workflow context objects.
+
+## Workflows
+
+The current demo pipeline is:
+
+```text
+TranscriberWorkflow
+-> CopyAnalysisWorkflow
+-> CopyAdaptationWorkflow
+```
+
+### WorkflowBase
+
+`WorkflowBase` centralizes the shared workflow runtime behavior:
+
+- Builds a LangGraph `StateGraph` from `STATE_SCHEMA` and `CONTEXT_SCHEMA`.
+- Stores `initial_state`, runtime `context`, optional `checkpointer`, and
+  optional `thread_id`.
+- Provides `start()` for synchronous execution.
+- Provides `astart()` for asynchronous execution.
+- Provides `draw_workflow()` to render a workflow graph PNG.
+
+Important side effects:
+
+- `start()` is decorated with `save_output_json` and writes a
+  `<WorkflowClass>.json` artifact.
+- `draw_workflow()` writes a `<WorkflowClass>.png` graph image.
+
+`RunnableNode` is used to adapt workflow nodes that have both synchronous and
+asynchronous implementations.
+
+### Checkpointers
+
+Workflow checkpointers live in `src/kyrg/workflows/checkpointers.py`:
+
+- `MemoryCheckpointer`
+- `SQLiteCheckpointer`
+- `PostgresCheckpointer`
+
+A `thread_id` allows LangGraph to resume state with a configured checkpointer.
+State should contain serializable workflow data. Context should contain runtime
+dependencies that should not be checkpointed.
+
+SQLite checkpointing is included through `langgraph-checkpoint-sqlite`.
+Postgres checkpointing requires the optional `langgraph-checkpoint-postgres`
+package.
+
+### Token Accounting
+
+LLM adapters expose `token_usage()` as latest-call usage only:
 
 ```python
-operation = SomeEditorOperation(context, runner, ...)
-command = operation.build_command()
+{"input_tokens": 100, "output_tokens": 40, "total_tokens": 140}
+```
+
+Workflow states use additive reducers for `input_tokens`, `output_tokens`, and
+`total_tokens`, so each node contributes its latest LLM usage to the final
+workflow totals.
+
+### TranscriberWorkflow
+
+`TranscriberWorkflow` converts an audio or video source into a normalized
+transcription result.
+
+Graph shape:
+
+```text
+START
+-> prepare_audio or extract_audio
+-> audio_text_converter
+-> measure_audio
+-> secondary_router
+-> extract_hybrid_context -> correction_transcriber -> END
+   or END
+```
+
+Behavior:
+
+- `source_type="audio"` routes to `prepare_audio`.
+- Other source types route to `extract_audio`.
+- `audio_text_converter` instantiates the configured transcriber from
+  `TranscriptorConfig`.
+- `measure_audio` uses ffprobe-backed editor operations to determine duration.
+- Correction runs only when `audio_duration_in_seconds <= 180` and
+  `need_correction` is truthy.
+- If correction does not run, the workflow ends with `result` and does not set
+  `status="accepted"` or `final_result`.
+
+### CopyAnalysisWorkflow
+
+`CopyAnalysisWorkflow` turns a transcription into a structured strategic copy
+analysis.
+
+Graph shape:
+
+```text
+prepare_copy_input
+-> extract_copy_structure
+-> extract_offer_elements
+-> analyse_persuasion
+-> build_copy_analysis
+```
+
+The final `analysis` combines:
+
+- Copy structure and section gaps.
+- Offer elements such as audience, problem, desire, promise, proof, objections,
+  CTA, and commercial terms.
+- Persuasion signals, weaknesses, and pattern diagnosis.
+
+### CopyAdaptationWorkflow
+
+`CopyAdaptationWorkflow` adapts a reference copy analysis to a new offer profile
+and returns an assembled script.
+
+Graph shape:
+
+```text
+prepare_adaptation_input
+-> build_copy_strategy
+-> write_script_sections
+-> review_section_flow
+-> correct_section retry path
+-> validate_script
+-> correct_script retry path
+-> build_script_output
+```
+
+Behavior:
+
+- Uses `CopyAnalysisOutput` as the reference-copy analysis.
+- Uses `UserProfileOutput` as the source of truth for the new offer, audience,
+  claims, proof, CTA, tone, language, platform, duration, and restrictions.
+- Reviews section flow before validation.
+- Applies bounded retries through `correct_section` and `correct_script` using
+  the `max_retry` value from `CopyAdaptationWorkflowContext`.
+- Adds deterministic word count, timing, pause, and duration-fit metadata before
+  final output assembly.
+
+## LLM Layer
+
+The LLM contract lives in `src/kyrg/llms`.
+
+Public adapters:
+
+```python
+from kyrg.llms import GoogleLLM, LangChainLLM, LLMBase, OpenAILLM
+```
+
+`LLMBase` provides:
+
+- `invoke()` / `ainvoke()` for plain text generation.
+- `structured()` / `astructured()` for Pydantic structured output.
+- Retry prompts for validation or parsing failures during structured output.
+- `token_usage()` for latest-call input/output/total token counts.
+
+`OpenAILLM` uses the OpenAI Responses API. OpenRouter can be used by subclassing
+`OpenAILLM` and overriding `BASE_URL`, as shown in the workflow demo.
+
+## Transcription
+
+Public transcription adapters:
+
+```python
+from kyrg.transcribers import (
+    ElevenLabsTranscriber,
+    OpenAITranscriber,
+    OpenRouterTranscriber,
+    TranscriberWhisperLocal,
+    TranscriptionResult,
+)
+```
+
+Available providers:
+
+- `TranscriberWhisperLocal`: local Faster Whisper transcription.
+- `OpenRouterTranscriber`: remote OpenRouter transcription.
+- `OpenAITranscriber`: remote OpenAI transcription.
+- `ElevenLabsTranscriber`: remote ElevenLabs transcription.
+
+All providers return a normalized `TranscriptionResult` with transcription text,
+optional segments, optional word-level timing, provider metadata, and source
+metadata.
+
+## Editor Operations
+
+Editor operations are command builders around FFmpeg and ffprobe. They build a
+command list from a typed context and execute it through `CommandRunner`.
+
+```python
+from kyrg.editor.context import MediaContext
+from kyrg.editor.runner import CommandRunner
+from kyrg.editor.video import TrimVideo
+
+operation = TrimVideo(
+    context=MediaContext(input_path="source.mp4", output_path="clip.mp4"),
+    runner=CommandRunner(),
+    start_time=10,
+    duration=30,
+)
+
 operation.execute()
 ```
 
-This keeps FFmpeg command construction separate from process execution.
-Operations stay focused on media semantics, while `CommandRunner` owns the
-subprocess boundary.
+Audio operations live in `src/kyrg/editor/audio` and include conversion,
+cleanup, dynamics, filters, timing, mixing, analysis, and effects.
 
-### Provider Adapters
+Video operations live in `src/kyrg/editor/video` and include streams, cutting,
+conversion, geometry, timing, color, overlays, subtitles, composition, frames,
+metadata, and stabilization.
 
-Remote APIs and SDKs return different response shapes. Adapters hide those
-differences behind a common request and normalization flow:
+## Generation Adapters
 
-```python
-raw_result = self._request()
-return self._normalize_response(raw_result)
+Generation adapters follow the shared adapter lifecycle:
+
+```text
+_request() -> _normalize_response(raw_result)
 ```
 
-Each provider owns its request logic, polling behavior, authentication details,
-and response parsing. The rest of the application works with normalized output
-schemas instead of provider-specific payloads.
+Image generation:
 
-### Stable Schemas
+```python
+from kyrg.generate.images import GeminiImageGenerator, ImageGeneratorInput
 
-Pydantic models define the public data contracts for generation and
-transcription. These schemas are intentionally small and explicit:
+image_input = ImageGeneratorInput(
+    model="imagen-4.0-generate-001",
+    prompt="A red sports car parked under studio lights.",
+)
 
-- Image generation returns image bytes plus media type metadata.
-- Voice generation returns local audio paths or voice identity metadata.
-- Video generation returns remote video references, not downloaded files.
-- Transcription returns text, optional segments, optional word timing, and raw
-  provider metadata.
+result = GeminiImageGenerator(
+    api_key="...",
+    image_input=image_input,
+).generate()
+```
 
-### Domain-Oriented Packages
+Voice generation:
 
-Modules are grouped by responsibility instead of by implementation detail. For
-example, audio editor operations are organized around cleanup, timing, mixing,
-and effects rather than raw FFmpeg filter names. Provider adapters are grouped
-by media type and provider domain.
+```python
+from kyrg.generate.voices import OpenAIVoiceGenerator, TextToSpeechInput
+
+tts_input = TextToSpeechInput(
+    model="gpt-4o-mini-tts",
+    text="Welcome to kyrgstudio.",
+    voice="alloy",
+    output_path="voice.mp3",
+)
+
+result = OpenAIVoiceGenerator(
+    api_key="...",
+    tts_input=tts_input,
+).run()
+```
+
+Video generation:
+
+```python
+from kyrg.generate.videos import GeminiVideoGenerator, VideoGenerateInput
+
+video_input = VideoGenerateInput(
+    model="veo-3.1-generate-preview",
+    prompt="A cinematic shot of a mountain valley at sunrise.",
+)
+
+result = GeminiVideoGenerator(
+    api_key="...",
+    video_input=video_input,
+).generate()
+```
+
+Provider coverage:
+
+- Images: OpenAI, OpenRouter, Gemini.
+- Voices: OpenAI, OpenRouter, ElevenLabs.
+- Videos: Gemini, OpenRouter, Runway.
+
+Images normalize to bytes. Voices that generate audio write to local paths.
+Videos normalize to remote video references and do not download assets
+automatically.
 
 ## Project Layout
 
 ```text
 src/kyrg/
-  adapters/
-    base.py                 # Shared API adapter template classes.
+  adapters/                  Shared adapter base classes.
+  editor/                    FFmpeg/ffprobe audio and video command builders.
+  generate/                  Image, voice, and video generation adapters.
+  llms/                      Provider-neutral LLM interface and adapters.
+  transcribers/              Local and remote transcription providers.
+  workflows/                 LangGraph workflow infrastructure and graphs.
+    checkpointers.py         Memory, SQLite, and Postgres checkpointers.
+    main.py                  Hardcoded demo pipeline.
+    transcriber/             TranscriberWorkflow.
+    copyanalysis/            CopyAnalysisWorkflow.
+    copyadaptation/          CopyAdaptationWorkflow.
 
-  editor/
-    base.py                 # Base command operation contract.
-    context.py              # Input/output context objects.
-    runner.py               # Subprocess-backed command runner.
-    audio/                  # FFmpeg-backed audio operations.
-    video/                  # FFmpeg-backed video operations.
-
-  generate/
-    images/                 # Image generation schemas and providers.
-    voices/                 # Voice generation and voice identity providers.
-    videos/                 # Video generation schemas and providers.
-
-  transcribers/
-    base.py                 # Transcription provider contracts.
-    schemas.py              # Normalized transcription schemas.
-    local_model.py          # Faster Whisper local provider.
-    remote_model.py         # OpenRouter, OpenAI, and ElevenLabs providers.
+tests/
+  unit/llms/                 LLM adapter and retry behavior tests.
+  unit/workflows/            Workflow unit tests.
+  integration/workflows/     Deterministic workflow integration tests.
+  evals/                     Opt-in live quality evaluations.
 ```
 
-Detailed package documentation:
+Additional package notes:
 
 - `src/kyrg/editor/audio/README.md`
 - `src/kyrg/editor/video/README.md`
 - `src/kyrg/transcribers/README.md`
+- `src/kyrg/workflows/README.md`
 
 ## Requirements
 
 - Python `>=3.12`
-- FFmpeg available in the system path for editor operations
-- Provider credentials for the remote APIs you use
+- FFmpeg and ffprobe available in the system path for editor and workflow media
+  operations
+- Provider credentials for any remote API you call
+- Optional Postgres checkpointing dependency when using `PostgresCheckpointer`
 
-Python dependencies are defined in `pyproject.toml` and currently include:
+Core Python dependencies are defined in `pyproject.toml` and currently include:
 
 - `elevenlabs`
 - `faster-whisper`
 - `google-genai`
+- `langchain`
+- `langchain-openai`
+- `langgraph`
+- `langgraph-checkpoint-sqlite`
+- `loguru`
 - `openai`
 - `pydantic`
+- `python-dotenv`
 - `requests`
 - `runwayml`
+- `weasyprint`
+
+Known dependency note: some demo or evolving code paths import packages such as
+`rich` or `httpx` that may not be pinned in `pyproject.toml` yet.
 
 ## Installation
 
@@ -151,352 +408,208 @@ Or with `pip` in an active virtual environment:
 pip install -e .
 ```
 
-The package is exposed under the `kyrg` import namespace.
+## Environment Variables
 
-## Usage
+Set only the provider keys required for the adapters or workflows you run:
 
-### Video Editing
-
-```python
-from kyrg.editor.context import MediaContext
-from kyrg.editor.runner import CommandRunner
-from kyrg.editor.video import TrimVideo
-
-context = MediaContext(
-    input_path="source.mp4",
-    output_path="clip.mp4",
-)
-
-operation = TrimVideo(
-    context=context,
-    runner=CommandRunner(),
-    start_time=10,
-    duration=30,
-)
-
-operation.execute()
+```bash
+OPENAI_API_KEY=...
+GEMINI_API_KEY=...
+OPENROUTER_API_KEY=...
+ELEVENLABS_API_KEY=...
+RUNWAY_API_KEY=...
 ```
 
-### Audio Editing
+The workflow demo in `src/kyrg/workflows/main.py` requires
+`OPENROUTER_API_KEY`.
 
-```python
-from kyrg.editor.audio import ReduceNoise
-from kyrg.editor.context import MediaContext
-from kyrg.editor.runner import CommandRunner
+Live evaluation tests require additional opt-in variables, depending on the eval
+suite:
 
-context = MediaContext(
-    input_path="raw_voice.wav",
-    output_path="clean_voice.wav",
-)
-
-operation = ReduceNoise(
-    context=context,
-    runner=CommandRunner(),
-    noise_reduction=12,
-    noise_floor=-50,
-)
-
-operation.execute()
+```bash
+KYRG_RUN_COPYADAPTATION_EVALS=1
+KYRG_COPYADAPTATION_EVAL_MODEL=...
 ```
 
-### Image Generation
+Store secrets in a local `.env` file or shell environment and keep them out of
+source control.
+
+## Basic Workflow Usage
+
+The example below mirrors the current workflow composition while keeping paths
+and profile content minimal. Real runs require valid media files, FFmpeg/ffprobe,
+model credentials, and a complete `UserProfileOutput`.
 
 ```python
-import os
+from kyrg.llms.openai_llm import OpenAILLM
+from kyrg.transcribers.local_model import TranscriberWhisperLocal
+from kyrg.workflows.checkpointers import SQLiteCheckpointer
+from kyrg.workflows.copyadaptation.schemas import (
+    CopyAdaptationWorkflowContext,
+    UserProfileOutput,
+)
+from kyrg.workflows.copyadaptation.workflow import CopyAdaptationWorkflow
+from kyrg.workflows.copyanalysis.schemas import CopyAnalysisWorkflowContext
+from kyrg.workflows.copyanalysis.workflow import CopyAnalysisWorkflow
+from kyrg.workflows.transcriber.schemas import (
+    TranscriberWorkflowContext,
+    TranscriptorConfig,
+)
+from kyrg.workflows.transcriber.workflow import TranscriberWorkflow
 
-from kyrg.generate.images import GeminiImageGenerator, ImageGeneratorInput
 
-image_input = ImageGeneratorInput(
-    model="imagen-4.0-generate-001",
-    prompt="A red sports car parked under studio lights.",
+class OpenRouterLLM(OpenAILLM):
+    BASE_URL = "https://openrouter.ai/api/v1"
+
+
+llm = OpenRouterLLM(
+    api_key="...",
+    model="deepseek/deepseek-v4-flash",
+    temperature=0.3,
 )
 
-generator = GeminiImageGenerator(
-    api_key=os.environ["GEMINI_API_KEY"],
-    image_input=image_input,
-)
+checkpointer = SQLiteCheckpointer("src/data/checkpoints/kyrg_workflows.sqlite")
 
-result = generator.generate()
-image = result.images[0]
-```
-
-Image adapters normalize provider output into bytes:
-
-```python
-image.data        # raw image bytes
-image.media_type  # for example, "image/png"
-```
-
-### Voice Generation
-
-```python
-import os
-
-from kyrg.generate.voices import OpenAIVoiceGenerator, TextToSpeechInput
-
-tts_input = TextToSpeechInput(
-    model="gpt-4o-mini-tts",
-    text="Welcome to kyrgstudio.",
-    voice="alloy",
-    output_path="voice.mp3",
-)
-
-generator = OpenAIVoiceGenerator(
-    api_key=os.environ["OPENAI_API_KEY"],
-    tts_input=tts_input,
-)
-
-result = generator.run()
-print(result.audio_path)
-```
-
-Voice adapters that produce audio write files to the configured output path and
-return a normalized `VoiceOutput`.
-
-### Video Generation
-
-```python
-import os
-
-from kyrg.generate.videos import GeminiVideoGenerator, VideoGenerateInput
-
-video_input = VideoGenerateInput(
-    model="veo-3.1-generate-preview",
-    prompt="A cinematic shot of a mountain valley at sunrise.",
-)
-
-generator = GeminiVideoGenerator(
-    api_key=os.environ["GEMINI_API_KEY"],
-    video_input=video_input,
-)
-
-result = generator.generate()
-video = result.videos[0]
-print(video.uri)
-```
-
-Video adapters return remote video references. They do not download generated
-assets automatically:
-
-```python
-video.uri            # temporary provider URL or URI
-video.requires_auth  # whether download needs provider credentials
-video.media_type     # usually "video/mp4"
-```
-
-For image-to-video providers, pass an optional image reference:
-
-```python
-video_input = VideoGenerateInput(
-    model="gen4.5",
-    prompt="A timelapse on a sunny day with clouds moving fast.",
-    image="./example.png",
-    image_mime_type="image/png",
-    config={
-        "ratio": "1280:720",
-        "duration": 5,
+transcriber_workflow = TranscriberWorkflow(
+    initial_state={
+        "source_path": "src/data/input/video_teste.mp4",
+        "source_type": "video",
+        "audio_path": "src/data/output/audio_extraido.wav",
+        "model_name": "small",
+        "language": "es",
+        "need_correction": False,
     },
-)
-```
-
-### Transcription
-
-```python
-import os
-
-from kyrg.transcribers import OpenAITranscriber
-
-transcriber = OpenAITranscriber(
-    audio_path="audio.wav",
-    model_name="whisper-1",
-    language="en",
-    temperature=0,
-    api_key=os.environ["OPENAI_API_KEY"],
+    context=TranscriberWorkflowContext(
+        correction_llm=llm,
+        extract_context_llm=llm,
+        transcriptor_config=TranscriptorConfig(
+            transcriptor=TranscriberWhisperLocal,
+        ),
+    ),
+    checkpointer=checkpointer,
+    thread_id="demo:transcriber",
 )
 
-result = transcriber.transcribe()
-print(result.text)
-```
+transcriber_result = transcriber_workflow.start()
+transcription = transcriber_result["result"]
 
-Local transcription uses the same public contract:
-
-```python
-from kyrg.transcribers import TranscriberWhisperLocal
-
-transcriber = TranscriberWhisperLocal(
-    audio_path="audio.wav",
-    model_name="small",
-    language="en",
-    temperature=0,
+analysis_workflow = CopyAnalysisWorkflow(
+    initial_state={"transcription": transcription},
+    context=CopyAnalysisWorkflowContext(analysis_llm=llm),
+    checkpointer=checkpointer,
+    thread_id="demo:copyanalysis",
 )
 
-result = transcriber.transcribe()
-```
+analysis_result = analysis_workflow.start()
+copy_analysis = analysis_result["analysis"]
 
-## Public APIs
-
-### Editor
-
-The editor layer exposes context objects, a command runner, and operation
-classes grouped by media domain:
-
-```python
-from kyrg.editor.context import MediaContext, MultiInputContext
-from kyrg.editor.runner import CommandRunner
-from kyrg.editor.audio import NormalizeVolume, MixVoiceWithMusic
-from kyrg.editor.video import TrimVideo, AddSubtitles, ReplaceVideoAudio
-```
-
-### Generation
-
-Image generation:
-
-```python
-from kyrg.generate.images import (
-    GeminiImageGenerator,
-    ImageGeneratorInput,
-    ImageGeneratorOutput,
-    OpenAIImageGenerator,
-    OpenRouterImageGenerator,
+user_profile = UserProfileOutput(
+    product_or_solution="Example product",
+    target_audience="Example audience",
+    core_problem="Example problem",
+    core_desire="Example desired outcome",
+    main_promise="Example promise",
+    unique_mechanism="Example mechanism",
+    benefits=["Example benefit"],
+    objections=["Example objection"],
+    proof_assets=["Example proof"],
+    offer_details="Example offer details",
+    call_to_action="Click to learn more",
+    tone="Direct and helpful",
+    target_language="English",
+    platform="Short-form video",
+    desired_duration=1.5,
+    restrictions=["Do not make unsupported claims"],
 )
-```
 
-Voice generation and voice identity:
-
-```python
-from kyrg.generate.voices import (
-    ElevenLabsSpeechToSpeech,
-    ElevenLabsVoiceCloner,
-    ElevenLabsVoiceDesignPreview,
-    ElevenLabsVoiceDesignSaver,
-    ElevenLabsVoiceGenerator,
-    OpenAIVoiceGenerator,
-    OpenRouterVoiceGenerator,
-    TextToSpeechInput,
-    VoiceOutput,
+adaptation_workflow = CopyAdaptationWorkflow(
+    initial_state={
+        "copy_analysis": copy_analysis,
+        "user_profile": user_profile,
+        "max_words_per_minute": 160,
+        "min_words_per_minute": 140,
+    },
+    context=CopyAdaptationWorkflowContext(
+        strategy_llm=llm,
+        writing_llm=llm,
+        review_llm=llm,
+        validation_llm=llm,
+        max_retry=2,
+    ),
+    checkpointer=checkpointer,
+    thread_id="demo:copyadaptation",
 )
+
+adaptation_result = adaptation_workflow.start()
+adapted_script = adaptation_result["adapted_script"]
 ```
 
-Video generation:
+## Running the Demo
 
-```python
-from kyrg.generate.videos import (
-    GeminiVideoGenerator,
-    OpenRouterVideoGenerator,
-    RunwayVideoGenerator,
-    VideoGenerateInput,
-    VideoGenerateOutput,
-)
+The current demo lives at:
+
+```text
+src/kyrg/workflows/main.py
 ```
 
-### Transcription
+It is intentionally hardcoded for local experimentation. Before running it,
+check and adjust:
 
-```python
-from kyrg.transcribers import (
-    ElevenLabsTranscriber,
-    OpenAITranscriber,
-    OpenRouterTranscriber,
-    TranscriberWhisperLocal,
-    TranscriptionResult,
-)
+- `run_id`
+- `database_path`
+- `source_path`
+- `audio_path`
+- model names
+- `UserProfileOutput`
+- provider API keys
+
+Example command:
+
+```bash
+uv run python src/kyrg/workflows/main.py
 ```
 
-## Data Contracts
+The demo can create local JSON and PNG workflow artifacts and SQLite checkpoint
+files.
 
-### Editor Contexts
+## Tests
 
-Editor operations receive explicit context objects:
+Run the deterministic test suite:
 
-- `MediaContext`: one input file and one output file.
-- `MultiInputContext`: multiple input files and one output file.
-- `VideoAudioContext`: one video input, one audio input, and one output file.
-- `SubtitlesContext`: one video input, one subtitle file, and one output file.
-- `VideoOverlayContext`: one video input, one overlay asset, and one output
-  file.
-- `ImageSequenceContext`: one image sequence pattern and one output file.
+```bash
+uv run pytest
+```
 
-### Generation Outputs
+Run focused suites:
 
-Generation adapters normalize different provider outputs into stable models:
+```bash
+uv run pytest tests/unit/llms -q
+uv run pytest tests/unit/workflows/transcriber -q
+uv run pytest tests/unit/workflows/copyanalysis -q
+uv run pytest tests/unit/workflows/copyadaptation -q
+uv run pytest tests/integration/workflows -q
+```
 
-- `ImageGeneratorOutput`: generated images as bytes.
-- `VoiceOutput`: generated or converted audio as local file paths.
-- `VoiceIdentityOutput`: permanent voice identifiers.
-- `VoiceDesignOutput`: temporary voice design previews.
-- `VideoGenerateOutput`: generated videos as remote references.
+Live evals are opt-in because they can call paid, non-deterministic provider
+APIs:
 
-### Transcription Output
+```bash
+KYRG_RUN_COPYADAPTATION_EVALS=1 uv run pytest -m live_eval tests/evals
+```
 
-`TranscriptionResult` contains:
+## Current Limitations
 
-- `audio_path`: source audio path.
-- `language`: detected or requested language.
-- `text`: complete transcription text.
-- `segments`: optional segment-level timing data.
-- `model`: provider model used.
-- `raw_response`: preserved provider metadata.
-- `provider`: stable provider identifier.
-
-## Adding New Functionality
-
-### Add an Editor Operation
-
-1. Choose the correct media package and responsibility module.
-2. Create a class that inherits from `BaseEditor`.
-3. Use the smallest context that accurately describes the input shape.
-4. Implement `build_command()` and return a list of command arguments.
-5. Export the operation from the package `__init__.py` when it is part of the
-   public API.
-
-### Add an API Provider
-
-1. Create a provider adapter in the correct domain package.
-2. Set a stable `PROVIDER` identifier and `URL` when applicable.
-3. Implement `_request()` for synchronous provider calls.
-4. Implement async behavior when the domain contract requires it.
-5. Normalize successful responses into the domain output schema.
-6. Keep credentials, provider-specific payloads, polling, and SDK quirks inside
-   the adapter.
-7. Export the provider from the package `__init__.py` when it is ready for
-   users.
-
-## Design Principles
-
-- Keep command construction separate from command execution.
-- Keep provider-specific API details inside provider adapters.
-- Normalize external output before it reaches the rest of the application.
-- Prefer explicit schemas and context objects over loosely shaped dictionaries.
-- Keep public imports deliberate and stable.
-- Do not leak API keys into normalized results, logs, or persisted metadata.
-- Preserve raw provider metadata only when it helps debugging and does not
-  expose secrets.
-- Let each media type keep the contract that matches its real behavior:
-  images as bytes, voices as local files, videos as remote references.
-
-## Security and Local Files
-
-Store API keys in environment variables or local `.env` files and keep them out
-of source control. Generated media, local datasets, caches, virtual
-environments, and model artifacts should not be committed.
-
-Video generation outputs can be temporary provider URLs or authenticated URIs.
-Applications that need long-term access should download or copy those assets
-into their own storage layer.
-
-## Roadmap
-
-Planned areas for evolution:
-
-- Add tests for command generation and provider normalization.
-- Add a pipeline layer for multi-step media workflows.
-- Improve `CommandRunner` with structured output, logging, and richer errors.
-- Add validation around provider-specific configuration.
-- Add CLI or service-level entry points.
-- Add download/storage helpers for generated remote assets.
-- Decide whether the public package namespace should remain `kyrg` or move to
-  `kyrgstudio`.
-- Expand end-to-end examples for generation, editing, and transcription
-  pipelines.
+- The project is a library/MVP, not a stable product runtime.
+- `src/kyrg/workflows/main.py` is a hardcoded demo.
+- Workflow `start()` writes JSON artifacts as a side effect.
+- `draw_workflow()` writes PNG artifacts as a side effect.
+- FFmpeg/ffprobe operations depend on local binaries and local files.
+- Remote providers require valid credentials and may incur cost.
+- Video generation returns provider references; long-term storage/download is a
+  caller responsibility.
+- Postgres checkpointing requires an optional dependency that is not currently
+  part of the core dependency list.
+- Some evolving imports may not yet be represented in `pyproject.toml`.
 
 ## License
 

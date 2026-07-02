@@ -11,7 +11,7 @@ import base64
 import os
 from typing import Any, BinaryIO, cast
 
-from elevenlabs import ElevenLabs
+from elevenlabs import ElevenLabs, AsyncElevenLabs
 from elevenlabs.core import File
 from elevenlabs.core.api_error import ApiError
 
@@ -49,6 +49,7 @@ class ElevenLabsVoiceCloner(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLabs]):
 
         client = ElevenLabs(api_key=api_key)
         super().__init__(client)
+        self.async_client = AsyncElevenLabs(api_key=api_key)
         self.clone_input = clone_input
  
     def _open_audio_files(self) -> list[BinaryIO]:
@@ -96,6 +97,37 @@ class ElevenLabsVoiceCloner(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLabs]):
         finally:
             for f in audio_files:
                 f.close()
+
+    async def _arequest(self) -> dict[str, Any]:
+        """Call ElevenLabs instant voice cloning asynchronously."""
+
+        audio_files: list[BinaryIO] = []
+
+        try:
+            audio_files = self._open_audio_files()
+            remove_background_noise = self.clone_input.settings.get("remove_background_noise", True)
+
+            response = await self.async_client.voices.ivc.create(
+                name=self.clone_input.name,
+                files=cast(list[File], audio_files),
+                description=self.clone_input.description,
+                labels=self.clone_input.labels,
+                remove_background_noise=remove_background_noise,
+            )
+
+            return {
+                "voice_id": response.voice_id,
+                "name": self.clone_input.name,
+                "description": self.clone_input.description,
+                "raw_response": response.model_dump() if hasattr(response, "model_dump") else {},
+            }
+
+        except ApiError as error:
+            raise RuntimeError(f"Error calling ElevenLabs voice-cloner: {error}")
+
+        finally:
+            for f in audio_files:
+                f.close()
  
     def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceIdentityOutput:
         """Convert provider metadata into the public VoiceIdentityOutput schema."""
@@ -135,6 +167,7 @@ class ElevenLabsVoiceDesignPreview(APIAdapterSDKBase[VoiceDesignOutput, ElevenLa
 
         client = ElevenLabs(api_key=api_key)
         super().__init__(client)
+        self.async_client = AsyncElevenLabs(api_key=api_key)
         self.design_input = design_input
 
     def _build_request_kwargs(self) -> dict[str, Any]:
@@ -241,6 +274,31 @@ class ElevenLabsVoiceDesignPreview(APIAdapterSDKBase[VoiceDesignOutput, ElevenLa
                 f"Error calling ElevenLabs voice design previews: {error}"
             ) from error
 
+    async def _arequest(self) -> dict[str, Any]:
+        """Call ElevenLabs text-to-voice design asynchronously."""
+
+        try:
+            response = await self.async_client.text_to_voice.design(
+                **self._build_request_kwargs()
+            )
+
+            raw_response = (
+                response.model_dump()
+                if hasattr(response, "model_dump")
+                else {}
+            )
+
+            return {
+                "text": response.text,
+                "previews": self._save_previews(response.previews),
+                "raw_response": raw_response,
+            }
+
+        except ApiError as error:
+            raise RuntimeError(
+                f"Error calling ElevenLabs voice design previews: {error}"
+            ) from error
+
     def _normalize_response(self, raw_result: dict[str, Any]) -> VoiceDesignOutput:
         """Convert provider metadata into the public VoiceDesignOutput schema."""
 
@@ -276,6 +334,7 @@ class ElevenLabsVoiceDesignSaver(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLa
 
         client = ElevenLabs(api_key=api_key)
         super().__init__(client)
+        self.async_client = AsyncElevenLabs(api_key=api_key)
         self.save_input = save_input
 
     def _request(self) -> dict[str, Any]:
@@ -303,6 +362,29 @@ class ElevenLabsVoiceDesignSaver(APIAdapterSDKBase[VoiceIdentityOutput, ElevenLa
                 "raw_response": response.model_dump(),
             }
             
+        except ApiError as error:
+            raise RuntimeError(
+                f"Error calling ElevenLabs voice design saver: {error}"
+            ) from error
+
+    async def _arequest(self) -> dict[str, Any]:
+        """Call ElevenLabs asynchronously to save the selected generated voice."""
+
+        try:
+            response = await self.async_client.text_to_voice.create(
+                voice_name=self.save_input.name,
+                voice_description=self.save_input.description,
+                generated_voice_id=self.save_input.generated_voice_id,
+                labels=self.save_input.labels,
+            )
+
+            return {
+                "voice_id": response.voice_id,
+                "name": self.save_input.name,
+                "description": self.save_input.description,
+                "raw_response": response.model_dump(),
+            }
+
         except ApiError as error:
             raise RuntimeError(
                 f"Error calling ElevenLabs voice design saver: {error}"

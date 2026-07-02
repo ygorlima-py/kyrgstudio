@@ -7,7 +7,7 @@ schema into an ElevenLabs SDK call and normalizes the result into VoiceOutput.
 
 from typing import Any
  
-from elevenlabs.client import ElevenLabs
+from elevenlabs.client import ElevenLabs, AsyncElevenLabs
 from elevenlabs.core.api_error import ApiError
  
 from kyrg.adapters.base import APIAdapterSDKBase
@@ -39,6 +39,7 @@ class ElevenLabsVoiceGenerator(APIAdapterSDKBase[VoiceOutput, ElevenLabs]):
 
         client = ElevenLabs(api_key=api_key)
         super().__init__(client)
+        self.async_client = AsyncElevenLabs(api_key=api_key)
         self.tts_input = tts_input
  
     def _request(self) -> dict[str, Any]:
@@ -75,6 +76,39 @@ class ElevenLabsVoiceGenerator(APIAdapterSDKBase[VoiceOutput, ElevenLabs]):
                 "output_format": output_format,
             }
  
+        except ApiError as error:
+            raise RuntimeError(f"Error calling ElevenLabs text-to-speech: {error}")
+
+    async def _arequest(self) -> dict[str, Any]:
+        """Call ElevenLabs asynchronously and persist the generated audio file."""
+
+        output_format = self.tts_input.settings.get("output_format", "mp3_44100_128")
+
+        kwargs: dict[str, Any] = {
+            "voice_id": self.tts_input.voice,
+            "text": self.tts_input.text,
+            "model_id": self.tts_input.model,
+            "output_format": output_format,
+        }
+
+        voice_settings = self.tts_input.settings.get("voice_settings")
+        if voice_settings is not None:
+            kwargs["voice_settings"] = voice_settings
+
+        try:
+            audio = self.async_client.text_to_speech.convert(**kwargs)
+
+            with open(self.tts_input.output_path, "wb") as audio_file:
+                async for chunk in audio:
+                    audio_file.write(chunk)
+
+            return {
+                "audio_path": self.tts_input.output_path,
+                "model": self.tts_input.model,
+                "voice": self.tts_input.voice,
+                "output_format": output_format,
+            }
+
         except ApiError as error:
             raise RuntimeError(f"Error calling ElevenLabs text-to-speech: {error}")
  
@@ -115,6 +149,7 @@ class ElevenLabsSpeechToSpeech(APIAdapterSDKBase[VoiceOutput, ElevenLabs]):
 
         client = ElevenLabs(api_key=api_key)
         super().__init__(client)
+        self.async_client = AsyncElevenLabs(api_key=api_key)
         self.speech_input = speech_input
  
     def _request(self) -> dict[str, Any]:
@@ -153,6 +188,44 @@ class ElevenLabsSpeechToSpeech(APIAdapterSDKBase[VoiceOutput, ElevenLabs]):
                 "output_format": output_format,
             }
  
+        except ApiError as error:
+            raise RuntimeError(f"Error calling ElevenLabs speech-to-speech: {error}")
+
+    async def _arequest(self) -> dict[str, Any]:
+        """Call ElevenLabs asynchronously and persist the converted audio file."""
+
+        output_format = self.speech_input.settings.get("output_format", "mp3_44100_128")
+
+        kwargs: dict[str, Any] = {
+            "voice_id": self.speech_input.voice,
+            "model_id": self.speech_input.model,
+            "output_format": output_format,
+        }
+
+        for setting in ("voice_settings", "remove_background_noise", "file_format"):
+            value = self.speech_input.settings.get(setting)
+            if value is not None:
+                kwargs[setting] = value
+
+        try:
+            with open(self.speech_input.audio_path, "rb") as audio_file:
+                audio = self.async_client.speech_to_speech.convert(
+                    audio=audio_file,
+                    **kwargs,
+                )
+
+                with open(self.speech_input.output_path, "wb") as output_file:
+                    async for chunk in audio:
+                        output_file.write(chunk)
+
+            return {
+                "audio_path": self.speech_input.output_path,
+                "model": self.speech_input.model,
+                "voice": self.speech_input.voice,
+                "source_audio_path": self.speech_input.audio_path,
+                "output_format": output_format,
+            }
+
         except ApiError as error:
             raise RuntimeError(f"Error calling ElevenLabs speech-to-speech: {error}")
  

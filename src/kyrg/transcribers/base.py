@@ -54,6 +54,16 @@ class TranscriberBase(ABC):
         """
 
         pass
+    
+    @abstractmethod
+    async def atranscribe(self) -> TranscriptionResult:
+        """
+        Transcribe async the configured audio file.
+        
+        Returns:
+            A normalized ``TranscriptionResult``.
+        """
+        pass
 
 
 class TranscriberAPIBase(TranscriberBase, APIAdapterBase[TranscriptionResult]):
@@ -86,25 +96,7 @@ class TranscriberAPIBase(TranscriberBase, APIAdapterBase[TranscriptionResult]):
         super().__init__(audio_path, model_name, language, temperature)
         self.api_key = api_key
         
-    @abstractmethod
-    def _request(self) -> dict[str, Any]:
-        """Send the provider-specific API request and return its raw response."""
-
-        pass
-
-    @abstractmethod
-    def _normalize_response(self, response: dict[str, Any]) -> TranscriptionResult:
-        """Normalize a provider response into ``TranscriptionResult``.
-
-        Args:
-            response: Raw response returned by the provider API.
-
-        Returns:
-            A normalized transcription result.
-        """
-
-        pass
-
+        
     def transcribe(self) -> TranscriptionResult:
         """Run the standard API transcription flow.
 
@@ -116,3 +108,6 @@ class TranscriberAPIBase(TranscriberBase, APIAdapterBase[TranscriptionResult]):
         """
 
         return self.run()
+
+    async def atranscribe(self) -> TranscriptionResult:
+        return await self.arun()

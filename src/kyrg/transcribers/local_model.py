@@ -4,9 +4,8 @@ This module contains the local Whisper transcriber implementation. It adapts
 ``faster_whisper`` segment objects into the shared ``TranscriptionResult``
 schema used by the rest of the application.
 """
-
 from typing import Any
-
+import asyncio
 from faster_whisper import WhisperModel # type: ignore[reportMissingTypeStubs]
 
 from kyrg.transcribers.base import TranscriberBase
@@ -95,4 +94,19 @@ class TranscriberWhisperLocal(TranscriberBase):
 
         raw_segments = list(segments_generator)
 
+        return self._normalize_result(raw_segments, info)
+
+    async def atranscribe(self) -> TranscriptionResult:
+        
+        model: Any = WhisperModel(self.model_name, device="cpu", compute_type="int8")
+        segments_generator, info = await asyncio.to_thread(
+            model.transcribe,
+            self.audio_path,
+            language=self.language,
+            temperature=self.temperature,
+            word_timestamps=True,
+        )
+        
+        raw_segments = await asyncio.to_thread(list, segments_generator)
+        
         return self._normalize_result(raw_segments, info)

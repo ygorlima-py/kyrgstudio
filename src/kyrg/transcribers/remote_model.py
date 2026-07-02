@@ -6,9 +6,8 @@ used by the application.
 """
 
 import base64
-
 import requests
-
+import httpx
 from typing import Any
 
 from kyrg.transcribers.base import TranscriberAPIBase
@@ -70,16 +69,53 @@ class OpenRouterTranscriber(TranscriberAPIBase):
         except requests.RequestException as error:
             raise RuntimeError(f"Error calling OpenRouter provider: {error}") from error
 
-    def _normalize_response(self, response: dict[str, Any]) -> TranscriptionResult:
+    async def _arequest(self):
+        """Send the transcription async request to OpenRouter.
+
+        Returns:
+            The decoded JSON response returned by the provider.
+
+        Raises:
+            RuntimeError: If the HTTP request fails or returns an error status.
+        """
+        request_args: dict[str, Any] = {
+            "headers": {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            "json": {
+                "model": self.model_name,
+                "input_audio": {
+                    "data": self._open_file(),
+                    "format": "wav",
+                },
+                "temperature": self.temperature,
+            },
+            "timeout": 300,
+        }
+
+        if self.language is not None:
+            request_args["json"]["language"] = self.language
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(self.URL, **request_args)
+                response.raise_for_status()
+                return response.json()
+            
+            except httpx.HTTPError as error:
+                raise RuntimeError(f"Error calling OpenRouter provider: {error}")
+
+    def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an OpenRouter response into ``TranscriptionResult``."""
 
         return TranscriptionResult(
             audio_path=self.audio_path,
-            language=response.get("language", self.language),
-            text=response.get("text", "").strip(),
+            language=raw_result.get("language", self.language),
+            text=raw_result.get("text", "").strip(),
             segments=[],
             model=self.model_name,
-            raw_response=response,
+            raw_response=raw_result,
             provider=self.PROVIDER,
         )
 
@@ -135,6 +171,55 @@ class OpenAITranscriber(TranscriberAPIBase):
         except requests.RequestException as error:
             raise RuntimeError(f"Error calling OpenAI provider: {error}") from error
 
+    async def _arequest(self) -> dict[str, Any]:
+        """Send the transcription request to OpenAI.
+
+        Returns:
+            The decoded JSON response returned by the provider.
+
+        Raises:
+            RuntimeError: If the HTTP request fails or returns an error status.
+        """
+
+        data = {
+            "model": self.model_name,
+            "response_format": "json",
+        }
+
+        if self.language:
+            data["language"] = self.language
+
+        request_args: dict[str, Any] = {
+            "headers": {
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            "data": data,
+            "timeout": 300,
+        }
+
+        try:
+            with open(self.audio_path, "rb") as audio_file:
+                files = {
+                    "file": (
+                        self.audio_path,
+                        audio_file,
+                        "application/octet-stream",
+                    )
+                }
+
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        self.URL,
+                        **request_args,
+                        files=files,
+                    )
+
+            response.raise_for_status()
+            return response.json()
+    
+        except requests.RequestException as error:
+            raise RuntimeError(f"Error calling OpenAI provider: {error}") from error
+        
     def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an OpenAI response into ``TranscriptionResult``."""
 
@@ -202,6 +287,49 @@ class ElevenLabsTranscriber(TranscriberAPIBase):
         except requests.RequestException as error:
             raise RuntimeError(f"Error calling ElevenLabs provider: {error}") from error
 
+    async def _arequest(self) -> dict[str, Any]:
+        """Send the transcription async request to ElevenLabs.
+
+        Returns:
+            The decoded JSON response returned by the provider.
+
+        Raises:
+            RuntimeError: If the HTTP request fails or returns an error status.
+        """
+
+        data: dict[str, Any] = {
+            "model_id": self.model_name,
+            "timestamps_granularity": "word",
+            "diarize": False,
+            "temperature": self.temperature,
+        }
+
+        if self.language:
+            data["language_code"] = self.language
+
+        request_args: dict[str, Any] = {
+            "headers": {
+                "xi-api-key": self.api_key,
+            },
+            "data": data,
+            "timeout": 300,
+        }
+
+        try:
+            with open(self.audio_path, "rb") as audio_file:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        self.URL,
+                        **request_args,
+                        files={"file": audio_file},
+                    )
+
+            response.raise_for_status()
+            return response.json()
+    
+        except httpx.HTTPError as error:
+            raise RuntimeError(f"Error calling ElevenLabs provider: {error}") from error
+    
     def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an ElevenLabs response into ``TranscriptionResult``."""
 

@@ -7,7 +7,7 @@ strings into raw image bytes.
 """
 
 from typing import Any
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 import base64
 
 from kyrg.generate.images.base import ImageGeneratorBase
@@ -29,6 +29,7 @@ class OpenRouterImageGenerator(ImageGeneratorBase):
         """
 
         self.client = OpenAI(api_key=api_key, base_url=self.URL)
+        self.async_client = AsyncOpenAI(api_key=api_key, base_url=self.URL)
         self.image_input = image_input
     
     def _build_payload(self) -> dict[str, Any]:
@@ -80,6 +81,25 @@ class OpenRouterImageGenerator(ImageGeneratorBase):
             "model": response.model or self.image_input.model,
         }
     
+        except Exception as error:
+            raise RuntimeError(
+                f"Error calling {self.PROVIDER} image provider: {error}"
+            ) from error
+
+    async def _arequest(self) -> Any:
+        """Call OpenRouter asynchronously and return image metadata."""
+
+        args = self._build_payload()
+
+        try:
+            response = await self.async_client.chat.completions.create(**args)
+            message = response.choices[0].message
+
+            return {
+            "images": message.images or [],
+            "model": response.model or self.image_input.model,
+        }
+
         except Exception as error:
             raise RuntimeError(
                 f"Error calling {self.PROVIDER} image provider: {error}"
