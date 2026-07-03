@@ -94,7 +94,7 @@ Exemplo de estrutura local:
 No fluxo local, o frontend envia o arquivo para a API. A API recebe o arquivo, grava no storage local e inicia o job.
 
 ### `s3.py`
-
+<FEITO>
 Implementacao futura para AWS S3.
 
 Responsabilidades:
@@ -117,16 +117,70 @@ Detalhes de implementacao a decidir:
 - upload de arquivo grande: `upload_fileobj` do boto3 ja faz multipart automatico acima de um threshold, mas vale confirmar o `TransferConfig` se os videos passarem de alguns GB.
 
 ### `r2.py`
-
+<FEITO>
 Implementacao futura para Cloudflare R2.
 
-Cloudflare R2 e compativel com API S3 em muitos pontos. A implementacao pode reaproveitar a mesma logica conceitual do S3, mudando endpoint, credenciais e bucket.
+R2Storage deve reutilizar toda a implementacao de S3Storage e apenas configurar
+`endpoint_url`, `region_name`, `uri_scheme` e `backend`:
+
+```python
+class R2Storage(S3Storage):
+    backend = "r2"
+
+    def __init__(self, account_id: str, bucket: str, access_key: str, secret_key: str) -> None:
+        super().__init__(
+            bucket=bucket,
+            region_name="auto",
+            endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
+            access_key=access_key,
+            secret_key=secret_key,
+            uri_scheme="r2",
+        )
+```
+
+`uri_scheme="r2"` e obrigatorio aqui: sem isso, `uri()` herda o default `"s3"` de
+`S3Storage` e toda referencia de arquivo R2 fica salva no banco como `s3://bucket/key`,
+o que confunde debug e qualquer logica futura que decida comportamento a partir do
+prefixo da URI (materializer, por exemplo).
+
+`region_name="auto"` fica fixo dentro do `R2Storage`, nao exposto como parametro do
+seu `__init__` — R2 nao tem regioes reais, e deixar configuravel abre espaco pra
+alguem passar um valor tipo `"us-east-1"` por engano copiando de exemplo AWS.
+
+Diferencas que exigem atencao, mesmo com API compativel:
+
+- R2 nao cobra egress; S3 cobra — afeta custo se o materializer baixar arquivos com frequencia;
+- credenciais de R2 sao um R2 API token (formato access key/secret key), gerado separado do restante da conta Cloudflare;
+- nem toda feature do S3 tem equivalente no R2 (storage classes, object lock, replication) — o contrato do app usa apenas save_file, save_upload, exists, delete, delete_prefix, uri e presigned URL, entao isso nao deve ser um problema, mas vale confirmar antes de ir pra producao.
 
 ### `gcp.py`
+<FEITO>
+Implementa storage em Google Cloud Storage.
 
-Implementacao futura para Google Cloud Storage.
+Diferente de `R2Storage`, `GCPStorage` nao herda de `S3Storage`. Google Cloud Storage nao usa o client boto3 nem a API S3 do app. A implementacao deve usar `google-cloud-storage` e implementar `StorageBase` diretamente.
 
-Responsabilidades equivalentes ao S3, usando os clients e signed URLs da GCP.
+`GCPStorage` deve seguir o mesmo contrato atual dos outros storages:
+
+- `save_file`: fazer upload de arquivo local usando `blob.upload_from_filename`;
+- `save_upload`: fazer upload de stream usando `blob.upload_from_file`;
+- `exists`: verificar objeto usando `blob.exists`;
+- `delete`: remover objeto usando `blob.delete`;
+- `delete_prefix`: remover objetos por prefixo usando `bucket.list_blobs(prefix=...)`;
+- `uri`: retornar `gs://{bucket}/{key}`;
+- traduzir erros do Google SDK para `StorageError`.
+
+`__init__`:
+
+```python
+def __init__(
+    self,
+    bucket: str,
+    credentials_path: str | None = None,
+    project: str | None = None,
+    uri_scheme: str = "gs",
+) -> None:
+    ...
+
 
 ### `paths.py`
 
