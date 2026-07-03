@@ -102,9 +102,24 @@ class StorageError(AppError):
     default_step = "storage"
 
 
-class JobStoreError(AppError):
+class StoreError(AppError):
+    code = "store_error"
+    default_step = "store"
+
+
+class JobStoreError(StoreError):
     code = "job_store_error"
     default_step = "job_store"
+
+
+class UserStoreError(StoreError):
+    code = "user_store_error"
+    default_step = "user_store"
+
+
+class BillingStoreError(StoreError):
+    code = "billing_store_error"
+    default_step = "billing_store"
 
 
 class ExportError(AppError):
@@ -119,6 +134,7 @@ class TimeoutAppError(AppError):
 
 __all__ = [
     "AppError",
+    "BillingStoreError",
     "ExportError",
     "FileNotFoundAppError",
     "InvalidInputError",
@@ -129,9 +145,11 @@ __all__ = [
     "PipelineExecutionError",
     "ProviderConfigError",
     "StorageError",
+    "StoreError",
     "StructuredOutputError",
     "TimeoutAppError",
     "TranscriptionError",
     "UnsupportedMediaTypeError",
+    "UserStoreError",
     "WorkflowResultError",
 ]
