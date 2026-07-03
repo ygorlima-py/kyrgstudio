@@ -228,8 +228,8 @@ class S3Storage(StorageBase):
 
     def _load_boto3(self) -> tuple[Any, type[Exception], type[Exception]]:
         try:
-            import boto3
-            from botocore.exceptions import BotoCoreError, ClientError
+            import boto3 #type: ignore
+            from botocore.exceptions import BotoCoreError, ClientError #type: ignore
         except ImportError as error:
             raise StorageError(
                 technical_message=(
