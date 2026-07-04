@@ -944,22 +944,21 @@ list_user_jobs(user_id, limit=20, offset=0)
 Construir nesta ordem:
 
 1. adicionar dependencias `sqlalchemy`, `alembic` e driver Postgres async;
-2. criar `database.py` com `create_async_engine`, `async_sessionmaker` e
-   `AsyncSession`;
+2. criar `database.py`;
 3. criar `models.py` com `users`, `subscriptions`, `billing_events`, `jobs` e
    `job_events`;
-4. configurar Alembic na raiz;
-5. gerar primeira migration;
-6. criar `base.py` com contratos;
+4. criar `base.py` com contratos;
+5. configurar Alembic na raiz;
+6. gerar primeira migration;
 7. criar `jobs.py`;
 8. criar `users.py`;
 9. criar `billing.py`;
 10. criar `factory.py`;
-11. integrar `JobStore` no pipeline;
-12. integrar `UserStore` na camada de auth;
-13. integrar `BillingStore` nos webhooks da Stripe;
-14. criar testes unitarios;
-15. criar testes de integracao com banco temporario.
+11. criar testes unitarios;
+12. criar testes de integracao com banco temporario;
+13. integrar `JobStore` no pipeline;
+14. integrar `UserStore` na camada de auth;
+15. integrar `BillingStore` nos webhooks da Stripe.
 
 ## Testes Necessarios
 
