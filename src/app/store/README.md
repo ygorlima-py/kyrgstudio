@@ -431,20 +431,24 @@ Isso evita passar tres stores separados por todo o pipeline.
 Campos:
 
 ```text
-id
-email
-password_hash
-auth_provider
-email_verified_at
-created_at
-updated_at
-disabled_at
+id: Integer, primary key
+email: String(320), not null, unique
+password_hash: String(256), nullable
+name: String(255), nullable
+avatar_url: String(2048), nullable
+auth_provider: String(50), not null, default "password"
+google_sub: String(255), nullable, unique
+email_verified_at: DateTime(timezone=True), nullable
+created_at: DateTime(timezone=True), not null, server_default now()
+updated_at: DateTime(timezone=True), not null, server_default now(), onupdate now()
+disabled_at: DateTime(timezone=True), nullable
 ```
 
 Indices:
 
 ```text
 unique(email)
+unique(google_sub)
 ```
 
 Observacoes:
@@ -461,18 +465,18 @@ Observacoes:
 Campos:
 
 ```text
-id
-user_id
-stripe_customer_id
-stripe_subscription_id
-stripe_price_id
-status
-plan
-current_period_start
-current_period_end
-cancel_at_period_end
-created_at
-updated_at
+id: Integer, primary key
+user_id: Integer, foreign key users.id, not null
+stripe_customer_id: String(255), not null, unique
+stripe_subscription_id: String(255), not null, unique
+stripe_price_id: String(255), nullable
+status: String(50), not null
+plan: String(50), nullable
+current_period_start: DateTime(timezone=True), nullable
+current_period_end: DateTime(timezone=True), nullable
+cancel_at_period_end: Boolean, not null, default false
+created_at: DateTime(timezone=True), not null, server_default now()
+updated_at: DateTime(timezone=True), not null, server_default now(), onupdate now()
 ```
 
 Indices:
@@ -494,12 +498,12 @@ Observacoes:
 Campos:
 
 ```text
-id
-stripe_event_id
-event_type
-payload_json
-processed_at
-created_at
+id: Integer, primary key
+stripe_event_id: String(255), not null, unique
+event_type: String(100), not null
+payload_json: JSON/JSONB, not null
+processed_at: DateTime(timezone=True), nullable
+created_at: DateTime(timezone=True), not null, server_default now()
 ```
 
 Indices:
@@ -525,26 +529,26 @@ processado, nao como erro fatal do usuario.
 Campos:
 
 ```text
-id
-user_id
-run_id
-status
-current_step
-pipeline_type
-input_json
-storage_backend
-input_file_key
-input_file_uri
-audio_file_key
-audio_file_uri
-output_json
-error_json
-token_usage_json
-execution_time_seconds
-created_at
-updated_at
-started_at
-finished_at
+id: Integer, primary key
+user_id: Integer, foreign key users.id, not null
+run_id: String(255), nullable, unique
+status: String(50), not null
+current_step: String(100), not null
+pipeline_type: String(50), not null
+input_json: JSON/JSONB, not null
+storage_backend: String(50), nullable
+input_file_key: String(1024), nullable
+input_file_uri: String(2048), nullable
+audio_file_key: String(1024), nullable
+audio_file_uri: String(2048), nullable
+output_json: JSON/JSONB, nullable
+error_json: JSON/JSONB, nullable
+token_usage_json: JSON/JSONB, nullable
+execution_time_seconds: Float, nullable
+created_at: DateTime(timezone=True), not null, server_default now()
+updated_at: DateTime(timezone=True), not null, server_default now(), onupdate now()
+started_at: DateTime(timezone=True), nullable
+finished_at: DateTime(timezone=True), nullable
 ```
 
 Indices:
@@ -600,12 +604,12 @@ Tabela opcional, mas recomendada para debug e produto.
 Campos:
 
 ```text
-id
-job_id
-step
-event_type
-payload_json
-created_at
+id: Integer, primary key
+job_id: Integer, foreign key jobs.id, not null
+step: String(100), not null
+event_type: String(100), not null
+payload_json: JSON/JSONB, nullable
+created_at: DateTime(timezone=True), not null, server_default now()
 ```
 
 Indices:
