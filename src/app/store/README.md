@@ -943,12 +943,14 @@ list_user_jobs(user_id, limit=20, offset=0)
 
 Construir nesta ordem:
 
-1. adicionar dependencias `sqlalchemy`, `alembic` e driver Postgres async;
-2. criar `database.py`;
+
+1. adicionar dependencias `sqlalchemy`, `alembic` e driver Postgres async; [FEITO]
+
+2. criar `database.py`; [FEITO]
 3. criar `models.py` com `users`, `subscriptions`, `billing_events`, `jobs` e
-   `job_events`;
-4. criar `base.py` com contratos;
-5. configurar Alembic na raiz;
+   `job_events`; [FEITO]
+4. criar `base.py` com contratos; [FEITO]
+5. configurar Alembic na raiz; [FEITO]
 6. gerar primeira migration;
 7. criar `jobs.py`;
 8. criar `users.py`;
