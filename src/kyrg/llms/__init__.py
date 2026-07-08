@@ -7,12 +7,14 @@ independent from provider SDK details.
 """
 
 from kyrg.llms.openai_llm import OpenAILLM
+from kyrg.llms.openrouter_llm import OpenRouterLLM
 from kyrg.llms.langchain_llm import LangChainLLM
 from kyrg.llms.gemini_llm import GoogleLLM
 from kyrg.llms.base import LLMBase
 
 __all__ = [
     "OpenAILLM",
+    "OpenRouterLLM",
     "LangChainLLM",
     "GoogleLLM",
     "LLMBase",
