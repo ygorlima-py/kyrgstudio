@@ -16,7 +16,8 @@ from pathlib import Path
 
 from alembic import context
 from dotenv import load_dotenv
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 
@@ -86,14 +87,26 @@ def _run_migrations(connection) -> None:
         context.run_migrations()
 
 
-async def run_migrations_online() -> None:
-    """Run migrations using SQLAlchemy's async engine."""
+def _configuration(database_url: str) -> dict[str, str]:
+    """Return Alembic engine configuration for a specific database URL."""
 
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = _database_url()
+    configuration["sqlalchemy.url"] = database_url
+    return configuration
+
+
+def _is_async_url(database_url: str) -> bool:
+    """Return whether a SQLAlchemy URL uses an async driver."""
+
+    driver = make_url(database_url).get_driver_name()
+    return driver in {"aiosqlite", "asyncpg"}
+
+
+async def run_async_migrations_online(database_url: str) -> None:
+    """Run migrations using SQLAlchemy's async engine."""
 
     connectable = async_engine_from_config(
-        configuration,
+        _configuration(database_url),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
@@ -104,7 +117,34 @@ async def run_migrations_online() -> None:
     await connectable.dispose()
 
 
+def run_sync_migrations_online(database_url: str) -> None:
+    """Run migrations using SQLAlchemy's synchronous engine."""
+
+    connectable = engine_from_config(
+        _configuration(database_url),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        _run_migrations(connection)
+
+    connectable.dispose()
+
+
+def run_migrations_online() -> None:
+    """Run migrations with the engine type required by the configured URL."""
+
+    database_url = _database_url()
+
+    if _is_async_url(database_url):
+        asyncio.run(run_async_migrations_online(database_url))
+        return
+
+    run_sync_migrations_online(database_url)
+
+
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    asyncio.run(run_migrations_online())
+    run_migrations_online()

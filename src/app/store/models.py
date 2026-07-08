@@ -108,7 +108,7 @@ class Subscription(Base):
     # Identificador do cliente na Stripe.
     stripe_customer_id: Mapped[str] = mapped_column(
         String(255),
-        unique=True,
+        index=True,
     )
 
     # Identificador da assinatura na Stripe.
@@ -342,4 +342,38 @@ class JobEvent(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         index=True,
+    )
+
+class BillingCustomer(Base):
+    __tablename__ = "billing_customers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Usuario dono deste customer na Stripe.
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # Identificador do customer na Stripe, exemplo: cus_123.
+    stripe_customer_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # Data em que o customer foi registrado localmente.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+
+    # Data da ultima atualizacao local do customer.
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
     )

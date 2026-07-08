@@ -259,6 +259,7 @@ Tabelas iniciais:
 
 ```text
 users
+billing_customers
 subscriptions
 billing_events
 jobs
@@ -462,12 +463,42 @@ Observacoes:
 
 ### `subscriptions`
 
+### `billing_customers`
+
+Campos:
+
+```text
+id: Integer, primary key
+user_id: Integer, foreign key users.id, not null, unique
+stripe_customer_id: String(255), not null, unique
+created_at: DateTime(timezone=True), not null, server_default now()
+updated_at: DateTime(timezone=True), not null, server_default now(), onupdate now()
+```
+
+Indices:
+
+```text
+unique(user_id)
+unique(stripe_customer_id)
+index(user_id)
+index(stripe_customer_id)
+```
+
+Uso:
+
+- salvar o customer da Stripe antes de existir assinatura;
+- ligar um usuario local a um customer Stripe;
+- permitir que `subscriptions` mantenha historico de assinaturas sem depender de
+  `stripe_customer_id` unico nessa tabela.
+
+### `subscriptions`
+
 Campos:
 
 ```text
 id: Integer, primary key
 user_id: Integer, foreign key users.id, not null
-stripe_customer_id: String(255), not null, unique
+stripe_customer_id: String(255), not null
 stripe_subscription_id: String(255), not null, unique
 stripe_price_id: String(255), nullable
 status: String(50), not null
@@ -483,7 +514,7 @@ Indices:
 
 ```text
 index(user_id)
-unique(stripe_customer_id)
+index(stripe_customer_id)
 unique(stripe_subscription_id)
 ```
 
@@ -947,8 +978,8 @@ Construir nesta ordem:
 1. adicionar dependencias `sqlalchemy`, `alembic` e driver Postgres async; [FEITO]
 
 2. criar `database.py`; [FEITO]
-3. criar `models.py` com `users`, `subscriptions`, `billing_events`, `jobs` e
-   `job_events`; [FEITO]
+3. criar `models.py` com `users`, `billing_customers`, `subscriptions`,
+   `billing_events`, `jobs` e `job_events`; [FEITO]
 4. criar `base.py` com contratos; [FEITO]
 5. configurar Alembic na raiz; [FEITO]
 6. gerar primeira migration;

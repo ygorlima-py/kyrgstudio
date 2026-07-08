@@ -68,6 +68,14 @@ class UserStoreBase(ABC):
         
 class BillingStoreBase(ABC):
     @abstractmethod
+    async def set_stripe_customer(
+        self,
+        user_id: int,
+        stripe_customer_id: str,
+    ) -> Any:
+        ...
+
+    @abstractmethod
     async def upsert_subscription(self, payload: dict[str, Any]) -> Any:
         ...
 
