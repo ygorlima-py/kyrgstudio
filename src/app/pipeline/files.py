@@ -8,35 +8,7 @@ from typing import BinaryIO
 
 from app.storage.base import StorageBase, StoredFile
 from app.storage.paths import job_input_key
-
-
-@dataclass(frozen=True)
-class PipelineInputFile:
-    """Stored input file plus the payload expected by JobStore.mark_uploaded."""
-
-    stored_file: StoredFile
-
-    @property
-    def storage_backend(self) -> str:
-        return self.stored_file.backend
-
-    @property
-    def input_file_key(self) -> str:
-        return self.stored_file.key
-
-    @property
-    def input_file_uri(self) -> str:
-        return self.stored_file.uri
-
-    def to_job_payload(self) -> dict[str, str]:
-        """Return the database payload used to mark a job as uploaded."""
-
-        return {
-            "storage_backend": self.storage_backend,
-            "input_file_key": self.input_file_key,
-            "input_file_uri": self.input_file_uri,
-        }
-
+from app.schemas.pipeline import PipelineInputFile
 
 def save_pipeline_upload(
     *,

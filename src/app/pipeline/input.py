@@ -10,10 +10,10 @@ from app.providers.transcribers import SUPPORTED_TRANSCRIBER_PROVIDERS
 from app.schemas.pipeline import (
     CopyAdaptationPipelineInput,
     CopyAnalysisPipelineInput,
+    PipelineType,
 )
 
 
-PipelineType = Literal["copy_analysis", "copy_adaptation"]
 PipelineInput = CopyAnalysisPipelineInput | CopyAdaptationPipelineInput
 OutputFormat = Literal["json", "md", "txt"]
 
