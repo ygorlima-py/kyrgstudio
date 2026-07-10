@@ -12,6 +12,7 @@ class ResolvedInputFile:
     input_file_uri: str
     local_path: Path
     should_cleanup: bool = False
+    cleanup_root: Path | None = None
     
 @dataclass(frozen=True)
 class WorkflowExecutionRequest:

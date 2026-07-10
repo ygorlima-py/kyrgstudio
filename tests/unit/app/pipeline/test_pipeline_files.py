@@ -122,6 +122,7 @@ class StorageFake(StorageBase):
     def __init__(self) -> None:
         self.file_calls: list[dict[str, object]] = []
         self.upload_calls: list[dict[str, object]] = []
+        self.download_calls: list[dict[str, object]] = []
 
     def save_file(self, source_path: Path, destination_key: str) -> StoredFile:
         self.file_calls.append(
@@ -144,6 +145,15 @@ class StorageFake(StorageBase):
             }
         )
         return self._stored_file(destination_key)
+
+    def download_file(self, key: str, destination_path: Path) -> Path:
+        self.download_calls.append(
+            {
+                "key": key,
+                "destination_path": destination_path,
+            }
+        )
+        return destination_path
 
     def exists(self, key: str) -> bool:
         return False

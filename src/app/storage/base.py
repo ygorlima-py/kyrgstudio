@@ -32,6 +32,17 @@ class StorageBase(ABC):
         ...
 
     @abstractmethod
+    def download_file(self, key: str, destination_path: Path) -> Path:
+        """Download a complete stored file to an exact local destination.
+
+        Implementations must avoid exposing partial downloads at
+        ``destination_path`` and return the path only after the file is fully
+        available locally.
+        """
+
+        ...
+
+    @abstractmethod
     def exists(self, key: str) -> bool:
         """Return whether a complete stored file exists for the given key."""
 

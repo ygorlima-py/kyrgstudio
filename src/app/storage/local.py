@@ -77,6 +77,44 @@ class LocalStorage(StorageBase):
             backend=self.backend,
         )
 
+    def download_file(self, key: str, destination_path: Path) -> Path:
+        """Copy a stored file atomically to an exact local destination."""
+
+        source = self._resolve_path(key)
+        destination = Path(destination_path).expanduser().resolve()
+
+        if not source.is_file():
+            raise StorageError(
+                technical_message=f"Local storage file does not exist: {key}",
+                details={"key": key},
+            )
+
+        if source == destination:
+            return destination
+
+        temporary_destination = self._temporary_path(destination)
+
+        try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, temporary_destination)
+            temporary_destination.replace(destination)
+        except OSError as error:
+            self._delete_partial_file(temporary_destination)
+            raise StorageError(
+                technical_message=(
+                    f"Failed to download file from local storage: {error}"
+                ),
+                details={
+                    "key": key,
+                    "destination_path": str(destination),
+                },
+            ) from error
+        except Exception:
+            self._delete_partial_file(temporary_destination)
+            raise
+
+        return destination
+
     def exists(self, key: str) -> bool:
         try:
             return self._resolve_path(key).exists()
@@ -153,3 +191,9 @@ class LocalStorage(StorageBase):
                 path.unlink()
         except OSError:
             pass
+
+    @staticmethod
+    def _temporary_path(destination: Path) -> Path:
+        return destination.with_name(
+            f"{destination.name}.{uuid.uuid4().hex}.part"
+        )

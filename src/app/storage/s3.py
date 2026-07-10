@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from typing import Any, BinaryIO
 
@@ -104,6 +105,52 @@ class S3Storage(StorageBase):
             ) from error
 
         return self._stored_file(key)
+
+    def download_file(self, key: str, destination_path: Path) -> Path:
+        """Download an S3-compatible object atomically to local storage."""
+
+        resolved_key = self._validate_key(key)
+        destination = Path(destination_path).expanduser().resolve()
+        temporary_destination = self._temporary_path(destination)
+
+        try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            self.client.download_file(
+                self.bucket,
+                resolved_key,
+                str(temporary_destination),
+            )
+            temporary_destination.replace(destination)
+        except self._storage_errors() as error:
+            self._delete_partial_file(temporary_destination)
+            raise StorageError(
+                technical_message=(
+                    "Failed to download file from S3-compatible storage: "
+                    f"{error}"
+                ),
+                details={
+                    "backend": self.backend,
+                    "bucket": self.bucket,
+                    "key": resolved_key,
+                    "destination_path": str(destination),
+                },
+            ) from error
+        except OSError as error:
+            self._delete_partial_file(temporary_destination)
+            raise StorageError(
+                technical_message=f"Failed to finalize downloaded file: {error}",
+                details={
+                    "backend": self.backend,
+                    "bucket": self.bucket,
+                    "key": resolved_key,
+                    "destination_path": str(destination),
+                },
+            ) from error
+        except Exception:
+            self._delete_partial_file(temporary_destination)
+            raise
+
+        return destination
 
     def exists(self, key: str) -> bool:
         try:
@@ -225,6 +272,20 @@ class S3Storage(StorageBase):
             objects[index:index + self.max_delete_objects]
             for index in range(0, len(objects), self.max_delete_objects)
         ]
+
+    @staticmethod
+    def _temporary_path(destination: Path) -> Path:
+        return destination.with_name(
+            f"{destination.name}.{uuid.uuid4().hex}.part"
+        )
+
+    @staticmethod
+    def _delete_partial_file(path: Path) -> None:
+        try:
+            if path.is_file():
+                path.unlink()
+        except OSError:
+            pass
 
     def _load_boto3(self) -> tuple[Any, type[Exception], type[Exception]]:
         try:

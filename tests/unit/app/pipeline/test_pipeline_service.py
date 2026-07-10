@@ -342,6 +342,7 @@ class StorageFake(StorageBase):
         self.upload_error = upload_error
         self.upload_calls: list[dict[str, object]] = []
         self.file_calls: list[dict[str, object]] = []
+        self.download_calls: list[dict[str, object]] = []
 
     def save_file(self, source_path: Path, destination_key: str) -> StoredFile:
         self.events.append("save_file")
@@ -370,6 +371,15 @@ class StorageFake(StorageBase):
             raise self.upload_error
 
         return self._stored_file(destination_key)
+
+    def download_file(self, key: str, destination_path: Path) -> Path:
+        self.download_calls.append(
+            {
+                "key": key,
+                "destination_path": destination_path,
+            }
+        )
+        return destination_path
 
     def exists(self, key: str) -> bool:
         return False
