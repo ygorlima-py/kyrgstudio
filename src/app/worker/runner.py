@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -31,6 +30,7 @@ from app.schemas.workflow import (
 )
 from app.storage.base import StorageBase
 from app.store.base import JobStoreBase
+from app.worker.outputs import build_completed_output
 
 
 JOB_STATUS_UPLOADED = "uploaded"
@@ -172,8 +172,9 @@ class WorkerRunner:
             )
             workflow_result = await self.workflow_executor.execute(request)
             execution_time_seconds = _elapsed_seconds(self.clock() - started_at)
-            completed_output = _build_completed_output(
-                workflow_result,
+            completed_output = build_completed_output(
+                pipeline_type=request.pipeline_type,
+                result=workflow_result,
                 execution_time_seconds=execution_time_seconds,
             )
             completed_job = await self.job_store.mark_completed(
@@ -229,27 +230,6 @@ def _build_execution_request(
         source_type=_required_input_str(input_json, "source_type"),
         input_json=input_json,
     )
-
-
-def _build_completed_output(
-    result: WorkflowExecutionResult | Mapping[str, Any] | BaseModel,
-    *,
-    execution_time_seconds: float,
-) -> dict[str, Any]:
-    if isinstance(result, WorkflowExecutionResult):
-        output = dict(result.output_json)
-        token_usage = dict(result.token_usage)
-    elif isinstance(result, BaseModel):
-        output = result.model_dump(mode="json")
-        token_usage = _optional_mapping(output.get("token_usage"))
-    else:
-        output = dict(result)
-        token_usage = _optional_mapping(output.get("token_usage"))
-
-    output["token_usage"] = token_usage
-    output["execution_time_seconds"] = execution_time_seconds
-
-    return _json_safe(output)
 
 
 def _ensure_job_is_uploaded(job: Any) -> None:
@@ -364,34 +344,8 @@ def _safe_job_id(job: Any) -> int | None:
         return None
 
 
-def _optional_mapping(value: Any) -> dict[str, Any]:
-    if isinstance(value, Mapping):
-        return dict(value)
-
-    return {}
-
-
 def _elapsed_seconds(value: float) -> float:
     return round(max(value, 0.0), 6)
-
-
-def _json_safe(value: Any) -> Any:
-    if isinstance(value, BaseModel):
-        return value.model_dump(mode="json")
-
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(item) for key, item in value.items()}
-
-    if isinstance(value, list):
-        return [_json_safe(item) for item in value]
-
-    if isinstance(value, tuple):
-        return [_json_safe(item) for item in value]
-
-    if isinstance(value, Path):
-        return str(value)
-
-    return value
 
 
 __all__ = [

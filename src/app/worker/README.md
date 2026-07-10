@@ -1,264 +1,223 @@
-# Worker Do App
+# Worker Da Aplicacao
 
-Este modulo sera responsavel por executar jobs que ja foram criados pelo
-`src/app/pipeline`.
+O package `src/app/worker` executa jobs que ja foram criados, tiveram o arquivo
+de entrada salvo e foram colocados na fila pelo `PipelineService`.
 
-O pipeline prepara o trabalho:
-
-```text
-cria job
-salva arquivo
-marca uploaded
-enfileira job_id
-retorna resposta inicial
-```
-
-O worker executa o trabalho:
+O worker nao inicia uploads nem cria jobs. Sua entrada e um `job_id` persistido
+com status `uploaded`; sua saida e o mesmo job em estado terminal `completed` ou
+`failed`.
 
 ```text
-recebe job_id
-carrega job
-marca running
-executa workflows
-salva resultado
-marca completed ou failed
+API/Pipeline                       Worker
+------------                       ------
+valida input                       recebe job_id
+cria job pending                   carrega job uploaded
+salva arquivo                      marca running
+marca uploaded                     executa workflows
+enfileira job_id   ------------->  persiste resultado ou erro
+retorna ao cliente                 limpa arquivos do processamento
 ```
 
-## Decisao Arquitetural
+## Fontes De Verdade
 
-O worker fica fora de `src/app/pipeline` porque executar workflow e tarefa
-pesada.
+Este documento segue os contratos existentes nestes pontos:
 
-O pipeline deve ser rapido e seguro para a API. O worker pode demorar, chamar
-FFmpeg, transcritor, LLMs e workflows.
+- `app.schemas.pipeline`: tipos de pipeline e input publico;
+- `app.schemas.workflow`: contratos internos entre runner e executor;
+- `app.store.base.JobStoreBase`: leitura e transicoes do job;
+- `app.storage.base.StorageBase`: acesso e remocao de arquivos;
+- `app.queue.base.QueueBase`: envio do `job_id` para processamento;
+- `kyrg.workflows`: implementacao dos workflows de transcricao, analise e
+  adaptacao.
 
-Essa separacao permite que a API apenas crie e agende o job, enquanto o
-processamento pesado roda no worker via Celery.
+Quando houver divergencia entre este README e um contrato executavel, o contrato
+executavel deve ser corrigido ou o README deve ser atualizado no mesmo change.
 
-`InlineQueue` pode continuar existindo para testes e desenvolvimento local, mas
-Celery faz parte da implementacao planejada deste modulo desde o inicio.
+## Responsabilidades
 
-## Modulos Planejados
+O worker deve:
 
-### `runner.py`
+- consumir somente o identificador do job;
+- validar que o job existe e esta pronto para execucao;
+- tornar as transicoes de estado persistentes;
+- disponibilizar o arquivo de entrada em um caminho local;
+- montar os providers definidos em `job.input_json`;
+- executar os workflows da biblioteca `kyrg` de forma assincrona;
+- converter os estados finais dos workflows para um contrato interno estavel;
+- persistir output, tokens e tempo total;
+- persistir erro controlado quando a execucao falhar;
+- limpar arquivos temporarios e arquivos do job conforme a politica de storage.
 
-O que vai ser feito:
+O worker nao deve:
 
-- receber um `job_id`;
-- buscar o job no banco usando `JobStore`;
-- validar se o job pode ser executado;
-- marcar o job como `running`;
-- localizar o arquivo original salvo no storage;
-- preparar um arquivo local para os workflows quando necessario;
-- construir providers de transcricao e LLM;
-- executar o fluxo correto conforme `job.pipeline_type`;
-- salvar `output_json`, `token_usage_json` e `execution_time_seconds`;
-- marcar o job como `completed`;
-- marcar o job como `failed` quando ocorrer erro;
-- limpar arquivos temporarios locais usados durante a execucao.
+- receber upload HTTP;
+- criar o job inicial;
+- autenticar usuario;
+- verificar permissao de acesso ao job;
+- processar pagamentos ou webhooks;
+- implementar regras internas dos workflows `kyrg`;
+- retornar uma resposta HTTP;
+- guardar arquivos binarios no banco.
 
-Por que vai ser feito:
+## Estado Atual
 
-O runner centraliza a execucao real do processamento. Sem ele, a API ou o
-pipeline teriam que executar workflows diretamente, o que misturaria upload,
-orquestracao e processamento pesado no mesmo lugar.
+| Modulo | Estado | Observacao |
+| --- | --- | --- |
+| `runner.py` | Parcialmente implementado | Executa o fluxo principal e suporta arquivo local. Fronteiras de transacao e cleanup do arquivo original ainda precisam ser resolvidos. |
+| `outputs.py` | Implementado | Monta payload persistivel. Ainda aceita formatos brutos alem do contrato canonico. |
+| `workflows.py` | Concluido | Executa e normaliza os pipelines de analise e adaptacao usando os workflows `kyrg`. |
+| `materializer.py` | Pendente | Necessario para baixar inputs de storage remoto. |
+| `celery_app.py` | Pendente | A instancia e a configuracao real do Celery ainda nao existem. |
+| `tasks.py` | Pendente | A task que liga Celery ao runner ainda nao existe. |
+| `__init__.py` | Pendente | Deve exportar apenas a API publica estabilizada. |
 
-Regra principal:
+O adapter `app.queue.CeleryQueue` ja sabe chamar `task.delay(job_id)`, mas isso
+nao configura um worker Celery. A dependencia `celery`, o broker, a instancia da
+aplicacao e a task ainda precisam ser adicionados para a fila externa funcionar.
+
+## Contratos Internos
+
+### Entrada Do Runner
 
 ```text
-runner executa job existente
-pipeline cria e agenda job
+WorkerRunner.run(job_id: int) -> WorkerRunResult
 ```
 
-O `runner.py` nao deve:
+O job carregado precisa conter:
 
-- receber upload;
-- criar job inicial;
-- decidir autenticacao;
-- lidar com Stripe;
-- responder HTTP;
-- configurar Celery;
-- salvar arquivo inicial no storage.
+- `id`;
+- `status="uploaded"`;
+- `pipeline_type`;
+- `input_json`;
+- `storage_backend`;
+- `input_file_key`;
+- `input_file_uri`.
 
-### `materializer.py`
+### Pedido Para Os Workflows
 
-O que vai ser feito:
+O runner cria um `WorkflowExecutionRequest` com:
 
-- receber `storage_backend`, `input_file_key` e `input_file_uri`;
-- garantir que o arquivo esteja disponivel em um caminho local;
-- se o storage for local, usar o caminho local diretamente quando possivel;
-- se o storage for remoto, baixar o arquivo para uma pasta temporaria;
-- devolver o caminho local que os workflows conseguem usar.
+- `job_id`;
+- `pipeline_type`;
+- `source_path` local;
+- `source_type`;
+- copia de `input_json`.
 
-Por que vai ser feito:
+### Resultado Dos Workflows
 
-FFmpeg e os workflows atuais trabalham melhor com arquivo local. O materializer
-isola a diferenca entre LocalStorage, S3, R2 e GCP.
-
-Sem esse modulo, o runner teria que conhecer detalhes de cada backend de
-storage.
-
-Regra principal:
+O contrato canonico entre `workflows.py` e o runner e
+`WorkflowExecutionResult`:
 
 ```text
-workflow recebe caminho local
-storage pode ser local ou remoto
+output_json: dict[str, Any]
+token_usage: dict[str, Any]
 ```
 
-### `outputs.py`
+`workflows.py` deve traduzir os estados especificos da biblioteca `kyrg` para
+esse contrato. `outputs.py` nao deve precisar descobrir qual chave arbitraria
+representa cada resultado.
 
-O que vai ser feito:
+As chaves brutas atuais da biblioteca sao:
 
-- consolidar resultado final em formato persistivel no banco;
-- montar `output_json`;
-- montar `token_usage`;
-- montar `execution_time_seconds`;
-- separar output de analise e output de adaptacao;
-- garantir que o banco receba apenas dados serializaveis.
+| Workflow | Resultado principal | Tokens |
+| --- | --- | --- |
+| `TranscriberWorkflow` | `result` | `input_tokens`, `output_tokens`, `total_tokens` |
+| `CopyAnalysisWorkflow` | `analysis` | `input_tokens`, `output_tokens`, `total_tokens` |
+| `CopyAdaptationWorkflow` | `adapted_script` | `input_tokens`, `output_tokens`, `total_tokens` |
 
-Por que vai ser feito:
+No fluxo de adaptacao, `validation_passed`, `validation_errors`,
+`validation_warnings` e `missing_proofs` pertencem ao objeto
+`adapted_script`. A traducao para o output do app deve acontecer uma unica vez
+em `workflows.py`.
 
-Os workflows retornam objetos estruturados. O banco deve receber um dicionario
-limpo, serializavel e estavel.
+### Resultado Do Runner
 
-Separar essa etapa evita que o runner vire um arquivo grande misturando
-execucao, conversao de output e persistencia.
+O runner retorna `WorkerRunResult`, contendo apenas o resumo da execucao:
 
-### `workflows.py`
+- `job_id`;
+- `status`;
+- `pipeline_type`;
+- `execution_time_seconds`.
 
-O que vai ser feito:
+O resultado completo permanece no banco, em `jobs.output_json`.
 
-- construir e executar os workflows da biblioteca `kyrg`;
-- executar `TranscriberWorkflow`;
-- executar `CopyAnalysisWorkflow`;
-- executar `CopyAdaptationWorkflow` quando o pipeline for de adaptacao;
-- retornar um resultado interno padronizado para o runner.
-
-Por que vai ser feito:
-
-O runner precisa coordenar execucao, mas nao deve carregar todos os detalhes de
-como cada workflow e instanciado.
-
-Esse modulo cria uma fronteira clara:
+## Fluxo De Execucao
 
 ```text
-runner decide quando executar
-workflows.py sabe como executar
+Celery recebe job_id
+-> task cria as dependencias da execucao
+-> runner carrega o job
+-> runner exige status uploaded
+-> job passa para running
+-> input e resolvido para um caminho local
+-> workflows.py executa o pipeline solicitado
+-> outputs.py monta o payload persistivel
+-> job passa para completed
+-> arquivos temporarios e arquivos do job sao limpos
 ```
 
-### `tasks.py`
-
-O que vai ser feito:
-
-- definir funcoes que a fila pode chamar;
-- receber apenas `job_id`;
-- abrir dependencias necessarias;
-- chamar `runner.run(job_id)`.
-
-Por que vai ser feito:
-
-Celery ou outro sistema de fila precisa de uma funcao de entrada simples. Essa
-funcao nao deve conter a logica do processamento. Ela deve apenas adaptar o
-formato da fila para o runner.
-
-Neste projeto, `tasks.py` deve expor a task Celery responsavel por receber o
-`job_id` e delegar a execucao para o runner.
-
-Exemplo conceitual:
+Em caso de erro depois que o job foi carregado:
 
 ```text
-run_pipeline_job_task(job_id)
-  -> cria dependencias
-  -> chama runner
+erro
+-> converter para AppError ou erro controlado equivalente
+-> persistir error_json
+-> mover job para failed
+-> executar cleanup
+-> propagar o erro para a task registrar a falha
 ```
 
-### `celery_app.py`
+Falha ao registrar `failed` nao deve substituir nem esconder o erro original,
+mas precisa ser registrada em log com `job_id` para investigacao.
 
-O que vai ser feito:
+## Transacoes Do Banco
 
-- criar e configurar a instancia do Celery;
-- configurar broker;
-- configurar backend de resultado, se necessario;
-- registrar tasks;
-- centralizar configuracoes de fila usadas pelo worker.
+Os stores SQLAlchemy nao fazem `commit`; a camada que abre a sessao controla a
+transacao. O worker nao deve manter uma transacao aberta durante FFmpeg,
+transcricao ou chamadas de LLM.
 
-Por que vai ser feito:
+As operacoes precisam ser duraveis em transacoes curtas:
 
-Configuracao de Celery nao deve ficar no `PipelineService`, nem no `runner`.
-Fila e execucao sao responsabilidades diferentes.
+1. carregar e mover `uploaded -> running`, depois commit;
+2. executar os workflows sem transacao de banco aberta;
+3. mover `running -> completed`, depois commit;
+4. em falha, mover o estado permitido para `failed`, depois commit.
 
-Este modulo faz parte da implementacao inicial do worker. Ele permite rodar o
-processamento fora do processo da API, mantendo a API responsavel apenas por
-criar o job e enviar o `job_id` para a fila.
+O `runner.py` atual recebe um `JobStoreBase` unico e ainda nao define essas
+fronteiras. Antes de ligar o runner a um worker real, deve ser criado um
+coordenador de sessao/Unit of Work ou uma factory que forneca stores em
+transacoes curtas. Envolver `runner.run()` inteiro em um unico
+`async_transaction_scope` nao e aceitavel, porque manteria conexao e transacao
+abertas durante todo o processamento pesado.
 
-### `__init__.py`
+## Execucao Dos Workflows
 
-O que vai ser feito:
-
-- exportar somente a API publica do package worker;
-- evitar imports acidentais de modulos internos;
-- manter superficie publica pequena.
-
-Por que vai ser feito:
-
-O restante do app deve depender de poucos pontos claros, como `WorkerRunner` ou
-uma task publica, nao de funcoes internas de materializacao ou montagem de
-outputs.
-
-## Fluxo De Execucao Esperado
-
-```text
-Queue recebe job_id
--> task/handler chama runner
--> runner busca job
--> runner marca running
--> runner materializa arquivo
--> runner executa workflows
--> runner monta output
--> runner marca completed
-```
-
-Em caso de erro:
-
-```text
-erro durante execucao
--> runner captura erro
--> runner marca failed
--> runner salva error_json
--> runner limpa temporarios locais
-```
-
-## Tipos De Pipeline
+`workflows.py` deve implementar `WorkflowExecutor` e ser a unica camada do app
+que conhece a montagem dos workflows `kyrg`.
 
 ### `copy_analysis`
 
-O que deve executar:
+Executa, em ordem:
 
-```text
-TranscriberWorkflow
-CopyAnalysisWorkflow
-```
+1. `TranscriberWorkflow.astart()`;
+2. `CopyAnalysisWorkflow.astart()`.
 
-Resultado esperado:
+O resultado normalizado deve conter:
 
 ```text
 transcription
 copy_analysis
-token_usage
-execution_time_seconds
 ```
 
 ### `copy_adaptation`
 
-O que deve executar:
+Executa, em ordem:
 
-```text
-TranscriberWorkflow
-CopyAnalysisWorkflow
-CopyAdaptationWorkflow
-```
+1. `TranscriberWorkflow.astart()`;
+2. `CopyAnalysisWorkflow.astart()`;
+3. `CopyAdaptationWorkflow.astart()`.
 
-Resultado esperado:
+O resultado normalizado deve conter:
 
 ```text
 transcription
@@ -266,114 +225,210 @@ copy_analysis
 adapted_script
 validation
 missing_proofs
-token_usage
-execution_time_seconds
 ```
 
-## Dependencias Esperadas
+### Providers
 
-O runner deve receber dependencias prontas ou factories bem definidas:
+Os providers e modelos devem vir de `request.input_json`:
 
-- `AppStore` ou `JobStoreBase`;
-- `StorageBase`;
-- `AppSettings`;
-- factories de providers;
-- diretorio temporario;
-- clock/temporizador, se necessario para testes.
+- `transcriber_provider` e `transcriber_model`;
+- `llm_provider` e `analysis_model`;
+- `adaptation_model`, apenas para `copy_adaptation`;
+- `language` e `need_correction`;
+- `user_profile`, apenas para `copy_adaptation`.
 
-Ele nao deve criar configuracoes espalhadas no codigo. Bootstrap, API, CLI ou
-task devem montar dependencias e entregar para o runner.
+`workflows.py` usa as factories de `app.providers`; o runner nao instancia
+adapters concretos de LLM ou transcricao.
 
-## Regras De Estado Do Job
+O executor deve acumular tokens por etapa sem confundir os contadores de
+transcricao, analise e adaptacao. O formato final precisa ser um dicionario
+serializavel e estavel.
 
-O worker deve respeitar as transicoes do store:
+## `runner.py`
 
-```text
-uploaded -> running -> completed
-uploaded -> running -> failed
-uploaded -> failed
-```
+Responsabilidade:
 
-O worker nao deve executar job que ainda esta `pending`, porque isso significa
-que o arquivo ainda nao foi salvo ou que o pipeline nao finalizou a etapa de
-upload.
+- controlar a sequencia de alto nivel da execucao;
+- validar o job e seu estado;
+- solicitar a resolucao do arquivo;
+- construir `WorkflowExecutionRequest`;
+- chamar `WorkflowExecutor.execute(...)`;
+- medir o tempo total;
+- montar o output por meio de `outputs.py`;
+- persistir sucesso ou falha;
+- garantir cleanup em `finally`.
 
-## Cleanup
+O runner recebe dependencias. Ele nao deve construir engine, sessao, storage,
+Celery ou providers concretos.
 
-O worker pode limpar:
+## `workflows.py`
 
-- arquivos temporarios locais criados para execucao;
-- downloads locais de arquivos remotos;
-- arquivos intermediarios que nao precisam ser preservados.
+Responsabilidade:
 
-O worker nao deve apagar o arquivo original do storage sem uma politica clara.
+- implementar `WorkflowExecutor`;
+- validar os campos de `input_json` necessarios para a execucao;
+- construir os contextos de cada workflow;
+- usar as factories de providers;
+- executar os grafos com `astart()`;
+- validar as chaves finais retornadas por cada grafo;
+- converter os resultados para `WorkflowExecutionResult`.
 
-Essa decisao deve considerar:
+Nao pertence a este modulo persistir job, fazer cleanup ou configurar Celery.
 
-- debug;
-- reprocessamento;
-- custo de storage;
-- privacidade;
-- regra de retencao do produto.
+## `outputs.py`
+
+Responsabilidade:
+
+- receber `WorkflowExecutionResult`;
+- separar o formato persistido de `copy_analysis` e `copy_adaptation`;
+- adicionar `token_usage` e `execution_time_seconds`;
+- garantir serializacao JSON;
+- rejeitar pipeline ou resultado invalido com `WorkflowResultError`.
+
+Depois que `workflows.py` estiver implementado, o caminho principal deve aceitar
+somente `WorkflowExecutionResult`. O suporte atual a `Mapping` e `BaseModel` e
+uma compatibilidade temporaria, nao o contrato definitivo entre os modulos.
+
+## `materializer.py`
+
+Responsabilidade:
+
+- implementar `WorkerFileResolver`;
+- usar diretamente o caminho de `LocalStorage` quando ele for valido;
+- baixar objetos de S3, R2 ou GCP para um workspace temporario;
+- retornar `ResolvedInputFile`;
+- apagar somente a copia local temporaria em `cleanup(...)`.
+
+O contrato atual de `StorageBase` nao possui operacao de download. Portanto,
+storage remoto nao pode ser implementado corretamente apenas com `exists()` e
+`uri()`. Antes de concluir `materializer.py`, o storage precisa expor uma
+operacao comum de download para arquivo local, implementada por todos os
+backends remotos.
+
+## Cleanup E Retencao
+
+Existem dois tipos diferentes de cleanup:
+
+1. o materializer remove a copia temporaria local criada para executar FFmpeg e
+   workflows;
+2. ao terminar o job, a camada de execucao remove os arquivos do job no storage
+   com `delete_prefix(job_prefix(job_id))`.
+
+O segundo comportamento segue a politica definida em `app/storage/README.md`:
+o video de entrada e temporario e deve ser apagado depois que o processamento
+terminar, tanto em sucesso quanto em falha.
+
+O `runner.py` atual executa apenas o primeiro tipo de cleanup. A remocao do
+prefixo do job ainda precisa ser implementada. O resultado estruturado nao e
+apagado porque pertence ao banco, nao ao storage de arquivos.
+
+## `celery_app.py`
+
+Responsabilidade:
+
+- criar a instancia real de `Celery`;
+- ler broker e configuracoes do worker a partir de settings;
+- registrar as tasks do package;
+- configurar serializacao JSON;
+- definir limites de tempo e comportamento de acknowledgement de forma
+  explicita;
+- nao executar workflows durante import.
+
+O banco e a fonte de verdade para status e resultado do job. O result backend
+do Celery nao deve duplicar `jobs.output_json` sem uma necessidade concreta.
+
+## `tasks.py`
+
+Responsabilidade:
+
+- declarar a task Celery publica;
+- receber somente `job_id`;
+- abrir o ciclo de vida das dependencias do worker;
+- chamar o runner assincrono de forma segura;
+- fechar sessoes, engine e recursos criados pela task;
+- deixar a excecao visivel ao Celery depois que o job for marcado como failed.
+
+A task nao deve repetir a logica de `WorkerRunner` nem receber o payload inteiro
+do pipeline. O banco guarda o payload; a fila transporta apenas o identificador.
+
+Retries automaticos do Celery nao devem ser habilitados antes de existir uma
+politica para jobs deixados em `running` por encerramento abrupto do processo.
+Sem essa politica, uma nova entrega encontraria o job em `running` e o runner
+atual o rejeitaria.
+
+## Concorrencia E Idempotencia
+
+- `mark_running` deve continuar usando a transicao atomica
+  `uploaded -> running` do `JobStore`;
+- duas tasks nao podem executar o mesmo job simultaneamente;
+- uma entrega duplicada para job `running`, `completed` ou `failed` nao deve
+  iniciar os workflows novamente;
+- o comportamento para job abandonado em `running` deve ser definido antes de
+  ativar retry automatico ou `acks_late`.
 
 ## Ordem De Implementacao
 
-Construir nesta ordem:
+1. implementar `workflows.py` e seus testes unitarios;
+2. tornar `outputs.py` estrito em torno de `WorkflowExecutionResult`;
+3. definir e implementar fronteiras curtas de transacao para o runner;
+4. adicionar download ao contrato de storage remoto;
+5. implementar `materializer.py`;
+6. implementar cleanup do prefixo do job;
+7. adicionar settings e dependencia do Celery;
+8. implementar `celery_app.py`;
+9. implementar `tasks.py`;
+10. ajustar `worker/__init__.py` com a API publica;
+11. criar testes unitarios do worker;
+12. criar testes de integracao do runner;
+13. criar teste controlado da task Celery.
 
-1. `runner.py`;
-2. `outputs.py`;
-3. `workflows.py`;
-4. `materializer.py`;
-5. `celery_app.py`;
-6. `tasks.py` para adaptar Celery ao runner;
-7. testes unitarios do runner com fakes;
-8. testes unitarios das tasks com runner fake;
-9. teste de integracao com job real, storage local e workflows fake;
-10. teste de integracao da task Celery em modo eager ou com task chamada de
-    forma controlada.
-
-## Testes Esperados
+## Testes Necessarios
 
 ### Unitarios
 
-- runner rejeita job inexistente;
-- runner rejeita job que nao esta `uploaded`;
-- runner marca job como `running`;
-- runner chama executor correto para `copy_analysis`;
-- runner chama executor correto para `copy_adaptation`;
-- runner marca `completed` quando executor retorna sucesso;
-- runner marca `failed` quando executor falha;
-- output final e serializavel;
-- token usage e tempo sao persistidos;
-- cleanup local e chamado em sucesso e falha;
-- task Celery recebe apenas `job_id`;
-- task Celery chama o runner;
-- configuracao do Celery nao executa workflow no import.
+- rejeitar `job_id` invalido;
+- rejeitar job inexistente;
+- rejeitar job que nao esteja `uploaded`;
+- garantir a transicao para `running` antes da execucao;
+- construir corretamente `WorkflowExecutionRequest`;
+- selecionar o fluxo de analise;
+- selecionar o fluxo de adaptacao;
+- validar os campos obrigatorios de `input_json`;
+- normalizar resultados reais dos tres workflows `kyrg`;
+- somar tokens por etapa;
+- persistir output serializavel e tempo em sucesso;
+- persistir erro controlado em falha;
+- preservar o erro original se `mark_failed` tambem falhar;
+- limpar arquivo materializado em sucesso e falha;
+- remover o prefixo do job em sucesso e falha;
+- garantir que a task receba apenas `job_id`;
+- garantir que importar `celery_app.py` nao execute workflows;
+- garantir que configuracao ausente de broker falhe com erro controlado.
 
 ### Integracao
 
-- criar job real `uploaded`;
-- salvar arquivo real em LocalStorage;
-- executar runner com workflows fake;
-- verificar status `completed`;
-- verificar `output_json`;
-- verificar `token_usage_json`;
-- verificar `execution_time_seconds`;
-- verificar status `failed` quando executor fake falha;
-- executar task Celery em modo controlado com runner fake e confirmar que ela
-  delega para o runner.
+- executar runner com job real `uploaded`, banco temporario, LocalStorage e
+  workflows fake;
+- confirmar commits separados para `running` e `completed`;
+- confirmar status `failed` e `error_json` quando o executor falhar;
+- confirmar persistencia de `output_json`, `token_usage_json` e
+  `execution_time_seconds`;
+- confirmar cleanup do arquivo local do job;
+- materializar e limpar um objeto remoto usando backend fake;
+- executar a task Celery em modo eager com runner fake;
+- confirmar que entrega duplicada nao executa o mesmo job duas vezes.
 
-## Fora Do Escopo Deste Modulo
+Testes de qualidade das copies e chamadas reais de LLM pertencem aos workflows
+ou aos evals, nao ao worker.
 
-Este modulo nao deve implementar:
+## Fora Do Escopo
 
 - rotas HTTP;
-- upload inicial de arquivo;
-- criacao inicial de job;
-- autenticacao;
-- billing/Stripe;
-- exporters;
-- UI;
-- regras de permissao;
-- implementacao concreta de provider;
-- implementacao interna dos workflows da biblioteca.
+- upload inicial;
+- criacao inicial do job;
+- autenticacao e autorizacao;
+- Stripe e billing;
+- implementacao interna dos providers;
+- prompts e regras internas dos workflows;
+- exportacao para Markdown, texto ou PDF;
+- interface do usuario.
