@@ -318,9 +318,12 @@ O segundo comportamento segue a politica definida em `app/storage/README.md`:
 o video de entrada e temporario e deve ser apagado depois que o processamento
 terminar, tanto em sucesso quanto em falha.
 
-O `runner.py` atual executa apenas o primeiro tipo de cleanup. A remocao do
-prefixo do job ainda precisa ser implementada. O resultado estruturado nao e
-apagado porque pertence ao banco, nao ao storage de arquivos.
+O `runner.py` executa os dois tipos de cleanup. A copia materializada e removida
+sempre que tiver sido criada. O prefixo original do job e removido somente
+depois que o estado terminal `completed` ou `failed` for persistido; se essa
+persistencia falhar, o arquivo original e preservado para permitir recuperacao.
+O resultado estruturado nao e apagado porque pertence ao banco, nao ao storage
+de arquivos.
 
 ## `celery_app.py`
 

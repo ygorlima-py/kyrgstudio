@@ -10,15 +10,14 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Mapping
-from pathlib import Path
 from typing import Any, Protocol
 
+from loguru import logger
 from pydantic import BaseModel
 
 from app.errors import (
     AppError,
     PipelineExecutionError,
-    StorageError,
     WorkflowResultError,
 )
 from app.schemas.pipeline import PipelineType
@@ -29,7 +28,9 @@ from app.schemas.workflow import (
     WorkerRunResult,
 )
 from app.storage.base import StorageBase
+from app.storage.paths import job_prefix
 from app.store.base import JobStoreBase
+from app.worker.materializer import StorageFileMaterializer
 from app.worker.outputs import build_completed_output
 
 
@@ -57,73 +58,6 @@ class WorkflowExecutor(Protocol):
         ...
 
 
-class StorageInputResolver:
-    """Default resolver for storage backends that expose a local file path.
-
-    Remote storage backends will need ``materializer.py`` to download the
-    object before execution. Until that module exists, this resolver safely
-    supports local storage and fails with a controlled storage error otherwise.
-    """
-
-    def __init__(self, storage: StorageBase) -> None:
-        self.storage = storage
-
-    def resolve(self, job: Any) -> ResolvedInputFile:
-        storage_backend = _job_required_str(job, "storage_backend")
-        input_file_key = _job_required_str(job, "input_file_key")
-        input_file_uri = _job_required_str(job, "input_file_uri")
-
-        if not self.storage.exists(input_file_key):
-            raise StorageError(
-                technical_message="Stored input file does not exist.",
-                step="materializing_input",
-                details={
-                    "storage_backend": storage_backend,
-                    "input_file_key": input_file_key,
-                    "input_file_uri": input_file_uri,
-                },
-            )
-
-        if storage_backend != "local":
-            raise StorageError(
-                technical_message=(
-                    "Remote storage input requires a materializer before "
-                    "workflow execution."
-                ),
-                step="materializing_input",
-                details={
-                    "storage_backend": storage_backend,
-                    "input_file_key": input_file_key,
-                },
-            )
-
-        local_path = Path(self.storage.uri(input_file_key))
-
-        if not local_path.is_file():
-            raise StorageError(
-                technical_message="Resolved input path is not a file.",
-                step="materializing_input",
-                details={
-                    "storage_backend": storage_backend,
-                    "input_file_key": input_file_key,
-                    "local_path": str(local_path),
-                },
-            )
-
-        return ResolvedInputFile(
-            storage_backend=storage_backend,
-            input_file_key=input_file_key,
-            input_file_uri=input_file_uri,
-            local_path=local_path,
-            should_cleanup=False,
-        )
-
-    def cleanup(self, resolved_file: ResolvedInputFile) -> None:
-        """No-op for local storage; remote materializers may delete downloads."""
-
-        return None
-
-
 class WorkerRunner:
     """Execute one queued job and persist its final state."""
 
@@ -139,7 +73,7 @@ class WorkerRunner:
         self.job_store = job_store
         self.storage = storage
         self.workflow_executor = workflow_executor
-        self.file_resolver = file_resolver or StorageInputResolver(storage)
+        self.file_resolver = file_resolver or StorageFileMaterializer(storage)
         self.clock = clock
 
     async def run(self, job_id: int) -> WorkerRunResult:
@@ -162,6 +96,7 @@ class WorkerRunner:
         )
 
         resolved_file: ResolvedInputFile | None = None
+        terminal_state_persisted = False
         started_at = self.clock()
 
         try:
@@ -181,6 +116,7 @@ class WorkerRunner:
                 normalized_job_id,
                 completed_output,
             )
+            terminal_state_persisted = True
 
             return WorkerRunResult(
                 job_id=normalized_job_id,
@@ -189,31 +125,58 @@ class WorkerRunner:
                 execution_time_seconds=execution_time_seconds,
             )
         except Exception as error:
-            await self._mark_failed_safely(
+            failure_persisted = await self._mark_failed_safely(
                 job_id=normalized_job_id,
                 error=error,
+            )
+            terminal_state_persisted = (
+                terminal_state_persisted or failure_persisted
             )
             raise
         finally:
             if resolved_file is not None:
                 self._cleanup_safely(resolved_file)
 
+            if terminal_state_persisted:
+                self._delete_job_files_safely(normalized_job_id)
+
     async def _mark_failed_safely(
         self,
         *,
         job_id: int,
         error: AppError | Exception,
-    ) -> None:
+    ) -> bool:
         try:
             await self.job_store.mark_failed(job_id, _error_payload(error))
         except Exception:
-            return
+            logger.exception(
+                "Failed to persist terminal failure state for job_id={}",
+                job_id,
+            )
+            return False
+
+        return True
 
     def _cleanup_safely(self, resolved_file: ResolvedInputFile) -> None:
         try:
             self.file_resolver.cleanup(resolved_file)
         except Exception:
-            return
+            logger.exception(
+                "Failed to clean materialized input for key={}",
+                resolved_file.input_file_key,
+            )
+
+    def _delete_job_files_safely(self, job_id: int) -> None:
+        prefix = job_prefix(str(job_id))
+
+        try:
+            self.storage.delete_prefix(prefix)
+        except Exception:
+            logger.exception(
+                "Failed to delete stored files for job_id={} prefix={}",
+                job_id,
+                prefix,
+            )
 
 
 def _build_execution_request(
@@ -352,7 +315,6 @@ __all__ = [
     "JOB_STATUS_UPLOADED",
     "RUNNING_STEP",
     "ResolvedInputFile",
-    "StorageInputResolver",
     "WorkerFileResolver",
     "WorkerRunResult",
     "WorkerRunner",
