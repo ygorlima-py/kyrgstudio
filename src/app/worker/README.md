@@ -63,17 +63,17 @@ O worker nao deve:
 
 | Modulo | Estado | Observacao |
 | --- | --- | --- |
-| `runner.py` | Parcialmente implementado | Executa o fluxo principal e suporta arquivo local. Fronteiras de transacao e cleanup do arquivo original ainda precisam ser resolvidos. |
+| `runner.py` | Concluido | Executa jobs com transacoes curtas fornecidas por `WorkerJobStore` e limpa arquivos ao atingir estado terminal. |
 | `outputs.py` | Implementado | Monta payload persistivel. Ainda aceita formatos brutos alem do contrato canonico. |
 | `workflows.py` | Concluido | Executa e normaliza os pipelines de analise e adaptacao usando os workflows `kyrg`. |
 | `materializer.py` | Pendente | Necessario para baixar inputs de storage remoto. |
-| `celery_app.py` | Pendente | A instancia e a configuracao real do Celery ainda nao existem. |
-| `tasks.py` | Pendente | A task que liga Celery ao runner ainda nao existe. |
+| `celery_app.py` | Concluido | Configura a instancia real do Celery, broker, fila, serializacao, limites e acknowledgements. |
+| `tasks.py` | Concluido | Cria recursos por task e delega a execucao de um `job_id` ao runner. |
 | `__init__.py` | Pendente | Deve exportar apenas a API publica estabilizada. |
 
-O adapter `app.queue.CeleryQueue` ja sabe chamar `task.delay(job_id)`, mas isso
-nao configura um worker Celery. A dependencia `celery`, o broker, a instancia da
-aplicacao e a task ainda precisam ser adicionados para a fila externa funcionar.
+O adapter `app.queue.CeleryQueue` ja sabe chamar `task.delay(job_id)`. A
+dependencia, os settings, a instancia do Celery e a task que conecta o Celery
+ao runner ja foram adicionados.
 
 ## Contratos Internos
 
@@ -183,12 +183,11 @@ As operacoes precisam ser duraveis em transacoes curtas:
 3. mover `running -> completed`, depois commit;
 4. em falha, mover o estado permitido para `failed`, depois commit.
 
-O `runner.py` atual recebe um `JobStoreBase` unico e ainda nao define essas
-fronteiras. Antes de ligar o runner a um worker real, deve ser criado um
-coordenador de sessao/Unit of Work ou uma factory que forneca stores em
-transacoes curtas. Envolver `runner.run()` inteiro em um unico
-`async_transaction_scope` nao e aceitavel, porque manteria conexao e transacao
-abertas durante todo o processamento pesado.
+`WorkerJobStore` fornece essas fronteiras ao runner. Cada leitura usa uma
+sessao curta e cada transicao de estado usa uma transacao propria. Envolver
+`runner.run()` inteiro em um unico `async_transaction_scope` continua
+inaceitavel, porque manteria conexao e transacao abertas durante todo o
+processamento pesado.
 
 ## Execucao Dos Workflows
 

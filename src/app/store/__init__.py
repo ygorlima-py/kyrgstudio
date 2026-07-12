@@ -34,7 +34,6 @@ from app.store.jobs import (
     JOB_STATUS_PENDING,
     JOB_STATUS_RUNNING,
     JOB_STATUS_UPLOADED,
-    JobStore,
     SQLAlchemyJobStore,
 )
 from app.store.models import (
@@ -76,7 +75,6 @@ __all__ = [
     "DatabaseConfig",
     "Job",
     "JobEvent",
-    "JobStore",
     "JobStoreBase",
     "SQLAlchemyBillingStore",
     "SQLAlchemyJobStore",

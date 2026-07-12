@@ -16,6 +16,12 @@ class AppSettings:
     storage_dir: Path
     sqlite_path: Path
 
+    database_url: str
+    database_echo: bool
+    database_pool_size: int
+    database_max_overflow: int
+    database_pool_pre_ping: bool
+
     openrouter_api_key: str | None
     openai_api_key: str | None
     gemini_api_key: str | None
@@ -30,14 +36,34 @@ class AppSettings:
     max_duration_seconds: int
     request_timeout_seconds: int
 
+    celery_broker_url: str
+    celery_queue_name: str
+    celery_task_soft_time_limit_seconds: int
+    celery_task_time_limit_seconds: int
+
 
 def load_settings() -> AppSettings:
     storage_dir = Path(os.getenv("APP_STORAGE_DIR", ".storage"))
+    sqlite_path = Path(
+        os.getenv("APP_SQLITE_PATH", str(storage_dir / "app.sqlite"))
+    )
 
     return AppSettings(
         environment=os.getenv("APP_ENV", "development"),
         storage_dir=storage_dir,
-        sqlite_path=Path(os.getenv("APP_SQLITE_PATH", str(storage_dir / "app.sqlite"))),
+        sqlite_path=sqlite_path,
+
+        database_url=os.getenv(
+            "DATABASE_URL",
+            f"sqlite+aiosqlite:///{sqlite_path.as_posix()}",
+        ),
+        database_echo=_environment_bool("DATABASE_ECHO", default=False),
+        database_pool_size=int(os.getenv("DATABASE_POOL_SIZE", "5")),
+        database_max_overflow=int(os.getenv("DATABASE_MAX_OVERFLOW", "10")),
+        database_pool_pre_ping=_environment_bool(
+            "DATABASE_POOL_PRE_PING",
+            default=True,
+        ),
 
         openrouter_api_key=os.getenv("OPENROUTER_API_KEY"),
         openai_api_key=os.getenv("OPENAI_API_KEY"),
@@ -52,4 +78,33 @@ def load_settings() -> AppSettings:
 
         max_duration_seconds=int(os.getenv("APP_MAX_DURATION_SECONDS", "300")),
         request_timeout_seconds=int(os.getenv("APP_REQUEST_TIMEOUT_SECONDS", "300")),
+
+        celery_broker_url=os.getenv(
+            "CELERY_BROKER_URL",
+            "amqp://guest:guest@localhost:5672//",
+        ),
+        celery_queue_name=os.getenv("CELERY_QUEUE_NAME", "pipeline"),
+        celery_task_soft_time_limit_seconds=int(
+            os.getenv("CELERY_TASK_SOFT_TIME_LIMIT_SECONDS", "1800")
+        ),
+        celery_task_time_limit_seconds=int(
+            os.getenv("CELERY_TASK_TIME_LIMIT_SECONDS", "1860")
+        ),
     )
+
+
+def _environment_bool(name: str, *, default: bool) -> bool:
+    value = os.getenv(name)
+
+    if value is None:
+        return default
+
+    normalized_value = value.strip().lower()
+
+    if normalized_value in {"1", "true", "yes", "on"}:
+        return True
+
+    if normalized_value in {"0", "false", "no", "off"}:
+        return False
+
+    raise ValueError(f"{name} must be a boolean environment variable.")

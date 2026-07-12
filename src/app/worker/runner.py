@@ -29,10 +29,9 @@ from app.schemas.workflow import (
 )
 from app.storage.base import StorageBase
 from app.storage.paths import job_prefix
-from app.store.base import JobStoreBase
 from app.worker.materializer import StorageFileMaterializer
 from app.worker.outputs import build_completed_output
-
+from app.worker.transactional_job_store import WorkerJobStoreBase
 
 JOB_STATUS_UPLOADED = "uploaded"
 RUNNING_STEP = "running_pipeline"
@@ -64,7 +63,7 @@ class WorkerRunner:
     def __init__(
         self,
         *,
-        job_store: JobStoreBase,
+        job_store: WorkerJobStoreBase,
         storage: StorageBase,
         workflow_executor: WorkflowExecutor,
         file_resolver: WorkerFileResolver | None = None,

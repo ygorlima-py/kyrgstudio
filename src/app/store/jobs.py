@@ -366,9 +366,6 @@ class SQLAlchemyJobStore(JobStoreBase):
             )
 
 
-JobStore = SQLAlchemyJobStore
-
-
 def _required_str(
     payload: Mapping[str, Any],
     field: str,
@@ -516,6 +513,5 @@ __all__ = [
     "JOB_STATUS_PENDING",
     "JOB_STATUS_RUNNING",
     "JOB_STATUS_UPLOADED",
-    "JobStore",
     "SQLAlchemyJobStore",
 ]

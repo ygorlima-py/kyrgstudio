@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.store.base import BillingStoreBase, JobStoreBase, UserStoreBase
 from app.store.billing import BillingStore
-from app.store.jobs import JobStore
+from app.store.jobs import SQLAlchemyJobStore
 from app.store.users import UserStore
 
 
@@ -39,7 +39,7 @@ def create_store(session: AsyncSession) -> AppStore:
     """
 
     return AppStore(
-        jobs=JobStore(session),
+        jobs=SQLAlchemyJobStore(session),
         users=UserStore(session),
         billing=BillingStore(session),
     )
