@@ -10,12 +10,12 @@ from pydantic import BaseModel
 from app.errors import AppError, InvalidInputError, PipelineExecutionError
 from app.pipeline.files import PipelineInputFile
 from app.pipeline.input import PipelineInput, PipelineType, get_pipeline_type
-from app.store.base import JobStoreBase
+from app.pipeline.transactional_job_store import PipelineJobStoreBase
 
 
 async def create_pipeline_job(
     *,
-    job_store: JobStoreBase,
+    job_store: PipelineJobStoreBase,
     user_id: int,
     pipeline_input: PipelineInput,
 ) -> Any:
@@ -30,7 +30,7 @@ async def create_pipeline_job(
 
 async def mark_pipeline_job_uploaded(
     *,
-    job_store: JobStoreBase,
+    job_store: PipelineJobStoreBase,
     job_id: int,
     input_file: PipelineInputFile,
 ) -> Any:
@@ -44,7 +44,7 @@ async def mark_pipeline_job_uploaded(
 
 async def mark_pipeline_job_failed(
     *,
-    job_store: JobStoreBase,
+    job_store: PipelineJobStoreBase,
     job_id: int,
     error: AppError | Exception | Mapping[str, Any],
 ) -> Any:

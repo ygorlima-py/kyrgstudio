@@ -15,7 +15,6 @@ PipelineType = Literal["copy_analysis", "copy_adaptation"]
 
 
 class BasePipelineInput(BaseModel):
-    source_path: str
     source_type: Literal["video", "audio"]
     run_id: str | None = None
     language: str | None = None

@@ -54,6 +54,10 @@ Thumbs.db
 tmp/
 temp/
 
+
+# Agent Build
+src/Agent
+
 # Local media storage and generated outputs
 data/
 src/data/

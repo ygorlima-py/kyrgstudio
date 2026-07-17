@@ -98,11 +98,6 @@ def _common_updates(
     )
 
     return {
-        "source_path": _required_text(
-            pipeline_input.source_path,
-            field_name="source_path",
-            pipeline_type=pipeline_type,
-        ),
         "source_type": source_type,
         "run_id": _optional_text(pipeline_input.run_id),
         "language": _optional_text(pipeline_input.language),

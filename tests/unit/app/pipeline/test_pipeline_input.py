@@ -23,7 +23,6 @@ def test_normalize_copy_analysis_input() -> None:
     """Copy analysis input should be trimmed and normalized consistently."""
 
     pipeline_input = _copy_analysis_input(
-        source_path="  video.mp4  ",
         source_type="VIDEO",
         run_id="  run_123  ",
         language="  pt-BR  ",
@@ -38,7 +37,6 @@ def test_normalize_copy_analysis_input() -> None:
 
     assert isinstance(normalized, CopyAnalysisPipelineInput)
     assert get_pipeline_type(normalized) == "copy_analysis"
-    assert normalized.source_path == "video.mp4"
     assert normalized.source_type == "video"
     assert normalized.run_id == "run_123"
     assert normalized.language == "pt-BR"
@@ -53,7 +51,6 @@ def test_normalize_copy_adaptation_input() -> None:
     """Copy adaptation input should normalize common fields and model choice."""
 
     pipeline_input = _copy_adaptation_input(
-        source_path="  input.wav  ",
         source_type="AUDIO",
         transcriber_provider="  OPENAI  ",
         transcriber_model="  whisper-1  ",
@@ -67,7 +64,6 @@ def test_normalize_copy_adaptation_input() -> None:
 
     assert isinstance(normalized, CopyAdaptationPipelineInput)
     assert get_pipeline_type(normalized) == "copy_adaptation"
-    assert normalized.source_path == "input.wav"
     assert normalized.source_type == "audio"
     assert normalized.transcriber_provider == "openai"
     assert normalized.transcriber_model == "whisper-1"
@@ -81,7 +77,6 @@ def test_rejects_invalid_source_type() -> None:
     """Invalid source_type should fail before storage or queue execution."""
 
     pipeline_input = CopyAnalysisPipelineInput.model_construct(
-        source_path="video.pdf",
         source_type="pdf",
         transcriber_provider="whisper_local",
         transcriber_model="small",
@@ -101,7 +96,6 @@ def test_rejects_invalid_source_type() -> None:
 @pytest.mark.parametrize(
     ("field", "value"),
     [
-        ("source_path", " "),
         ("transcriber_provider", " "),
         ("transcriber_model", " "),
         ("llm_provider", " "),
@@ -197,7 +191,6 @@ def _copy_analysis_input(**overrides: Any) -> CopyAnalysisPipelineInput:
     """Build a valid copy analysis pipeline input for unit tests."""
 
     payload: dict[str, Any] = {
-        "source_path": "video.mp4",
         "source_type": "video",
         "run_id": "run_123",
         "language": "pt-BR",
@@ -220,7 +213,6 @@ def _copy_adaptation_input(**overrides: Any) -> CopyAdaptationPipelineInput:
     """Build a valid copy adaptation pipeline input for unit tests."""
 
     payload: dict[str, Any] = {
-        "source_path": "video.mp4",
         "source_type": "video",
         "run_id": "run_123",
         "language": "pt-BR",

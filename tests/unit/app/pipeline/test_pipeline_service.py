@@ -438,7 +438,6 @@ def _copy_analysis_input(**overrides: Any) -> CopyAnalysisPipelineInput:
     """Build a valid copy analysis pipeline input."""
 
     payload: dict[str, Any] = {
-        "source_path": "video.mp4",
         "source_type": "video",
         "run_id": "run_123",
         "language": "pt-BR",

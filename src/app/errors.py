@@ -47,6 +47,62 @@ class InvalidInputError(AppError):
     default_step = "validating_input"
 
 
+class AuthenticationRequiredError(AppError):
+    """Raised when a protected operation has no authenticated principal."""
+
+    code = "authentication_required"
+    default_step = "authenticating_request"
+
+
+class InvalidCredentialsError(AppError):
+    """Raised when supplied login credentials cannot be accepted."""
+
+    code = "invalid_credentials"
+    default_step = "authenticating_user"
+
+
+class InvalidTokenError(AppError):
+    """Raised when an access token cannot be safely accepted."""
+
+    code = "invalid_token"
+    default_step = "validating_access_token"
+
+
+class RefreshTokenInvalidError(AppError):
+    """Raised when a refresh token is invalid, expired, or revoked."""
+
+    code = "refresh_token_invalid"
+    default_step = "validating_refresh_token"
+
+
+class AccountDisabledError(AppError):
+    """Raised when authentication is attempted for a disabled account."""
+
+    code = "account_disabled"
+    default_step = "authorizing_user"
+
+
+class EmailVerificationRequiredError(AppError):
+    """Raised when an operation requires a verified email address."""
+
+    code = "email_verification_required"
+    default_step = "authorizing_user"
+
+
+class AccountLinkRequiredError(AppError):
+    """Raised when an identity must be explicitly linked to an account."""
+
+    code = "account_link_required"
+    default_step = "linking_account"
+
+
+class AuthConfigurationError(AppError):
+    """Raised when authentication cannot start from server configuration."""
+
+    code = "auth_configuration_error"
+    default_step = "configuring_auth"
+
+
 class FileNotFoundAppError(AppError):
     code = "file_not_found"
     default_step = "validating_input"
@@ -60,6 +116,11 @@ class UnsupportedMediaTypeError(AppError):
 class MediaTooLongError(AppError):
     code = "media_too_long"
     default_step = "validating_input"
+
+
+class UploadTooLargeError(AppError):
+    code = "upload_too_large"
+    default_step = "validating_upload"
 
 
 class MediaProcessingError(AppError):
@@ -112,6 +173,16 @@ class JobStoreError(StoreError):
     default_step = "job_store"
 
 
+class JobNotFoundError(AppError):
+    code = "job_not_found"
+    default_step = "loading_job"
+
+
+class JobResultNotReadyError(AppError):
+    code = "job_result_not_ready"
+    default_step = "loading_job_result"
+
+
 class UserStoreError(StoreError):
     code = "user_store_error"
     default_step = "user_store"
@@ -133,23 +204,34 @@ class TimeoutAppError(AppError):
 
 
 __all__ = [
+    "AccountDisabledError",
+    "AccountLinkRequiredError",
     "AppError",
+    "AuthConfigurationError",
+    "AuthenticationRequiredError",
     "BillingStoreError",
+    "EmailVerificationRequiredError",
     "ExportError",
     "FileNotFoundAppError",
     "InvalidInputError",
+    "InvalidCredentialsError",
+    "InvalidTokenError",
+    "JobNotFoundError",
+    "JobResultNotReadyError",
     "JobStoreError",
     "LLMExecutionError",
     "MediaProcessingError",
     "MediaTooLongError",
     "PipelineExecutionError",
     "ProviderConfigError",
+    "RefreshTokenInvalidError",
     "StorageError",
     "StoreError",
     "StructuredOutputError",
     "TimeoutAppError",
     "TranscriptionError",
     "UnsupportedMediaTypeError",
+    "UploadTooLargeError",
     "UserStoreError",
     "WorkflowResultError",
 ]

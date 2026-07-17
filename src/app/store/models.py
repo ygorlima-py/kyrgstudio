@@ -90,8 +90,71 @@ class User(Base):
             raise ValueError("Invalid email address")
         else:
             return value.strip().lower()
-        
-        
+
+
+class AuthSession(Base):
+    """Persisted refresh-token session used for rotation and revocation."""
+
+    __tablename__ = "auth_sessions"
+
+    # Identificador interno da sessao de autenticacao.
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Usuario ao qual esta sessao de refresh pertence.
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Hash do refresh token; o token original nunca e salvo no banco.
+    token_hash: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # Identificador compartilhado pelas rotacoes da mesma sessao.
+    family_id: Mapped[str] = mapped_column(
+        String(36),
+        nullable=False,
+        index=True,
+    )
+
+    # Data limite para uso desta sessao de refresh.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+
+    # Data da ultima utilizacao valida do refresh token.
+    last_used_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    # Data de revogacao; fica vazia enquanto a sessao estiver ativa.
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # Nova sessao que substituiu esta durante a rotacao do refresh token.
+    replaced_by_session_id: Mapped[int | None] = mapped_column(
+        ForeignKey("auth_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # Data em que a sessao foi criada.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
 class Subscription(Base):
     __tablename__ = "subscriptions"
     

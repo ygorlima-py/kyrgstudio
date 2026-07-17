@@ -43,7 +43,7 @@ def test_build_create_job_payload_for_copy_analysis() -> None:
     assert payload["user_id"] == 7
     assert payload["pipeline_type"] == "copy_analysis"
     assert payload["run_id"] == "run_123"
-    assert payload["input_json"]["source_path"] == "video.mp4"
+    assert payload["input_json"]["source_type"] == "video"
     assert payload["input_json"]["need_correction"] is False
 
 
@@ -76,7 +76,7 @@ def test_build_input_json_is_json_serializable() -> None:
     encoded = json.dumps(input_json)
     decoded = json.loads(encoded)
 
-    assert decoded["source_path"] == "video.mp4"
+    assert decoded["source_type"] == "video"
     assert decoded["user_profile"]["target_audience"] == (
         "Agronomists who want to invest commissions"
     )
@@ -146,7 +146,7 @@ def test_mark_pipeline_job_failed_calls_job_store_mark_failed() -> None:
     store = JobStoreFake()
     error = InvalidInputError(
         technical_message="Invalid pipeline input.",
-        details={"field": "source_path"},
+        details={"field": "analysis_model"},
     )
 
     result = _run_async(
@@ -164,7 +164,7 @@ def test_mark_pipeline_job_failed_calls_job_store_mark_failed() -> None:
             "error": {
                 "code": "invalid_input",
                 "step": "validating_input",
-                "details": {"field": "source_path"},
+                "details": {"field": "analysis_model"},
             },
         }
     ]
@@ -261,7 +261,6 @@ def _copy_analysis_input(**overrides: Any) -> CopyAnalysisPipelineInput:
     """Build a valid copy analysis pipeline input."""
 
     payload: dict[str, Any] = {
-        "source_path": "video.mp4",
         "source_type": "video",
         "run_id": "run_123",
         "language": "pt-BR",
@@ -281,7 +280,6 @@ def _copy_adaptation_input(**overrides: Any) -> CopyAdaptationPipelineInput:
     """Build a valid copy adaptation pipeline input."""
 
     payload: dict[str, Any] = {
-        "source_path": "video.mp4",
         "source_type": "video",
         "run_id": "run_123",
         "language": "pt-BR",

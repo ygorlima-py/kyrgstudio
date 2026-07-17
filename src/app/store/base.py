@@ -182,6 +182,66 @@ class UserStoreBase(ABC):
         ...
         
 
+class AuthSessionStoreBase(ABC):
+    """Contract for persisted refresh-token sessions.
+
+    Implementations store token digests only. Authentication policy, token
+    generation, expiry decisions, and transaction ownership remain outside
+    this persistence contract.
+    """
+
+    @abstractmethod
+    async def create_session(self, payload: dict[str, Any]) -> Any:
+        """Create a refresh session from normalized digest metadata."""
+
+        ...
+
+    @abstractmethod
+    async def get_session(self, session_id: int) -> Any:
+        """Return a refresh session by internal id, or ``None`` when absent."""
+
+        ...
+
+    @abstractmethod
+    async def get_session_by_token_hash(
+        self,
+        token_hash: str,
+        *,
+        lock_for_update: bool = False,
+    ) -> Any:
+        """Return a session by token digest, optionally locking its row."""
+
+        ...
+
+    @abstractmethod
+    async def rotate_session(
+        self,
+        session_id: int,
+        replacement: dict[str, Any],
+    ) -> Any:
+        """Revoke one session and create its replacement atomically."""
+
+        ...
+
+    @abstractmethod
+    async def revoke_session(self, session_id: int) -> Any:
+        """Revoke one refresh session idempotently."""
+
+        ...
+
+    @abstractmethod
+    async def revoke_user_sessions(self, user_id: int) -> int:
+        """Revoke every active refresh session owned by one user."""
+
+        ...
+
+    @abstractmethod
+    async def revoke_family(self, family_id: str) -> int:
+        """Revoke every active session in one refresh-token family."""
+
+        ...
+
+
 class BillingStoreBase(ABC):
     """Contract for billing customer, subscription, and webhook persistence.
 

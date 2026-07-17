@@ -24,9 +24,9 @@ from app.pipeline.jobs import (
     mark_pipeline_job_failed,
     mark_pipeline_job_uploaded,
 )
+from app.pipeline.transactional_job_store import PipelineJobStoreBase
 from app.queue.base import QueueBase
 from app.storage.base import StorageBase
-from app.store.base import JobStoreBase
 from app.schemas.pipeline import PipelineStartResult
 
 
@@ -36,7 +36,7 @@ class PipelineService:
     def __init__(
         self,
         *,
-        job_store: JobStoreBase,
+        job_store: PipelineJobStoreBase,
         storage: StorageBase,
         queue: QueueBase,
     ) -> None:

@@ -223,7 +223,6 @@ async def _create_user(store: AppStore) -> User:
 
 def _copy_analysis_input(*, run_id: str) -> CopyAnalysisPipelineInput:
     return CopyAnalysisPipelineInput(
-        source_path="input.mp4",
         source_type="video",
         run_id=run_id,
         language="pt-BR",
