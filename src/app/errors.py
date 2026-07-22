@@ -89,6 +89,13 @@ class EmailVerificationRequiredError(AppError):
     default_step = "authorizing_user"
 
 
+class CsrfValidationError(AppError):
+    """Raised when a cookie-authenticated mutation fails CSRF validation."""
+
+    code = "csrf_validation_failed"
+    default_step = "validating_csrf"
+
+
 class AccountLinkRequiredError(AppError):
     """Raised when an identity must be explicitly linked to an account."""
 
@@ -210,6 +217,7 @@ __all__ = [
     "AuthConfigurationError",
     "AuthenticationRequiredError",
     "BillingStoreError",
+    "CsrfValidationError",
     "EmailVerificationRequiredError",
     "ExportError",
     "FileNotFoundAppError",

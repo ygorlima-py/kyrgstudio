@@ -17,6 +17,7 @@ from app.errors import (
     AppError,
     AuthConfigurationError,
     AuthenticationRequiredError,
+    CsrfValidationError,
     EmailVerificationRequiredError,
     InvalidCredentialsError,
     InvalidInputError,
@@ -42,6 +43,7 @@ _UNAUTHORIZED_ERRORS = (
 
 _FORBIDDEN_ERRORS = (
     AccountDisabledError,
+    CsrfValidationError,
     EmailVerificationRequiredError,
 )
 

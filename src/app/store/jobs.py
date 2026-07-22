@@ -87,6 +87,18 @@ class SQLAlchemyJobStore(JobStoreBase):
             existing_job = await self.get_job_by_run_id(run_id)
 
             if existing_job is not None:
+                if existing_job.user_id != user_id:
+                    raise JobStoreError(
+                        technical_message=(
+                            "Job run_id is already owned by another user."
+                        ),
+                        details={
+                            "operation": operation,
+                            "run_id": run_id,
+                            "user_id": user_id,
+                        },
+                    )
+
                 return existing_job
 
             raise _job_store_error(
