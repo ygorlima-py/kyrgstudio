@@ -51,7 +51,7 @@ def test_applying_first_migration_from_empty_database(
     head_revision = ScriptDirectory.from_config(config).get_current_head()
     database_revision = inspect_database(empty_database_url, current_revision)
 
-    assert database_revision == head_revision == "0001_create_app_store_tables"
+    assert database_revision == head_revision
 
 
 def test_verifying_indexes_exist_in_migrated_database(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar
@@ -37,7 +38,16 @@ def make_alembic_config(database_url: str) -> Config:
 def upgrade_database(database_url: str) -> None:
     """Apply all Alembic migrations to a temporary test database."""
 
-    command.upgrade(make_alembic_config(database_url), "head")
+    previous_database_url = os.environ.get("APP_DATABASE_URL")
+    os.environ["APP_DATABASE_URL"] = database_url
+
+    try:
+        command.upgrade(make_alembic_config(database_url), "head")
+    finally:
+        if previous_database_url is None:
+            os.environ.pop("APP_DATABASE_URL", None)
+        else:
+            os.environ["APP_DATABASE_URL"] = previous_database_url
 
 
 def inspect_database(
