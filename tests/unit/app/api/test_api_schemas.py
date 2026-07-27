@@ -341,7 +341,7 @@ def test_build_job_result_response_requires_completed_job() -> None:
 
 
 def test_build_job_result_response_returns_only_public_output() -> None:
-    """Return completed output without storage, ownership, or input metadata."""
+    """Preserve analysis while filtering legacy transcription internals."""
 
     job = {
         "id": 41,
@@ -350,8 +350,31 @@ def test_build_job_result_response_returns_only_public_output() -> None:
         "pipeline_type": "copy_analysis",
         "status": "completed",
         "output_json": {
-            "copy_analysis": {"main_promise": "Organize variable income"},
+            "transcription": {
+                "audio_path": "/tmp/private/transcription.wav",
+                "language": "en",
+                "text": "Organize variable income with a clear plan.",
+                "segments": [{"text": "Internal timed segment"}],
+                "words": [{"word": "Internal"}],
+                "raw_response": {"provider_payload": "private"},
+                "model": "private-model",
+                "provider": "private-provider",
+            },
+            "copy_analysis": {
+                "language": "en",
+                "copy_structure": {
+                    "summary": "The message follows a problem-solution flow."
+                },
+                "offer_analysis": {
+                    "main_promise": "Organize variable income"
+                },
+                "persuasion_analysis": {
+                    "summary": "The copy emphasizes clarity and control."
+                },
+            },
             "token_usage": {"total_tokens": 250},
+            "execution_time_seconds": 12.5,
+            "internal_debug": {"trace": "private"},
         },
         "input_json": {"provider": "private-provider"},
         "storage_backend": "local",
@@ -368,13 +391,35 @@ def test_build_job_result_response_returns_only_public_output() -> None:
         "pipeline_type": "copy_analysis",
         "status": "completed",
         "output": {
+            "transcription": {
+                "language": "en",
+                "text": "Organize variable income with a clear plan.",
+            },
             "copy_analysis": {
-                "main_promise": "Organize variable income",
+                "language": "en",
+                "copy_structure": {
+                    "summary": "The message follows a problem-solution flow."
+                },
+                "offer_analysis": {
+                    "main_promise": "Organize variable income"
+                },
+                "persuasion_analysis": {
+                    "summary": "The copy emphasizes clarity and control."
+                },
             },
             "token_usage": {"total_tokens": 250},
+            "execution_time_seconds": 12.5,
         },
     }
     assert "user_id" not in payload
     assert "input_json" not in payload
     assert "storage_backend" not in payload
     assert "input_file_uri" not in payload
+    serialized_response = response.model_dump_json()
+    assert "audio_path" not in serialized_response
+    assert "segments" not in serialized_response
+    assert "words" not in serialized_response
+    assert "raw_response" not in serialized_response
+    assert "private-model" not in serialized_response
+    assert "private-provider" not in serialized_response
+    assert "internal_debug" not in serialized_response

@@ -271,7 +271,12 @@ class FakeAuthStore:
 class ServiceHarness:
     """Collect all fake dependencies used by one AuthService instance."""
 
-    def __init__(self, *, refresh_ttl_seconds: int = 3600) -> None:
+    def __init__(
+        self,
+        *,
+        refresh_ttl_seconds: int = 3600,
+        google_authentication_enabled: bool = True,
+    ) -> None:
         self.store = FakeAuthStore()
         self.password_hasher = FakePasswordHasher()
         self.access_tokens = FakeAccessTokenService()
@@ -288,9 +293,10 @@ class ServiceHarness:
                 RefreshTokenGenerator,
                 self.refresh_tokens,
             ),
-            google_token_verifier=cast(
-                GoogleTokenVerifier,
-                self.google,
+            google_token_verifier=(
+                cast(GoogleTokenVerifier, self.google)
+                if google_authentication_enabled
+                else None
             ),
             refresh_token_ttl_seconds=refresh_ttl_seconds,
             clock=lambda: NOW,
@@ -504,6 +510,21 @@ def test_google_login_uses_verified_google_identity(
     assert isinstance(payload, dict)
     assert payload["google_subject"] == "google-subject"
     assert result.principal.email == "google@example.com"
+
+
+def test_google_login_rejects_unconfigured_google_authentication() -> None:
+    """Keep password authentication available when Google is not configured."""
+
+    harness = ServiceHarness(google_authentication_enabled=False)
+
+    with pytest.raises(
+        AuthConfigurationError,
+        match="Google authentication is not configured",
+    ):
+        _run(harness.service.login_with_google("signed-id-token"))
+
+    assert harness.google.calls == []
+    assert harness.store.calls == []
 
 
 def test_google_login_reuses_account_found_by_google_subject(

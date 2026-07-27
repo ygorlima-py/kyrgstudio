@@ -65,7 +65,6 @@ class WorkflowBase(ABC):
         filename = f"{self.__class__.__name__}.png"
         return self._compile().get_graph(xray=True).draw_mermaid_png(output_file_path=filename)
     
-    @save_output_json
     def start(self):     
         if self.checkpointer is None:
             return self._compile().invoke(

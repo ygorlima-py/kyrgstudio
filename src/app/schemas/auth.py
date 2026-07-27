@@ -23,6 +23,7 @@ from app.auth.principal import (
     AuthenticatedPrincipal,
     IssuedAuthTokens,
 )
+from app.auth.passwords import DEFAULT_MIN_PASSWORD_LENGTH
 
 
 MAXIMUM_EMAIL_LENGTH = 320
@@ -92,7 +93,7 @@ class PasswordLoginRequest(_EmailCredentialsRequest):
     """Request body for authenticating an account with a password."""
 
     password: str = Field(
-        min_length=1,
+        min_length=DEFAULT_MIN_PASSWORD_LENGTH,
         max_length=MAXIMUM_PASSWORD_LENGTH,
         repr=False,
         description="Plain password submitted for verification.",

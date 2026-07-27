@@ -9,7 +9,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Annotated, Any, Literal, TypeAlias, cast
+from typing import (
+    Annotated,
+    Any,
+    Literal,
+    NotRequired,
+    TypeAlias,
+    TypedDict,
+    cast,
+)
 
 from pydantic import (
     BaseModel,
@@ -121,6 +129,25 @@ class JobStatusResponse(BaseModel):
     error: ApiErrorResponse | None = None
 
 
+class PublicTranscriptionOutput(TypedDict):
+    """User-facing transcription without provider or filesystem metadata."""
+
+    language: str | None
+    text: str
+
+
+class JobResultOutput(TypedDict):
+    """Allowed fields inside a completed public pipeline result."""
+
+    transcription: NotRequired[PublicTranscriptionOutput | None]
+    copy_analysis: dict[str, Any]
+    adapted_script: NotRequired[dict[str, Any]]
+    validation: NotRequired[dict[str, Any] | None]
+    missing_proofs: NotRequired[list[str]]
+    token_usage: NotRequired[dict[str, Any]]
+    execution_time_seconds: NotRequired[float]
+
+
 class JobResultResponse(BaseModel):
     """Completed pipeline output returned without internal job metadata."""
 
@@ -130,7 +157,7 @@ class JobResultResponse(BaseModel):
     run_id: str | None = None
     pipeline_type: PipelineType
     status: Literal["completed"]
-    output: dict[str, Any]
+    output: JobResultOutput
 
 
 _CREATE_JOB_REQUEST_ADAPTER = TypeAdapter(CreateJobRequest)
@@ -242,13 +269,119 @@ def build_job_result_response(job: object) -> JobResultResponse:
     if status != "completed":
         raise ValueError("Job result can only be built for a completed job.")
 
+    pipeline_type = _required_pipeline_type(job)
+
     return JobResultResponse(
         job_id=_required_int(job, "id"),
         run_id=_optional_text(_job_value(job, "run_id")),
-        pipeline_type=_required_pipeline_type(job),
+        pipeline_type=pipeline_type,
         status="completed",
-        output=_required_mapping(job, "output_json"),
+        output=_build_public_job_output(
+            _required_mapping(job, "output_json"),
+            pipeline_type=pipeline_type,
+        ),
     )
+
+
+def _build_public_job_output(
+    persisted_output: Mapping[str, Any],
+    *,
+    pipeline_type: PipelineType,
+) -> JobResultOutput:
+    """Whitelist product data from current and legacy persisted outputs."""
+
+    copy_analysis = persisted_output.get("copy_analysis")
+
+    if not isinstance(copy_analysis, Mapping):
+        raise ValueError("Completed job copy analysis is invalid.")
+
+    public_output: dict[str, Any] = {
+        "copy_analysis": dict(copy_analysis),
+    }
+    transcription = persisted_output.get("transcription")
+
+    if transcription is not None:
+        if not isinstance(transcription, Mapping):
+            raise ValueError("Completed job transcription is invalid.")
+
+        transcription_text = transcription.get("text")
+
+        if not isinstance(transcription_text, str):
+            raise ValueError("Completed job transcription text is invalid.")
+
+        public_output["transcription"] = {
+            "language": _optional_text(transcription.get("language")),
+            "text": transcription_text,
+        }
+
+    _copy_optional_public_field(
+        persisted_output,
+        public_output,
+        field="token_usage",
+        expected_type=Mapping,
+    )
+    execution_time = _optional_float(
+        persisted_output.get("execution_time_seconds")
+    )
+
+    if execution_time is not None:
+        public_output["execution_time_seconds"] = execution_time
+
+    if pipeline_type == "copy_adaptation":
+        _copy_optional_public_field(
+            persisted_output,
+            public_output,
+            field="adapted_script",
+            expected_type=Mapping,
+        )
+        _copy_optional_public_field(
+            persisted_output,
+            public_output,
+            field="validation",
+            expected_type=Mapping,
+            allow_none=True,
+        )
+        _copy_optional_public_field(
+            persisted_output,
+            public_output,
+            field="missing_proofs",
+            expected_type=list,
+        )
+
+    return cast(JobResultOutput, public_output)
+
+
+def _copy_optional_public_field(
+    source: Mapping[str, Any],
+    destination: dict[str, Any],
+    *,
+    field: str,
+    expected_type: type,
+    allow_none: bool = False,
+) -> None:
+    """Copy one optional product field after validating its container type."""
+
+    if field not in source:
+        return
+
+    value = source[field]
+
+    if value is None and allow_none:
+        destination[field] = None
+        return
+
+    if not isinstance(value, expected_type):
+        raise ValueError(f"Completed job field is invalid: {field}")
+
+    if isinstance(value, Mapping):
+        destination[field] = dict(value)
+        return
+
+    if isinstance(value, list):
+        destination[field] = list(value)
+        return
+
+    raise ValueError(f"Completed job field is invalid: {field}")
 
 
 def _resolve_run_id(
@@ -379,14 +512,14 @@ __all__ = [
     "CreateCopyAdaptationJobRequest",
     "CreateCopyAnalysisJobRequest",
     "CreateJobRequest",
+    "JobResultOutput",
     "JobResultResponse",
     "JobStatusResponse",
     "JobSubmissionResponse",
+    "PublicTranscriptionOutput",
     "build_job_result_response",
     "build_job_status_response",
     "build_job_submission_response",
     "build_pipeline_input",
     "parse_create_job_request",
 ]
-
-

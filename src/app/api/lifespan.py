@@ -120,11 +120,15 @@ def _create_auth_service(
         ),
     )
     refresh_token_generator = RefreshTokenGenerator()
-    google_token_verifier = GoogleTokenVerifier(
-        client_ids=settings.google_client_ids,
-        allowed_clock_skew_seconds=(
-            settings.auth_allowed_clock_skew_seconds
-        ),
+    google_token_verifier = (
+        GoogleTokenVerifier(
+            client_ids=settings.google_client_ids,
+            allowed_clock_skew_seconds=(
+                settings.auth_allowed_clock_skew_seconds
+            ),
+        )
+        if settings.google_client_ids
+        else None
     )
 
     return AuthService(

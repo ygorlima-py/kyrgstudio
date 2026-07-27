@@ -456,6 +456,44 @@ def test_create_auth_service_rejects_missing_jwt_secret() -> None:
     assert isinstance(error_info.value.__cause__, ValueError)
 
 
+def test_create_auth_service_allows_google_authentication_to_be_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Start password authentication without configured Google client IDs."""
+
+    settings = replace(_settings(), google_client_ids=())
+    captured_dependencies: dict[str, Any] = {}
+    auth_service = object()
+
+    def reject_google_verifier_creation(**kwargs: Any) -> object:
+        raise AssertionError(
+            "GoogleTokenVerifier must not be created without client IDs."
+        )
+
+    def create_auth_service(**kwargs: Any) -> object:
+        captured_dependencies.update(kwargs)
+        return auth_service
+
+    monkeypatch.setattr(
+        lifespan_module,
+        "GoogleTokenVerifier",
+        reject_google_verifier_creation,
+    )
+    monkeypatch.setattr(
+        lifespan_module,
+        "AuthService",
+        create_auth_service,
+    )
+
+    result = lifespan_module._create_auth_service(
+        settings=settings,
+        session_factory=cast(SessionFactory, object()),
+    )
+
+    assert result is auth_service
+    assert captured_dependencies["google_token_verifier"] is None
+
+
 def test_create_pipeline_queue_wraps_public_celery_task(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

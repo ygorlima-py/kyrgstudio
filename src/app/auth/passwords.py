@@ -17,7 +17,7 @@ from pwdlib.exceptions import PwdlibError
 from pwdlib.hashers.argon2 import Argon2Hasher
 
 
-DEFAULT_MIN_PASSWORD_LENGTH = 12
+DEFAULT_MIN_PASSWORD_LENGTH = 8
 DEFAULT_MAX_PASSWORD_LENGTH = 128
 DEFAULT_ARGON2_TIME_COST = 3
 DEFAULT_ARGON2_MEMORY_COST = 65_536

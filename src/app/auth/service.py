@@ -80,7 +80,7 @@ class AuthService:
         password_hasher: PasswordHasher,
         access_token_service: AccessTokenService,
         refresh_token_generator: RefreshTokenGenerator,
-        google_token_verifier: GoogleTokenVerifier,
+        google_token_verifier: GoogleTokenVerifier | None,
         refresh_token_ttl_seconds: int,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
@@ -203,7 +203,14 @@ class AuthService:
     ) -> AuthenticationResult:
         """Authenticate a verified Google identity without implicit linking."""
 
-        google_identity = self.google_token_verifier.verify(google_id_token)
+        google_token_verifier = self.google_token_verifier
+
+        if google_token_verifier is None:
+            raise AuthConfigurationError(
+                technical_message="Google authentication is not configured.",
+            )
+
+        google_identity = google_token_verifier.verify(google_id_token)
 
         if not google_identity.email_verified:
             raise EmailVerificationRequiredError(

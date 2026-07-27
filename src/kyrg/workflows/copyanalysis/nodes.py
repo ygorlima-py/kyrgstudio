@@ -253,7 +253,7 @@ async def aextract_offer_elements(
         language=state.get("language")
     )
     
-    offer_analysis = await AIActionExecutor.run(action)
+    offer_analysis = await AIActionExecutor.arun(action)
     token_usage = action.tokens_usage
     
     return {
@@ -290,7 +290,7 @@ async def aanalyse_persuasion(
         language=state.get("language"),
     )
     
-    persuasion_analysis = await AIActionExecutor.run(action)
+    persuasion_analysis = await AIActionExecutor.arun(action)
     token_usage = action.tokens_usage
 
     return {

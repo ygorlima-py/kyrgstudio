@@ -115,13 +115,7 @@ def build_copy_analysis_output(
     """Build the persisted output for a copy-analysis pipeline."""
 
     return {
-        "transcription": _first_present(
-            payload,
-            "transcription",
-            "transcriber",
-            "transcriber_result",
-            "result",
-        ),
+        "transcription": _public_transcription(payload),
         "copy_analysis": _first_present(
             payload,
             "copy_analysis",
@@ -147,13 +141,7 @@ def build_copy_adaptation_output(
     )
 
     return {
-        "transcription": _first_present(
-            payload,
-            "transcription",
-            "transcriber",
-            "transcriber_result",
-            "result",
-        ),
+        "transcription": _public_transcription(payload),
         "copy_analysis": _first_present(
             payload,
             "copy_analysis",
@@ -164,6 +152,38 @@ def build_copy_adaptation_output(
         "missing_proofs": _missing_proofs(payload, adapted_script),
         "token_usage": dict(token_usage),
         "execution_time_seconds": execution_time_seconds,
+    }
+
+
+def _public_transcription(payload: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Return only transcription fields that belong to the final product."""
+
+    transcription = _first_present(
+        payload,
+        "transcription",
+        "transcriber",
+        "transcriber_result",
+        "result",
+    )
+
+    if transcription is None:
+        return None
+
+    normalized_transcription = _json_safe(transcription)
+
+    if not isinstance(normalized_transcription, Mapping):
+        raise WorkflowResultError(
+            technical_message="Workflow transcription must be an object.",
+            step="building_output",
+            details={
+                "transcription_type": transcription.__class__.__name__,
+            },
+        )
+
+    return {
+        key: normalized_transcription[key]
+        for key in ("language", "text")
+        if key in normalized_transcription
     }
 
 
