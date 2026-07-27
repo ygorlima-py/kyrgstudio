@@ -77,15 +77,26 @@ def test_copy_analysis_output_persists_only_public_transcription_fields() -> Non
 
 
 def test_copy_adaptation_output_uses_the_same_transcription_boundary() -> None:
-    """Apply the public transcription contract to adaptation results too."""
+    """Keep transcription and adaptation diagnostics at public boundaries."""
+
+    validation = {
+        "validation_passed": False,
+        "validation_errors": [{"code": "script_too_short"}],
+        "validation_warnings": [],
+    }
 
     output = build_copy_adaptation_output(
         payload={
             "transcription": _internal_transcription(),
             "copy_analysis": _analysis(),
-            "adapted_script": {"voice_ready_text": "Adapted script"},
-            "validation": {"passed": True},
-            "missing_proofs": [],
+            "adapted_script": {
+                "voice_ready_text": "Adapted script",
+                "validation_passed": False,
+                "validation_errors": [{"code": "script_too_short"}],
+                "validation_warnings": [],
+                "missing_proofs": ["A verified customer result"],
+            },
+            "validation": validation,
         },
         token_usage={"total_tokens": 40},
         execution_time_seconds=7.0,
@@ -98,6 +109,44 @@ def test_copy_adaptation_output_uses_the_same_transcription_boundary() -> None:
     assert output["adapted_script"] == {
         "voice_ready_text": "Adapted script"
     }
+    assert output["validation"] == validation
+    assert output["missing_proofs"] == ["A verified customer result"]
+
+
+def test_completed_adaptation_output_does_not_duplicate_diagnostics() -> None:
+    """Persist validation and proof diagnostics only at the result level."""
+
+    output = build_completed_output(
+        pipeline_type="copy_adaptation",
+        result=WorkflowExecutionResult(
+            output_json={
+                "transcription": _internal_transcription(),
+                "copy_analysis": _analysis(),
+                "adapted_script": {
+                    "script": "Adapted script",
+                    "voice_ready_text": "Adapted script",
+                    "validation_passed": False,
+                    "validation_errors": [{"code": "script_too_short"}],
+                    "validation_warnings": [{"code": "missing_proof"}],
+                    "missing_proofs": ["A verified customer result"],
+                },
+                "validation": {
+                    "validation_passed": False,
+                    "validation_errors": [{"code": "script_too_short"}],
+                    "validation_warnings": [{"code": "missing_proof"}],
+                },
+            },
+            token_usage={"total_tokens": 40},
+        ),
+        execution_time_seconds=7.0,
+    )
+
+    assert output["adapted_script"] == {
+        "script": "Adapted script",
+        "voice_ready_text": "Adapted script",
+    }
+    assert output["validation"]["validation_passed"] is False
+    assert output["missing_proofs"] == ["A verified customer result"]
 
 
 def test_completed_output_never_persists_transcription_internals() -> None:

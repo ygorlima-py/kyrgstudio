@@ -24,6 +24,14 @@ from app.schemas.workflow import WorkflowExecutionResult
 
 
 TOKEN_USAGE_KEYS = ("input_tokens", "output_tokens", "total_tokens")
+ADAPTED_SCRIPT_RESULT_FIELDS = frozenset(
+    {
+        "validation_errors",
+        "validation_passed",
+        "validation_warnings",
+        "missing_proofs",
+    }
+)
 
 
 def build_completed_output(
@@ -147,7 +155,7 @@ def build_copy_adaptation_output(
             "copy_analysis",
             "analysis",
         ),
-        "adapted_script": adapted_script,
+        "adapted_script": _adapted_script_content(adapted_script),
         "validation": _first_present(payload, "validation"),
         "missing_proofs": _missing_proofs(payload, adapted_script),
         "token_usage": dict(token_usage),
@@ -184,6 +192,35 @@ def _public_transcription(payload: Mapping[str, Any]) -> dict[str, Any] | None:
         key: normalized_transcription[key]
         for key in ("language", "text")
         if key in normalized_transcription
+    }
+
+
+def _adapted_script_content(adapted_script: Any) -> dict[str, Any] | None:
+    """Return script content without duplicated result-level diagnostics.
+
+    Validation and proof diagnostics have canonical top-level locations in the
+    persisted pipeline output. Removing their nested copies keeps one source of
+    truth while preserving every field used to render or edit the script.
+    """
+
+    if adapted_script is None:
+        return None
+
+    normalized_script = _json_safe(adapted_script)
+
+    if not isinstance(normalized_script, Mapping):
+        raise WorkflowResultError(
+            technical_message="Adapted script output must be an object.",
+            step="building_output",
+            details={
+                "adapted_script_type": adapted_script.__class__.__name__,
+            },
+        )
+
+    return {
+        key: value
+        for key, value in normalized_script.items()
+        if key not in ADAPTED_SCRIPT_RESULT_FIELDS
     }
 
 
@@ -288,6 +325,7 @@ def _json_safe(value: Any) -> Any:
 
 
 __all__ = [
+    "ADAPTED_SCRIPT_RESULT_FIELDS",
     "TOKEN_USAGE_KEYS",
     "build_completed_output",
     "build_copy_adaptation_output",

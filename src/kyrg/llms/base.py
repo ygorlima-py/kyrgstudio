@@ -36,7 +36,7 @@ class LLMBase(ABC):
     future provider.
     """
     
-    def __init__(self, max_attempts: int = 2):
+    def __init__(self, max_attempts: int = 3):
         """Initialize shared retry and token tracking state.
 
         Args:

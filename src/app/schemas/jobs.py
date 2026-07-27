@@ -136,12 +136,25 @@ class PublicTranscriptionOutput(TypedDict):
     text: str
 
 
+class PublicAdaptedScriptOutput(TypedDict, total=False):
+    """Editable script data exposed without duplicated result diagnostics."""
+
+    script: str
+    sections: list[dict[str, Any]]
+    hooks: list[str]
+    cta: str | None
+    estimated_duration_seconds: float | None
+    word_count: int
+    voice_ready_text: str
+    adaptation_notes: str | None
+
+
 class JobResultOutput(TypedDict):
     """Allowed fields inside a completed public pipeline result."""
 
     transcription: NotRequired[PublicTranscriptionOutput | None]
     copy_analysis: dict[str, Any]
-    adapted_script: NotRequired[dict[str, Any]]
+    adapted_script: NotRequired[PublicAdaptedScriptOutput]
     validation: NotRequired[dict[str, Any] | None]
     missing_proofs: NotRequired[list[str]]
     token_usage: NotRequired[dict[str, Any]]
@@ -328,12 +341,13 @@ def _build_public_job_output(
         public_output["execution_time_seconds"] = execution_time
 
     if pipeline_type == "copy_adaptation":
-        _copy_optional_public_field(
-            persisted_output,
-            public_output,
-            field="adapted_script",
-            expected_type=Mapping,
-        )
+        adapted_script = persisted_output.get("adapted_script")
+
+        if adapted_script is not None:
+            public_output["adapted_script"] = _build_public_adapted_script(
+                adapted_script
+            )
+
         _copy_optional_public_field(
             persisted_output,
             public_output,
@@ -349,6 +363,37 @@ def _build_public_job_output(
         )
 
     return cast(JobResultOutput, public_output)
+
+
+def _build_public_adapted_script(value: Any) -> PublicAdaptedScriptOutput:
+    """Whitelist editable script fields from current and legacy job results.
+
+    Older records may contain validation and proof diagnostics nested inside
+    ``adapted_script``. Those fields are intentionally omitted because their
+    canonical public locations are ``output.validation`` and
+    ``output.missing_proofs``.
+    """
+
+    if not isinstance(value, Mapping):
+        raise ValueError("Completed job adapted script is invalid.")
+
+    public_fields = (
+        "script",
+        "sections",
+        "hooks",
+        "cta",
+        "estimated_duration_seconds",
+        "word_count",
+        "voice_ready_text",
+        "adaptation_notes",
+    )
+    public_script = {
+        field: value[field]
+        for field in public_fields
+        if field in value
+    }
+
+    return cast(PublicAdaptedScriptOutput, public_script)
 
 
 def _copy_optional_public_field(
@@ -516,6 +561,7 @@ __all__ = [
     "JobResultResponse",
     "JobStatusResponse",
     "JobSubmissionResponse",
+    "PublicAdaptedScriptOutput",
     "PublicTranscriptionOutput",
     "build_job_result_response",
     "build_job_status_response",

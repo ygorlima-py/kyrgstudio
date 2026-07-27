@@ -423,3 +423,56 @@ def test_build_job_result_response_returns_only_public_output() -> None:
     assert "private-model" not in serialized_response
     assert "private-provider" not in serialized_response
     assert "internal_debug" not in serialized_response
+
+
+def test_build_adaptation_result_removes_legacy_duplicate_diagnostics() -> None:
+    """Expose legacy adaptation diagnostics only at canonical result fields."""
+
+    validation = {
+        "validation_passed": False,
+        "validation_errors": [{"code": "script_too_short"}],
+        "validation_warnings": [{"code": "missing_proof"}],
+    }
+    job = {
+        "id": 42,
+        "run_id": "run-42",
+        "pipeline_type": "copy_adaptation",
+        "status": "completed",
+        "output_json": {
+            "copy_analysis": {"language": "en"},
+            "adapted_script": {
+                "script": "Adapted script",
+                "sections": [],
+                "hooks": ["Adapted hook"],
+                "cta": "Start now",
+                "estimated_duration_seconds": 90.0,
+                "word_count": 210,
+                "voice_ready_text": "Adapted script",
+                "adaptation_notes": "Adapted from the reference strategy.",
+                "validation_passed": False,
+                "validation_errors": [{"code": "script_too_short"}],
+                "validation_warnings": [{"code": "missing_proof"}],
+                "missing_proofs": ["A verified customer result"],
+            },
+            "validation": validation,
+            "missing_proofs": ["A verified customer result"],
+        },
+    }
+
+    payload = build_job_result_response(job).model_dump()
+    adapted_script = payload["output"]["adapted_script"]
+
+    assert adapted_script == {
+        "script": "Adapted script",
+        "sections": [],
+        "hooks": ["Adapted hook"],
+        "cta": "Start now",
+        "estimated_duration_seconds": 90.0,
+        "word_count": 210,
+        "voice_ready_text": "Adapted script",
+        "adaptation_notes": "Adapted from the reference strategy.",
+    }
+    assert payload["output"]["validation"] == validation
+    assert payload["output"]["missing_proofs"] == [
+        "A verified customer result"
+    ]
