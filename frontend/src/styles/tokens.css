@@ -1,0 +1,81 @@
+@theme {
+  /* Remove Tailwind's generic palette in favor of the product palette. */
+  --color-*: initial;
+
+  /* Surfaces */
+  --color-background: #f3efe6;
+  --color-surface: #fffdf8;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: #eae4d8;
+
+  /* Text */
+  --color-text: #1c201c;
+  --color-text-muted: #62685f;
+  --color-text-subtle: #858b81;
+  --color-text-inverse: #ffffff;
+
+  /* Borders */
+  --color-border: #d8d1c3;
+  --color-border-strong: #aaa293;
+
+  /* Brand action */
+  --color-action: #b63d24;
+  --color-action-hover: #96301c;
+  --color-action-active: #762416;
+  --color-action-muted: #f6ddd5;
+
+  /* Semantic states */
+  --color-success: #28744a;
+  --color-success-muted: #dceee3;
+  --color-warning: #9a6114;
+  --color-warning-muted: #f7ead3;
+  --color-danger: #b63832;
+  --color-danger-muted: #f7dedc;
+  --color-processing: #246b82;
+  --color-processing-muted: #dbeaf0;
+
+  /* Interaction */
+  --color-focus: #246b82;
+  --color-overlay: rgb(28 32 28 / 58%);
+
+  /* A four-pixel base generates p-1, gap-4, mt-8, and similar utilities. */
+  --spacing: 0.25rem;
+
+  /* Shape */
+  --radius-*: initial;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 2rem;
+  --radius-pill: 9999px;
+
+  /* Elevation */
+  --shadow-*: initial;
+  --shadow-sm: 0 1px 2px rgb(28 32 28 / 8%);
+  --shadow-md: 0 12px 30px rgb(28 32 28 / 10%);
+  --shadow-lg: 0 24px 60px rgb(28 32 28 / 14%);
+
+  /* Layout */
+  --container-content: 75rem;
+  --container-reading: 46rem;
+  --container-form: 38rem;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root {
+  color-scheme: light;
+
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 450ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+}
