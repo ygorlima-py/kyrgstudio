@@ -24,10 +24,17 @@ export function MarketingHeader() {
           className="flex min-h-16 items-center justify-between"
         >
             <Link
-                className="font-heading text-xl font-semibold text-text"
+                className="flex items-center gap-2 font-heading text-xl font-semibold text-text"
                 to="/"
             >
-                Kyrg Studio
+                <img
+                    src="/kyrglogo.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="size-9 object-contain"
+                />
+
+                <span>Kyrg Studio</span>
             </Link>
             <div className="hidden items-center gap-8 md:flex">
                 <a
