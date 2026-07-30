@@ -66,10 +66,6 @@ video {
   max-width: 100%;
 }
 
-a {
-  color: inherit;
-}
-
 ::selection {
   color: var(--color-text);
   background: var(--color-action-muted);
