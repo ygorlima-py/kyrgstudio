@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react'
 
-import {
-  EmptyState,
-  type EmptyStateProps,
-} from '@/shared/components/states/empty-state'
+import { EmptyState, type EmptyStateProps } from '@/shared/components/states/empty-state'
 
 export interface UnauthorizedStateProps extends Omit<EmptyStateProps, 'icon'> {
   /**
@@ -27,33 +24,15 @@ export function UnauthorizedState({
 
 function AuthenticationRequiredIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      className="size-6"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
+    <svg aria-hidden="true" className="size-6" fill="none" viewBox="0 0 24 24">
       <path
         d="M7 10V8a5 5 0 0 1 10 0v2"
         stroke="currentColor"
         strokeLinecap="round"
         strokeWidth="1.75"
       />
-      <rect
-        height="10"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        width="16"
-        x="4"
-        y="10"
-      />
-      <path
-        d="M12 14v2"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.75"
-      />
+      <rect height="10" rx="2" stroke="currentColor" strokeWidth="1.75" width="16" x="4" y="10" />
+      <path d="M12 14v2" stroke="currentColor" strokeLinecap="round" strokeWidth="1.75" />
     </svg>
   )
 }

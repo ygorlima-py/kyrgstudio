@@ -15,9 +15,7 @@ export class RefreshCoordinator {
     return this.activeRefresh
   }
 
-  private async executeRefresh(
-    refreshAccessToken: AccessTokenRefresh,
-  ): Promise<string> {
+  private async executeRefresh(refreshAccessToken: AccessTokenRefresh): Promise<string> {
     try {
       const refreshedToken = (await refreshAccessToken()).trim()
 

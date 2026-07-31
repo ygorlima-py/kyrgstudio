@@ -58,17 +58,13 @@ export function AudienceSection() {
           <Stack className="max-w-3xl" gap="md">
             <Badge variant="action">Who it is for</Badge>
 
-            <h2
-              className="font-heading text-heading-2 text-text-inverse"
-              id="audience-title"
-            >
+            <h2 className="font-heading text-heading-2 text-text-inverse" id="audience-title">
               A clearer workspace for people responsible for the message.
             </h2>
 
             <p className="text-body-lg text-border">
-              Kyrg Studio helps creative professionals understand, review and
-              adapt direct-response content without reducing the work to a
-              generic AI conversation.
+              Kyrg Studio helps creative professionals understand, review and adapt direct-response
+              content without reducing the work to a generic AI conversation.
             </p>
           </Stack>
 
@@ -78,21 +74,15 @@ export function AudienceSection() {
                 <Card className="w-full" padding="lg" variant="elevated">
                   <Stack className="h-full" gap="lg">
                     <div className="flex items-center justify-between gap-4">
-                      <span className="font-mono text-meta text-action">
-                        {audience.number}
-                      </span>
+                      <span className="font-mono text-meta text-action">{audience.number}</span>
 
                       <Badge variant="neutral">{audience.role}</Badge>
                     </div>
 
                     <Stack gap="sm">
-                      <h3 className="font-heading text-heading-3 text-text">
-                        {audience.title}
-                      </h3>
+                      <h3 className="font-heading text-heading-3 text-text">{audience.title}</h3>
 
-                      <p className="text-body text-text-muted">
-                        {audience.description}
-                      </p>
+                      <p className="text-body text-text-muted">{audience.description}</p>
                     </Stack>
 
                     <ul className="mt-auto grid gap-3">
@@ -101,10 +91,7 @@ export function AudienceSection() {
                           className="grid grid-cols-[0.5rem_1fr] items-start gap-3 text-body-sm text-text-muted"
                           key={benefit}
                         >
-                          <span
-                            aria-hidden="true"
-                            className="mt-2 size-2 rounded-pill bg-action"
-                          />
+                          <span aria-hidden="true" className="mt-2 size-2 rounded-pill bg-action" />
 
                           <span>{benefit}</span>
                         </li>

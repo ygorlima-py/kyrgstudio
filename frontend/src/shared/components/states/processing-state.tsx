@@ -6,8 +6,10 @@ import { Progress } from '@/shared/ui/progress'
 import { Stack } from '@/shared/ui/stack'
 import { cn } from '@/shared/utils/class-names'
 
-export interface ProcessingStateProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'> {
+export interface ProcessingStateProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'children' | 'title'
+> {
   /**
    * Main heading describing the operation currently being processed.
    */

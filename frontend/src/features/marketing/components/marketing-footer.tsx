@@ -16,16 +16,13 @@ export function MarketingFooter() {
       <Container>
         <div className="grid gap-12 py-12 md:grid-cols-[1.4fr_1fr] lg:py-16">
           <Stack className="max-w-md" gap="md">
-            <Link
-              className="w-fit font-heading text-2xl font-semibold text-text"
-              to="/"
-            >
+            <Link className="w-fit font-heading text-2xl font-semibold text-text" to="/">
               Kyrg Studio
             </Link>
 
             <p className="text-body text-text-muted">
-              Creative intelligence for understanding and adapting
-              direct-response copy from video and audio.
+              Creative intelligence for understanding and adapting direct-response copy from video
+              and audio.
             </p>
 
             <p className="font-mono text-meta uppercase text-text-subtle">
@@ -33,14 +30,9 @@ export function MarketingFooter() {
             </p>
           </Stack>
 
-          <nav
-            aria-label="Footer navigation"
-            className="grid grid-cols-2 gap-8"
-          >
+          <nav aria-label="Footer navigation" className="grid grid-cols-2 gap-8">
             <Stack gap="sm">
-              <p className="font-mono text-meta uppercase text-text-subtle">
-                Product
-              </p>
+              <p className="font-mono text-meta uppercase text-text-subtle">Product</p>
 
               <a
                 className="w-fit text-body-sm text-text-muted transition-colors hover:text-text"
@@ -72,9 +64,7 @@ export function MarketingFooter() {
             </Stack>
 
             <Stack gap="sm">
-              <p className="font-mono text-meta uppercase text-text-subtle">
-                Account
-              </p>
+              <p className="font-mono text-meta uppercase text-text-subtle">Account</p>
 
               <Link
                 className="w-fit text-body-sm text-text-muted transition-colors hover:text-text"

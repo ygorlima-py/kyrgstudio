@@ -4,12 +4,7 @@ import { Container } from '@/shared/ui/container'
 import { Inline } from '@/shared/ui/inline'
 import { Separator } from '@/shared/ui/separator'
 import { Stack } from '@/shared/ui/stack'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/shared/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const analysisSections = [
   {
@@ -79,16 +74,13 @@ export function ProductPreview() {
           <Stack className="max-w-3xl" gap="md">
             <Badge variant="action">Product preview</Badge>
 
-            <h2
-              className="font-heading text-heading-2 text-text"
-              id="product-preview-title"
-            >
+            <h2 className="font-heading text-heading-2 text-text" id="product-preview-title">
               From raw video to structured creative intelligence.
             </h2>
 
             <p className="text-body-lg text-text-muted">
-              Explore how Kyrg Studio organizes the strategy inside a reference
-              copy and transforms it into an editable script for another offer.
+              Explore how Kyrg Studio organizes the strategy inside a reference copy and transforms
+              it into an editable script for another offer.
             </p>
           </Stack>
 
@@ -118,12 +110,8 @@ function AnalysisPreview() {
       <div className="border-b border-border p-5 sm:p-6">
         <Inline justify="between">
           <Stack gap="xs">
-            <span className="font-mono text-meta text-text-subtle">
-              REFERENCE COPY
-            </span>
-            <h3 className="font-heading text-heading-3 text-text">
-              Persuasion map
-            </h3>
+            <span className="font-mono text-meta text-text-subtle">REFERENCE COPY</span>
+            <h3 className="font-heading text-heading-3 text-text">Persuasion map</h3>
           </Stack>
 
           <Badge variant="processing">Analysis complete</Badge>
@@ -139,15 +127,11 @@ function AnalysisPreview() {
               className="grid gap-2 rounded-md border border-border bg-surface p-4 sm:grid-cols-[2rem_7rem_1fr] sm:items-center"
               key={section.order}
             >
-              <span className="font-mono text-meta text-text-subtle">
-                {section.order}
-              </span>
+              <span className="font-mono text-meta text-text-subtle">{section.order}</span>
 
               <span className="text-label text-text">{section.type}</span>
 
-              <span className="text-body-sm text-text-muted">
-                {section.summary}
-              </span>
+              <span className="text-body-sm text-text-muted">{section.summary}</span>
             </div>
           ))}
         </Stack>
@@ -156,20 +140,17 @@ function AnalysisPreview() {
           <Stack gap="sm">
             <span className="text-label text-text-muted">Offer extracted</span>
             <p className="text-body text-text">
-              A practical method that helps adults respond naturally in
-              everyday English conversations.
+              A practical method that helps adults respond naturally in everyday English
+              conversations.
             </p>
           </Stack>
 
           <Separator decorative />
 
           <Stack gap="sm">
-            <span className="text-label text-text-muted">
-              Strategic mechanism
-            </span>
+            <span className="text-label text-text-muted">Strategic mechanism</span>
             <p className="text-body-sm text-text-muted">
-              Conversation practice organized around real situations instead
-              of isolated vocabulary.
+              Conversation practice organized around real situations instead of isolated vocabulary.
             </p>
           </Stack>
 
@@ -182,8 +163,8 @@ function AnalysisPreview() {
             </Inline>
 
             <p className="text-body-sm text-text-muted">
-              The reference makes a strong promise but needs clearer evidence
-              before the same persuasion intensity can be adapted safely.
+              The reference makes a strong promise but needs clearer evidence before the same
+              persuasion intensity can be adapted safely.
             </p>
           </Stack>
         </Stack>
@@ -198,12 +179,8 @@ function AdaptationPreview() {
       <div className="border-b border-border p-5 sm:p-6">
         <Inline justify="between">
           <Stack gap="xs">
-            <span className="font-mono text-meta text-text-subtle">
-              ADAPTED OUTPUT
-            </span>
-            <h3 className="font-heading text-heading-3 text-text">
-              Editable script
-            </h3>
+            <span className="font-mono text-meta text-text-subtle">ADAPTED OUTPUT</span>
+            <h3 className="font-heading text-heading-3 text-text">Editable script</h3>
           </Stack>
 
           <Badge variant="success">Validated</Badge>
@@ -216,9 +193,7 @@ function AdaptationPreview() {
             className="grid gap-3 rounded-md border border-border bg-surface p-4 sm:grid-cols-[2rem_7rem_1fr]"
             key={section.order}
           >
-            <span className="font-mono text-meta text-text-subtle">
-              {section.order}
-            </span>
+            <span className="font-mono text-meta text-text-subtle">{section.order}</span>
 
             <Badge variant="neutral">{section.type}</Badge>
 
@@ -229,8 +204,8 @@ function AdaptationPreview() {
         <div className="mt-2 rounded-md bg-success-muted p-4">
           <p className="text-label text-success">Validation passed</p>
           <p className="mt-1 text-body-sm text-text-muted">
-            The adapted script preserves the reference strategy without
-            inventing proof, guarantees or commercial conditions.
+            The adapted script preserves the reference strategy without inventing proof, guarantees
+            or commercial conditions.
           </p>
         </div>
       </Stack>

@@ -4,8 +4,10 @@ import { Alert } from '@/shared/ui/alert'
 import { Stack } from '@/shared/ui/stack'
 import { cn } from '@/shared/utils/class-names'
 
-export interface ErrorStateProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'> {
+export interface ErrorStateProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'children' | 'title'
+> {
   /**
    * Short heading that identifies what failed.
    */
@@ -36,12 +38,7 @@ export function ErrorState({
   ...stateProps
 }: ErrorStateProps) {
   return (
-    <Alert
-      {...stateProps}
-      className={cn('w-full', className)}
-      heading={title}
-      variant="danger"
-    >
+    <Alert {...stateProps} className={cn('w-full', className)} heading={title} variant="danger">
       <Stack gap="md">
         <div>{description}</div>
 

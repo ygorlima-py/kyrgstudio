@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react'
 
-import {
-  EmptyState,
-  type EmptyStateProps,
-} from '@/shared/components/states/empty-state'
+import { EmptyState, type EmptyStateProps } from '@/shared/components/states/empty-state'
 
 export interface ForbiddenStateProps extends Omit<EmptyStateProps, 'icon'> {
   /**
@@ -28,24 +25,14 @@ export function ForbiddenState({
 
 function RestrictedAccessIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      className="size-6"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
+    <svg aria-hidden="true" className="size-6" fill="none" viewBox="0 0 24 24">
       <path
         d="M12 3 5 6v5c0 4.8 2.9 8.2 7 10 4.1-1.8 7-5.2 7-10V6l-7-3Z"
         stroke="currentColor"
         strokeLinejoin="round"
         strokeWidth="1.75"
       />
-      <path
-        d="m9 9 6 6m0-6-6 6"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.75"
-      />
+      <path d="m9 9 6 6m0-6-6 6" stroke="currentColor" strokeLinecap="round" strokeWidth="1.75" />
     </svg>
   )
 }

@@ -5,8 +5,10 @@ import { Card } from '@/shared/ui/card'
 import { Stack } from '@/shared/ui/stack'
 import { cn } from '@/shared/utils/class-names'
 
-export interface SuccessStateProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'> {
+export interface SuccessStateProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'children' | 'title'
+> {
   /**
    * Main heading describing the successfully completed operation.
    */
@@ -91,19 +93,8 @@ export function SuccessState({
 
 function SuccessIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      className="size-6"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        cx="12"
-        cy="12"
-        r="9"
-        stroke="currentColor"
-        strokeWidth="1.75"
-      />
+    <svg aria-hidden="true" className="size-6" fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75" />
       <path
         d="m8 12 2.5 2.5L16 9"
         stroke="currentColor"

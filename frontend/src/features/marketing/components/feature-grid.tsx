@@ -66,26 +66,19 @@ const features = [
  */
 export function FeatureGrid() {
   return (
-    <section
-      aria-labelledby="features-title"
-      className="py-20 sm:py-24 lg:py-32"
-      id="features"
-    >
+    <section aria-labelledby="features-title" className="py-20 sm:py-24 lg:py-32" id="features">
       <Container>
         <Stack gap="xl">
           <Stack className="max-w-3xl" gap="md">
             <Badge variant="action">Built for real creative work</Badge>
 
-            <h2
-              className="font-heading text-heading-2 text-text"
-              id="features-title"
-            >
+            <h2 className="font-heading text-heading-2 text-text" id="features-title">
               Move from content to decisions, without losing the strategy.
             </h2>
 
             <p className="text-body-lg text-text-muted">
-              Kyrg Studio turns an existing sales message into a structured
-              workspace you can inspect, question and adapt.
+              Kyrg Studio turns an existing sales message into a structured workspace you can
+              inspect, question and adapt.
             </p>
           </Stack>
 
@@ -107,17 +100,11 @@ export function FeatureGrid() {
                     </div>
 
                     <Stack gap="sm">
-                      <span className="text-label text-text-muted">
-                        {feature.category}
-                      </span>
+                      <span className="text-label text-text-muted">{feature.category}</span>
 
-                      <h3 className="font-heading text-heading-3 text-text">
-                        {feature.title}
-                      </h3>
+                      <h3 className="font-heading text-heading-3 text-text">{feature.title}</h3>
 
-                      <p className="text-body text-text-muted">
-                        {feature.description}
-                      </p>
+                      <p className="text-body text-text-muted">{feature.description}</p>
                     </Stack>
                   </Stack>
                 </Card>

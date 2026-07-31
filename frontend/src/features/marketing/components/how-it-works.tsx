@@ -39,17 +39,14 @@ export function HowItWorks() {
           <Stack className="max-w-3xl" gap="md">
             <Badge variant="action">How it works</Badge>
 
-            <h2
-              className="font-heading text-heading-2 text-text"
-              id="how-it-works-title"
-            >
+            <h2 className="font-heading text-heading-2 text-text" id="how-it-works-title">
               One reference. Two ways to turn it into useful creative work.
             </h2>
 
             <p className="text-body-lg text-text-muted">
-              Start with an existing sales video or audio file. Kyrg Studio
-              handles the transcription, extracts the strategy and prepares the
-              result for analysis or adaptation.
+              Start with an existing sales video or audio file. Kyrg Studio handles the
+              transcription, extracts the strategy and prepares the result for analysis or
+              adaptation.
             </p>
           </Stack>
 
@@ -58,18 +55,12 @@ export function HowItWorks() {
               <li className="flex" key={step.number}>
                 <Card className="w-full" padding="lg">
                   <Stack gap="lg">
-                    <span className="font-mono text-meta text-action">
-                      STEP {step.number}
-                    </span>
+                    <span className="font-mono text-meta text-action">STEP {step.number}</span>
 
                     <Stack gap="sm">
-                      <h3 className="font-heading text-heading-3 text-text">
-                        {step.title}
-                      </h3>
+                      <h3 className="font-heading text-heading-3 text-text">{step.title}</h3>
 
-                      <p className="text-body text-text-muted">
-                        {step.description}
-                      </p>
+                      <p className="text-body text-text-muted">{step.description}</p>
                     </Stack>
                   </Stack>
                 </Card>
@@ -87,8 +78,8 @@ export function HowItWorks() {
                 </h3>
 
                 <p className="text-body text-text-muted">
-                  Explore the copy structure, offer, persuasion pattern,
-                  objections, proof, strategic gaps and complete transcription.
+                  Explore the copy structure, offer, persuasion pattern, objections, proof,
+                  strategic gaps and complete transcription.
                 </p>
               </Stack>
 
@@ -103,8 +94,8 @@ export function HowItWorks() {
                 </h3>
 
                 <p className="text-body text-text-muted">
-                  Combine the reference strategy with your product, audience,
-                  available proof, restrictions and desired platform.
+                  Combine the reference strategy with your product, audience, available proof,
+                  restrictions and desired platform.
                 </p>
               </Stack>
             </div>

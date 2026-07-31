@@ -4,10 +4,7 @@ import type { AxiosResponse } from 'axios'
 import { environment } from '@/shared/config/environment'
 
 import { normalizeApiError } from './errors'
-import {
-  accessTokenRefreshCoordinator,
-  type AccessTokenRefresh,
-} from './refresh-coordinator'
+import { accessTokenRefreshCoordinator, type AccessTokenRefresh } from './refresh-coordinator'
 
 let accessToken: string | null = null
 let refreshAccessToken: AccessTokenRefresh | null = null
@@ -41,9 +38,7 @@ export function clearApiAccessToken(): void {
 /**
  * Registers the authentication operation used to renew an expired token.
  */
-export function configureApiTokenRefresh(
-  refreshHandler: AccessTokenRefresh | null,
-): void {
+export function configureApiTokenRefresh(refreshHandler: AccessTokenRefresh | null): void {
   refreshAccessToken = refreshHandler
 }
 
@@ -57,14 +52,9 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  handleResponseFailure,
-)
+apiClient.interceptors.response.use((response) => response, handleResponseFailure)
 
-async function handleResponseFailure(
-  error: unknown,
-): Promise<AxiosResponse<unknown>> {
+async function handleResponseFailure(error: unknown): Promise<AxiosResponse<unknown>> {
   const refreshHandler = refreshAccessToken
 
   if (
@@ -81,18 +71,14 @@ async function handleResponseFailure(
   let refreshedToken: string
 
   try {
-    refreshedToken =
-      await accessTokenRefreshCoordinator.refresh(refreshHandler)
+    refreshedToken = await accessTokenRefreshCoordinator.refresh(refreshHandler)
   } catch (refreshError) {
     clearApiAccessToken()
     throw normalizeApiError(refreshError)
   }
 
   setApiAccessToken(refreshedToken)
-  error.config.headers.set(
-    'Authorization',
-    `Bearer ${refreshedToken}`,
-  )
+  error.config.headers.set('Authorization', `Bearer ${refreshedToken}`)
 
   try {
     // Static Axios avoids sending the retried request through this interceptor

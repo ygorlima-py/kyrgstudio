@@ -47,22 +47,16 @@ export function HeroSection() {
       <Container className="relative z-10">
         <div className="grid items-center gap-16 lg:grid-cols-[1.08fr_0.92fr]">
           <Stack align="start" gap="lg">
-            <Badge variant="action">
-              Creative intelligence for direct response
-            </Badge>
+            <Badge variant="action">Creative intelligence for direct response</Badge>
 
             <Stack gap="md">
-              <h1
-                className="max-w-4xl font-heading text-heading-1 text-text"
-                id="hero-title"
-              >
+              <h1 className="max-w-4xl font-heading text-heading-1 text-text" id="hero-title">
                 See the strategy inside any sales video. Then make it yours.
               </h1>
 
               <p className="max-w-2xl text-body-lg text-text-muted">
-                Upload a video or audio file. Kyrg Studio identifies its copy
-                structure, offer, persuasion strategy and gaps, then helps you
-                adapt the strategy to your own offer.
+                Upload a video or audio file. Kyrg Studio identifies its copy structure, offer,
+                persuasion strategy and gaps, then helps you adapt the strategy to your own offer.
               </p>
             </Stack>
 
@@ -119,30 +113,19 @@ function HeroProductIllustration() {
     <div aria-hidden="true" className="relative mx-auto w-full max-w-xl">
       <div className="absolute -inset-6 rotate-2 rounded-xl border border-border bg-surface-muted" />
 
-      <Card
-        className="relative overflow-hidden"
-        padding="lg"
-        variant="elevated"
-      >
+      <Card className="relative overflow-hidden" padding="lg" variant="elevated">
         <Stack gap="lg">
           <Inline justify="between">
             <Badge variant="processing">Reference analysis</Badge>
 
-            <span className="font-mono text-meta text-text-subtle">
-              COPY MAP
-            </span>
+            <span className="font-mono text-meta text-text-subtle">COPY MAP</span>
           </Inline>
 
           <Stack gap="sm">
-            <span className="text-label text-text-muted">
-              Persuasion structure
-            </span>
+            <span className="text-label text-text-muted">Persuasion structure</span>
 
             {copySections.map((section, index) => (
-              <div
-                className="grid grid-cols-[2rem_1fr] items-center gap-3"
-                key={section.label}
-              >
+              <div className="grid grid-cols-[2rem_1fr] items-center gap-3" key={section.label}>
                 <span className="font-mono text-meta text-text-subtle">
                   {String(index + 1).padStart(2, '0')}
                 </span>
@@ -153,9 +136,7 @@ function HeroProductIllustration() {
                     section.width,
                   ].join(' ')}
                 >
-                  <span className="text-label text-text">
-                    {section.label}
-                  </span>
+                  <span className="text-label text-text">{section.label}</span>
                 </div>
               </div>
             ))}
