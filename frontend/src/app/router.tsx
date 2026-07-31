@@ -9,6 +9,8 @@ import { RegisterRoute } from '@/routes/register-route'
 import { LoginRoute } from '@/routes/login-route'
 import { RequireAuthentication } from '@/features/auth/components/require-authentication'
 
+import { AppLayout } from '@/layouts/app-layout'
+import { DashboardRoute } from '@/routes/dashboard-route'
 
 export const router = createBrowserRouter([
   {
@@ -35,8 +37,19 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/app',
     Component: RequireAuthentication,
+    children: [
+      {
+        path: '/app',
+        Component: AppLayout,
+        children: [
+          {
+            index: true,
+            Component: DashboardRoute,
+          },
+        ],
+      },
+    ],
   },
   {
     path: '*',
