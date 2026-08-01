@@ -6,6 +6,8 @@ import type {
 import type { UserProfileData } from '@/features/user-profile/schemas/user-profile-schema'
 import {
   apiClient,
+  type ApiRequestOptions,
+  type JobStatusResponse,
   type JobSubmissionResponse,
   type UploadProgress,
   type UploadRequestOptions,
@@ -79,6 +81,29 @@ export async function submitJob(
   const response = await apiClient.post<JobSubmissionResponse>(
     '/jobs',
     formData,
+    requestConfig,
+  )
+
+  return response.data
+}
+
+/** Fetch the latest public state of one job owned by the current user. */
+export async function getJobStatus(
+  jobId: number,
+  options: ApiRequestOptions = {},
+): Promise<JobStatusResponse> {
+  if (!Number.isSafeInteger(jobId) || jobId <= 0) {
+    throw new TypeError('Job id must be a positive integer.')
+  }
+
+  const requestConfig: AxiosRequestConfig = {}
+
+  if (options.signal !== undefined) {
+    requestConfig.signal = options.signal
+  }
+
+  const response = await apiClient.get<JobStatusResponse>(
+    `/jobs/${jobId}`,
     requestConfig,
   )
 

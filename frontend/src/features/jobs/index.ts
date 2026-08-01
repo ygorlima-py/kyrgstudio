@@ -1,4 +1,4 @@
-export { submitJob } from './api/jobs-api'
+export { getJobStatus, submitJob } from './api/jobs-api'
 export { buildJobRequestMetadata } from './utils/build-job-request'
 export { JobCreationForm } from './components/job-creation-form'
 export { JobTypeStep } from './components/job-type-step'
@@ -6,6 +6,14 @@ export { getInitialPipelineType } from './utils/get-initial-pipeline-type'
 export { FileUploadStep } from './components/file-upload-step'
 export { JobSettingsStep } from './components/job-settings-step'
 export { JobReviewStep } from './components/job-review-step'
+export { JobStatusPanel } from './components/job-status-panel'
+export { useJobStatus } from './hooks/use-job-status'
+export { parseJobId } from './utils/parse-job-id'
+export {
+  isActiveJobStatus,
+  isKnownJobStatus,
+  isTerminalJobStatus,
+} from './config/job-status'
 export { UploadProgress } from './components/upload-progress'
 export { useJobSubmission } from './hooks/use-job-submission'
 
@@ -20,6 +28,9 @@ export type {
 export type { 
   JobReviewStepProps
  } from './components/job-review-step'
+
+export type { JobStatusPanelProps } from './components/job-status-panel'
+export type { JobStatus } from './config/job-status'
 
 export type { 
     JobCreationFormProps 
