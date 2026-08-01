@@ -5,7 +5,7 @@ export {
   setApiAccessToken,
 } from './client'
 
-export { ApiError } from './errors'
+export { ApiError, normalizeApiError } from './errors'
 
 export type { AccessTokenRefresh } from './refresh-coordinator'
 

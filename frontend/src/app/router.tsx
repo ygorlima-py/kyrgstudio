@@ -12,6 +12,8 @@ import { RequireAuthentication } from '@/features/auth/components/require-authen
 import { AppLayout } from '@/layouts/app-layout'
 import { DashboardRoute } from '@/routes/dashboard-route'
 
+import { NewJobRoute } from '@/routes/new-job-route'
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -46,6 +48,10 @@ export const router = createBrowserRouter([
           {
             index: true,
             Component: DashboardRoute,
+          },
+          {
+            path: 'jobs/new',
+            Component: NewJobRoute,
           },
         ],
       },
