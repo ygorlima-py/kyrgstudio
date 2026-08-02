@@ -202,7 +202,7 @@ def load_settings() -> AppSettings:
             "small",
         ),
         max_duration_seconds=int(
-            os.getenv("APP_MAX_DURATION_SECONDS", "300")
+            os.getenv("APP_MAX_DURATION_SECONDS", "600")
         ),
         request_timeout_seconds=int(
             os.getenv("APP_REQUEST_TIMEOUT_SECONDS", "300")
