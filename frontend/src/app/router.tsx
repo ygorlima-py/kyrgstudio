@@ -13,6 +13,7 @@ import { AppLayout } from '@/layouts/app-layout'
 import { DashboardRoute } from '@/routes/dashboard-route'
 
 import { NewJobRoute } from '@/routes/new-job-route'
+import { JobsHistoryRoute } from '@/routes/jobs-history-route'
 import { JobStatusRoute } from '@/routes/job-status-route'
 import { JobResultRoute } from '@/routes/job-result-route'
 
@@ -54,6 +55,10 @@ export const router = createBrowserRouter([
           {
             path: 'jobs/new',
             Component: NewJobRoute,
+          },
+          {
+            path: 'jobs',
+            Component: JobsHistoryRoute,
           },
           {
             path: 'jobs/:jobId',

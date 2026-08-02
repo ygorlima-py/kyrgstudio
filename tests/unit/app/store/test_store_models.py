@@ -233,6 +233,14 @@ def test_jobs_indices_and_uniques() -> None:
     _assert_column_is_indexed(Job, "user_id")
     _assert_column_is_indexed(Job, "status")
     _assert_column_is_indexed(Job, "created_at")
+    assert ("user_id", "created_at", "id") in _index_column_sets(Job)
+    assert ("user_id", "status", "created_at", "id") in _index_column_sets(Job)
+    assert (
+        "user_id",
+        "pipeline_type",
+        "created_at",
+        "id",
+    ) in _index_column_sets(Job)
     assert _column(Job, "run_id").unique is True
 
 

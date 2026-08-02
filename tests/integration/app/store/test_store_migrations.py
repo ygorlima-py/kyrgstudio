@@ -77,6 +77,9 @@ def test_verifying_indexes_exist_in_migrated_database(
             "ix_jobs_user_id",
             "ix_jobs_status",
             "ix_jobs_created_at",
+            "ix_jobs_user_created_id",
+            "ix_jobs_user_status_created_id",
+            "ix_jobs_user_pipeline_created_id",
         },
         "job_events": {
             "ix_job_events_created_at",

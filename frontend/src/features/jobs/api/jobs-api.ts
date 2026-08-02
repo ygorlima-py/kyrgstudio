@@ -51,8 +51,13 @@ type ListUserJobsOperation = ApiOperations['list_jobs_v1_jobs_get']
 type ListUserJobsQuery = NonNullable<ListUserJobsOperation['parameters']['query']>
 
 export type JobListResponse = ListUserJobsOperation['responses'][200]['content']['application/json']
+export type JobListStatus = NonNullable<ListUserJobsQuery['status']>
+export type JobListPipelineType = NonNullable<ListUserJobsQuery['pipeline_type']>
 
 export interface ListUserJobsOptions extends ApiRequestOptions {
+  readonly jobId?: NonNullable<ListUserJobsQuery['job_id']>
+  readonly status?: JobListStatus
+  readonly pipelineType?: JobListPipelineType
   readonly limit?: ListUserJobsQuery['limit']
   readonly offset?: ListUserJobsQuery['offset']
 }
@@ -152,13 +157,21 @@ export async function getJobResult(
 
 /** Fetch one page of jobs owned by the authenticated user. */
 export async function listUserJobs(options: ListUserJobsOptions = {}): Promise<JobListResponse> {
+  const jobId = options.jobId
   const limit = options.limit ?? DEFAULT_USER_JOBS_LIMIT
   const offset = options.offset ?? DEFAULT_USER_JOBS_OFFSET
+
+  if (jobId !== undefined) {
+    validateJobId(jobId)
+  }
 
   validateUserJobsPagination(limit, offset)
 
   const requestConfig: AxiosRequestConfig = {
     params: {
+      ...(jobId === undefined ? {} : { job_id: jobId }),
+      ...(options.status === undefined ? {} : { status: options.status }),
+      ...(options.pipelineType === undefined ? {} : { pipeline_type: options.pipelineType }),
       limit,
       offset,
     } satisfies ListUserJobsQuery,
@@ -171,6 +184,12 @@ export async function listUserJobs(options: ListUserJobsOptions = {}): Promise<J
   const response = await apiClient.get<JobListResponse>('/jobs', requestConfig)
 
   return response.data
+}
+
+function validateJobId(jobId: number): void {
+  if (!Number.isSafeInteger(jobId) || jobId <= 0) {
+    throw new TypeError('Job id must be a positive integer.')
+  }
 }
 
 function validateUserJobsPagination(limit: number, offset: number): void {

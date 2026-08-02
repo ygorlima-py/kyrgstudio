@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.errors import JobStoreError
-from app.store.base import JobStoreBase
+from app.store.base import JobListPage, JobStoreBase
 from app.store.database import async_savepoint_scope
 from app.store.models import Job, JobEvent
 
@@ -28,6 +28,18 @@ JOB_STATUS_UPLOADED = "uploaded"
 JOB_STATUS_RUNNING = "running"
 JOB_STATUS_COMPLETED = "completed"
 JOB_STATUS_FAILED = "failed"
+
+SUPPORTED_JOB_STATUSES = (
+    JOB_STATUS_PENDING,
+    JOB_STATUS_UPLOADED,
+    JOB_STATUS_RUNNING,
+    JOB_STATUS_COMPLETED,
+    JOB_STATUS_FAILED,
+)
+SUPPORTED_PIPELINE_TYPES = (
+    "copy_analysis",
+    "copy_adaptation",
+)
 
 STEP_CREATED = "created"
 STEP_UPLOADED = "uploaded"
@@ -293,30 +305,72 @@ class SQLAlchemyJobStore(JobStoreBase):
         self,
         user_id: int,
         *,
+        job_id: int | None = None,
+        status: str | None = None,
+        pipeline_type: str | None = None,
         limit: int = DEFAULT_PAGE_LIMIT,
         offset: int = 0,
-    ) -> list[Job]:
-        """Return jobs for a user with stable pagination."""
+    ) -> JobListPage:
+        """Return one filtered, newest-first page owned by a user."""
 
         operation = "list_user_jobs"
+        normalized_user_id = _normalize_positive_integer(
+            user_id,
+            field="user_id",
+            operation=operation,
+        )
+        normalized_job_id = _normalize_optional_positive_integer(
+            job_id,
+            field="job_id",
+            operation=operation,
+        )
+        normalized_status = _normalize_optional_choice(
+            status,
+            field="status",
+            allowed_values=SUPPORTED_JOB_STATUSES,
+            operation=operation,
+        )
+        normalized_pipeline_type = _normalize_optional_choice(
+            pipeline_type,
+            field="pipeline_type",
+            allowed_values=SUPPORTED_PIPELINE_TYPES,
+            operation=operation,
+        )
         normalized_limit = _normalize_limit(limit, operation=operation)
         normalized_offset = _normalize_offset(offset, operation=operation)
+        filters = [Job.user_id == normalized_user_id]
+
+        if normalized_job_id is not None:
+            filters.append(Job.id == normalized_job_id)
+
+        if normalized_status is not None:
+            filters.append(Job.status == normalized_status)
+
+        if normalized_pipeline_type is not None:
+            filters.append(Job.pipeline_type == normalized_pipeline_type)
 
         try:
             result = await self.session.execute(
                 select(Job)
-                .where(Job.user_id == user_id)
+                .where(*filters)
                 .order_by(Job.created_at.desc(), Job.id.desc())
-                .limit(normalized_limit)
+                .limit(normalized_limit + 1)
                 .offset(normalized_offset)
             )
-            return list(result.scalars().all())
+            rows = list(result.scalars().all())
+            return JobListPage(
+                items=tuple(rows[:normalized_limit]),
+                has_more=len(rows) > normalized_limit,
+            )
         except SQLAlchemyError as error:
             raise _job_store_error(
                 operation,
                 "Failed to list user jobs.",
                 details={
-                    "user_id": user_id,
+                    "user_id": normalized_user_id,
+                    "job_id": normalized_job_id,
+                    "status": normalized_status,
+                    "pipeline_type": normalized_pipeline_type,
                     "limit": normalized_limit,
                     "offset": normalized_offset,
                 },
@@ -479,7 +533,7 @@ def _error_step(error: Mapping[str, Any]) -> str:
 
 
 def _normalize_limit(limit: int, *, operation: str) -> int:
-    if limit <= 0:
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
         raise JobStoreError(
             technical_message="Job list limit must be greater than zero.",
             details={"operation": operation, "limit": limit},
@@ -489,13 +543,70 @@ def _normalize_limit(limit: int, *, operation: str) -> int:
 
 
 def _normalize_offset(offset: int, *, operation: str) -> int:
-    if offset < 0:
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
         raise JobStoreError(
             technical_message="Job list offset must be greater than or equal to zero.",
             details={"operation": operation, "offset": offset},
         )
 
     return offset
+
+
+def _normalize_positive_integer(
+    value: int,
+    *,
+    field: str,
+    operation: str,
+) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise JobStoreError(
+            technical_message=f"Job list {field} must be a positive integer.",
+            details={"operation": operation, "field": field, "value": value},
+        )
+
+    return value
+
+
+def _normalize_optional_positive_integer(
+    value: int | None,
+    *,
+    field: str,
+    operation: str,
+) -> int | None:
+    if value is None:
+        return None
+
+    return _normalize_positive_integer(
+        value,
+        field=field,
+        operation=operation,
+    )
+
+
+def _normalize_optional_choice(
+    value: str | None,
+    *,
+    field: str,
+    allowed_values: Sequence[str],
+    operation: str,
+) -> str | None:
+    if value is None:
+        return None
+
+    normalized_value = str(value).strip().lower()
+
+    if normalized_value not in allowed_values:
+        raise JobStoreError(
+            technical_message=f"Unsupported job list {field} filter.",
+            details={
+                "operation": operation,
+                "field": field,
+                "value": value,
+                "allowed_values": list(allowed_values),
+            },
+        )
+
+    return normalized_value
 
 
 def _job_store_error(
@@ -526,4 +637,6 @@ __all__ = [
     "JOB_STATUS_RUNNING",
     "JOB_STATUS_UPLOADED",
     "SQLAlchemyJobStore",
+    "SUPPORTED_JOB_STATUSES",
+    "SUPPORTED_PIPELINE_TYPES",
 ]

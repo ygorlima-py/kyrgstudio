@@ -336,6 +336,8 @@ export interface components {
       limit: number
       /** Offset */
       offset: number
+      /** Has More */
+      has_more: boolean
     }
     /**
      * JobResultOutput
@@ -705,6 +707,12 @@ export interface operations {
   list_jobs_v1_jobs_get: {
     parameters: {
       query?: {
+        /** @description Return only the job with this identifier. */
+        job_id?: number | null
+        /** @description Return only jobs with this lifecycle status. */
+        status?: ('pending' | 'uploaded' | 'running' | 'completed' | 'failed') | null
+        /** @description Return only jobs from this pipeline type. */
+        pipeline_type?: ('copy_analysis' | 'copy_adaptation') | null
         /** @description Maximum number of jobs returned. */
         limit?: number
         /** @description Number of newer jobs to skip. */

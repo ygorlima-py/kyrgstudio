@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.main import create_app
+from app.api.routers import jobs as jobs_module
 from app.auth.dependencies import get_current_user
 from app.auth.principal import AuthenticatedPrincipal
 from app.errors import PipelineExecutionError, StorageError
@@ -202,6 +203,24 @@ async def _get_job_by_run_id(
 ) -> Job | None:
     async with session_factory() as session:
         return await SQLAlchemyJobStore(session).get_job_by_run_id(run_id)
+
+
+async def _create_pending_job(
+    session_factory: async_sessionmaker[AsyncSession],
+    *,
+    user_id: int,
+) -> Job:
+    """Persist one minimal job for list and ownership scenarios."""
+
+    async with session_factory.begin() as session:
+        return await SQLAlchemyJobStore(session).create_job(
+            {
+                "user_id": user_id,
+                "pipeline_type": "copy_analysis",
+                "run_id": f"integration-list-{uuid4().hex}",
+                "input_json": {"source_type": "video"},
+            }
+        )
 
 
 async def _complete_job(
@@ -602,6 +621,54 @@ def test_user_cannot_read_another_users_job_or_result(
         assert result_response.status_code == 404
         assert status_response.json() == result_response.json()
         assert status_response.json()["code"] == "job_not_found"
+
+    _run_async(scenario())
+
+
+def test_job_list_filters_never_return_another_users_jobs(
+    api_session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Combine the real route and store without exposing foreign jobs."""
+
+    async def scenario() -> None:
+        owner = await _create_user(api_session_factory, label="list-owner")
+        stranger = await _create_user(
+            api_session_factory,
+            label="list-stranger",
+        )
+        owner_job = await _create_pending_job(
+            api_session_factory,
+            user_id=owner.user_id,
+        )
+        stranger_job = await _create_pending_job(
+            api_session_factory,
+            user_id=stranger.user_id,
+        )
+        async with api_session_factory() as session:
+            store = SQLAlchemyJobStore(session)
+            list_response = await jobs_module.list_jobs(
+                current_user=stranger,
+                job_store=store,
+                job_id=None,
+                job_status="pending",
+                pipeline_type="copy_analysis",
+                limit=20,
+                offset=0,
+            )
+            foreign_filter_response = await jobs_module.list_jobs(
+                current_user=stranger,
+                job_store=store,
+                job_id=owner_job.id,
+                job_status=None,
+                pipeline_type=None,
+                limit=20,
+                offset=0,
+            )
+
+        assert [item.job_id for item in list_response.items] == [
+            stranger_job.id
+        ]
+        assert foreign_filter_response.items == []
 
     _run_async(scenario())
 

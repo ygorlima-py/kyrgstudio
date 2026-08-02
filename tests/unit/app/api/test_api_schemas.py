@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from app.schemas.jobs import (
     CreateCopyAdaptationJobRequest,
     CreateCopyAnalysisJobRequest,
+    build_job_list_response,
     build_job_result_response,
     build_job_status_response,
     build_job_submission_response,
@@ -290,6 +291,35 @@ def test_build_job_status_response_maps_public_fields() -> None:
     assert "user_id" not in payload
     assert "input_json" not in payload
     assert "input_file_uri" not in payload
+
+
+def test_build_job_list_response_exposes_page_metadata() -> None:
+    """Expose bounded pagination metadata without internal job fields."""
+
+    job = SimpleNamespace(
+        id=41,
+        run_id="run-41",
+        pipeline_type="copy_analysis",
+        status="running",
+        current_step="copy_analysis",
+        created_at=NOW,
+        started_at=NOW,
+        finished_at=None,
+        execution_time_seconds=None,
+        error_json=None,
+    )
+
+    response = build_job_list_response(
+        [job],
+        limit=20,
+        offset=0,
+        has_more=True,
+    )
+
+    assert response.limit == 20
+    assert response.offset == 0
+    assert response.has_more is True
+    assert [item.job_id for item in response.items] == [41]
 
 
 def test_build_failed_job_status_hides_internal_error_details() -> None:

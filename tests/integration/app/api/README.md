@@ -10,6 +10,7 @@ Status: Completed.
 - verify the uploaded transaction is committed before queue invocation;
 - prevent local storage paths from appearing in public responses;
 - hide jobs and results owned by another user;
+- keep filtered job listings isolated to the authenticated user;
 - reject result retrieval before completion;
 - return completed persisted output through the result endpoint;
 - preserve the stable public error contract.

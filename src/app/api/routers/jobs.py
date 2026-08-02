@@ -42,6 +42,7 @@ from app.pipeline.service import PipelineService
 from app.schemas.jobs import (
     CreateJobRequest,
     JobListResponse,
+    JobStatus,
     JobResultResponse,
     JobStatusResponse,
     JobSubmissionResponse,
@@ -52,6 +53,7 @@ from app.schemas.jobs import (
     build_pipeline_input,
     parse_create_job_request,
 )
+from app.schemas.pipeline import PipelineType
 from app.settings import AppSettings
 from app.store.base import JobStoreBase
 
@@ -81,6 +83,24 @@ JobListOffsetQuery = Annotated[
         ge=0,
         description="Number of newer jobs to skip.",
     ),
+]
+JobListIdQuery = Annotated[
+    int | None,
+    Query(
+        gt=0,
+        description="Return only the job with this identifier.",
+    ),
+]
+JobListStatusQuery = Annotated[
+    JobStatus | None,
+    Query(
+        alias="status",
+        description="Return only jobs with this lifecycle status.",
+    ),
+]
+JobListPipelineTypeQuery = Annotated[
+    PipelineType | None,
+    Query(description="Return only jobs from this pipeline type."),
 ]
 
 
@@ -140,20 +160,27 @@ async def submit_job(
 async def list_jobs(
     current_user: CurrentUserDependency,
     job_store: JobStoreDependency,
+    job_id: JobListIdQuery = None,
+    job_status: JobListStatusQuery = None,
+    pipeline_type: JobListPipelineTypeQuery = None,
     limit: JobListLimitQuery = 20,
     offset: JobListOffsetQuery = 0,
 ) -> JobListResponse:
     """Return an ordered page containing only the caller's public job data."""
 
-    jobs = await job_store.list_user_jobs(
+    page = await job_store.list_user_jobs(
         current_user.user_id,
+        job_id=job_id,
+        status=job_status,
+        pipeline_type=pipeline_type,
         limit=limit,
         offset=offset,
     )
     return build_job_list_response(
-        jobs,
+        page.items,
         limit=limit,
         offset=offset,
+        has_more=page.has_more,
     )
 
 

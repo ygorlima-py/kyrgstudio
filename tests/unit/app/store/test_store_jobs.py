@@ -81,12 +81,13 @@ class _ScalarsResult:
 class _ExecuteListSession:
     """Session fake that captures the select statement used by list_user_jobs."""
 
-    def __init__(self) -> None:
+    def __init__(self, rows: list[Job] | None = None) -> None:
         self.statement: object | None = None
+        self.rows = rows or []
 
     async def execute(self, statement: object) -> _ScalarsResult:
         self.statement = statement
-        return _ScalarsResult()
+        return _ScalarsResult(self.rows)
 
 
 class _CreateJobSession:
@@ -330,15 +331,15 @@ def test_list_user_jobs_caps_limit_to_maximum() -> None:
     session = _ExecuteListSession()
     store = _store(session)
 
-    result = cast(
-        list[Job],
-        _run_async(store.list_user_jobs(1, limit=jobs.MAX_PAGE_LIMIT + 500)),
+    result = _run_async(
+        store.list_user_jobs(1, limit=jobs.MAX_PAGE_LIMIT + 500)
     )
 
-    assert result == []
+    assert result.items == ()
+    assert result.has_more is False
     assert session.statement is not None
     limit_clause = getattr(session.statement, "_limit_clause")
-    assert getattr(limit_clause, "value") == jobs.MAX_PAGE_LIMIT
+    assert getattr(limit_clause, "value") == jobs.MAX_PAGE_LIMIT + 1
 
 
 def test_list_user_jobs_rejects_negative_offset() -> None:
@@ -353,6 +354,64 @@ def test_list_user_jobs_rejects_negative_offset() -> None:
         "operation": "list_user_jobs",
         "offset": -1,
     }
+
+
+def test_list_user_jobs_filters_in_sql_and_uses_stable_order() -> None:
+    """Owner and optional filters should be part of the database statement."""
+
+    session = _ExecuteListSession()
+    store = _store(session)
+
+    _run_async(
+        store.list_user_jobs(
+            7,
+            job_id=41,
+            status="running",
+            pipeline_type="copy_analysis",
+            limit=20,
+            offset=5,
+        )
+    )
+
+    assert session.statement is not None
+    statement_text = str(session.statement)
+    statement_parameters = session.statement.compile().params
+
+    assert "jobs.user_id" in statement_text
+    assert "jobs.id" in statement_text
+    assert "jobs.status" in statement_text
+    assert "jobs.pipeline_type" in statement_text
+    assert "ORDER BY jobs.created_at DESC, jobs.id DESC" in statement_text
+    assert {7, 41, "running", "copy_analysis"} <= set(
+        statement_parameters.values()
+    )
+
+
+def test_list_user_jobs_reports_and_removes_extra_page_row() -> None:
+    """One extra SQL row should indicate another page without leaking it."""
+
+    rows = [Job(id=1), Job(id=2), Job(id=3)]
+    store = _store(_ExecuteListSession(rows))
+
+    page = _run_async(store.list_user_jobs(7, limit=2))
+
+    assert tuple(job.id for job in page.items) == (1, 2)
+    assert page.has_more is True
+
+
+@pytest.mark.parametrize("status", ["", "queued", "COMPLETED_JOB"])
+def test_list_user_jobs_rejects_unsupported_status(status: str) -> None:
+    """Store callers cannot bypass the public lifecycle status allowlist."""
+
+    with pytest.raises(JobStoreError):
+        _run_async(_store().list_user_jobs(1, status=status))
+
+
+def test_list_user_jobs_rejects_unsupported_pipeline_type() -> None:
+    """Store callers cannot query an unknown pipeline type."""
+
+    with pytest.raises(JobStoreError):
+        _run_async(_store().list_user_jobs(1, pipeline_type="unknown"))
 
 
 def test_get_job_returns_none_when_session_get_returns_none() -> None:

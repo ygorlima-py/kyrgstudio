@@ -262,6 +262,23 @@ class BillingEvent(Base):
 
 class Job(Base):
     __tablename__ = "jobs"
+    __table_args__ = (
+        Index("ix_jobs_user_created_id", "user_id", "created_at", "id"),
+        Index(
+            "ix_jobs_user_status_created_id",
+            "user_id",
+            "status",
+            "created_at",
+            "id",
+        ),
+        Index(
+            "ix_jobs_user_pipeline_created_id",
+            "user_id",
+            "pipeline_type",
+            "created_at",
+            "id",
+        ),
+    )
 
     # Identificador interno do job no banco.
     id: Mapped[int] = mapped_column(primary_key=True)

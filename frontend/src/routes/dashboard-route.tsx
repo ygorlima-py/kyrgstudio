@@ -51,9 +51,7 @@ function AuthenticatedDashboard({ firstName }: AuthenticatedDashboardProps) {
   return (
     <div className="mx-auto w-full max-w-6xl">
       <section className="border-b border-border pb-8 sm:pb-10">
-        <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Workspace
-        </p>
+        <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">Workspace</p>
 
         <h1 className="mt-2 font-heading text-heading-3 text-text">
           {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
@@ -65,10 +63,7 @@ function AuthenticatedDashboard({ firstName }: AuthenticatedDashboardProps) {
       </section>
 
       <section aria-labelledby="dashboard-actions-heading" className="pt-8 sm:pt-10">
-        <h2
-          className="text-body-lg font-semibold text-text"
-          id="dashboard-actions-heading"
-        >
+        <h2 className="text-body-lg font-semibold text-text" id="dashboard-actions-heading">
           Start a new project
         </h2>
 
@@ -121,6 +116,16 @@ function AuthenticatedDashboard({ firstName }: AuthenticatedDashboardProps) {
         <>
           <ActiveJobs jobs={activeJobs} />
           <RecentJobs jobs={recentJobs} />
+
+          <div className="mt-7 flex justify-end border-t border-border pt-5">
+            <Link
+              className="inline-flex items-center gap-2 text-label text-action underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+              to="/app/jobs"
+            >
+              View project history
+              <ArrowIcon />
+            </Link>
+          </div>
         </>
       ) : null}
     </div>

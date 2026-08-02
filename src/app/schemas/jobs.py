@@ -46,6 +46,13 @@ RunId: TypeAlias = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=255),
 ]
+JobStatus: TypeAlias = Literal[
+    "pending",
+    "uploaded",
+    "running",
+    "completed",
+    "failed",
+]
 
 
 class _CreateJobRequestBase(BaseModel):
@@ -137,6 +144,7 @@ class JobListResponse(BaseModel):
     items: list[JobStatusResponse]
     limit: int = Field(ge=1, le=100)
     offset: int = Field(ge=0)
+    has_more: bool
 
 
 class PublicTranscriptionOutput(TypedDict):
@@ -289,6 +297,7 @@ def build_job_list_response(
     *,
     limit: int,
     offset: int,
+    has_more: bool,
 ) -> JobListResponse:
     """Map an ordered page of persisted jobs to public status records."""
 
@@ -296,6 +305,7 @@ def build_job_list_response(
         items=[build_job_status_response(job) for job in jobs],
         limit=limit,
         offset=offset,
+        has_more=has_more,
     )
 
 
@@ -583,6 +593,7 @@ __all__ = [
     "CreateCopyAnalysisJobRequest",
     "CreateJobRequest",
     "JobListResponse",
+    "JobStatus",
     "JobResultOutput",
     "JobResultResponse",
     "JobStatusResponse",

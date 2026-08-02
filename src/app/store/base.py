@@ -10,7 +10,20 @@ the caller so multiple store operations can be composed in one transaction.
 """
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any
+
+
+@dataclass(frozen=True, slots=True)
+class JobListPage:
+    """One bounded page of jobs returned by a store query.
+
+    ``has_more`` is calculated by the persistence implementation without
+    loading the user's complete job history into memory.
+    """
+
+    items: tuple[Any, ...]
+    has_more: bool
 
 
 class JobStoreBase(ABC):
@@ -132,18 +145,24 @@ class JobStoreBase(ABC):
         self,
         user_id: int,
         *,
+        job_id: int | None = None,
+        status: str | None = None,
+        pipeline_type: str | None = None,
         limit: int = 20,
         offset: int = 0,
-    ) -> list[Any]:
-        """Return a paginated list of jobs owned by one user.
+    ) -> JobListPage:
+        """Return a filtered page of jobs owned by one user.
 
         Args:
             user_id: Owner user id.
+            job_id: Optional exact internal job identifier.
+            status: Optional lifecycle status filter.
+            pipeline_type: Optional pipeline type filter.
             limit: Maximum number of jobs to return.
             offset: Number of jobs to skip.
 
         Returns:
-            Jobs ordered by the concrete implementation's stable default order.
+            Jobs in stable newest-first order and whether another page exists.
         """
 
         ...

@@ -32,7 +32,7 @@ from app.schemas.pipeline import (
     PipelineType,
 )
 from app.settings import AppSettings
-from app.store.base import JobStoreBase
+from app.store.base import JobListPage, JobStoreBase
 
 
 ResultT = TypeVar("ResultT")
@@ -180,6 +180,18 @@ class _JobStoreStub:
         return self.job
 
 
+class _ListJobStoreStub:
+    """Capture authenticated list filters and return one configured page."""
+
+    def __init__(self, page: JobListPage) -> None:
+        self.page = page
+        self.calls: list[dict[str, Any]] = []
+
+    async def list_user_jobs(self, user_id: int, **filters: Any) -> JobListPage:
+        self.calls.append({"user_id": user_id, **filters})
+        return self.page
+
+
 def _persisted_job(
     *,
     user_id: int = 7,
@@ -219,6 +231,40 @@ def _persisted_job(
         "input_file_key": "jobs/41/input/input.mp4",
         "input_file_uri": "/private/storage/jobs/41/input/input.mp4",
     }
+
+
+def test_list_jobs_forwards_owner_filters_and_page_metadata() -> None:
+    """List endpoint should query only the authenticated owner's page."""
+
+    persisted_job = _persisted_job(status_value="running")
+    store = _ListJobStoreStub(
+        JobListPage(items=(persisted_job,), has_more=True)
+    )
+
+    response = _run(
+        jobs_module.list_jobs(
+            current_user=_principal(user_id=7),
+            job_store=cast(JobStoreBase, store),
+            job_id=41,
+            job_status="running",
+            pipeline_type="copy_analysis",
+            limit=1,
+            offset=2,
+        )
+    )
+
+    assert store.calls == [
+        {
+            "user_id": 7,
+            "job_id": 41,
+            "status": "running",
+            "pipeline_type": "copy_analysis",
+            "limit": 1,
+            "offset": 2,
+        }
+    ]
+    assert response.has_more is True
+    assert [item.job_id for item in response.items] == [41]
 
 
 def _install_upload_validator(

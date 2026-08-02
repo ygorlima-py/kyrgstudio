@@ -6,7 +6,12 @@ validation helpers and private functions from submodules are intentionally not
 exported here.
 """
 
-from app.store.base import BillingStoreBase, JobStoreBase, UserStoreBase
+from app.store.base import (
+    BillingStoreBase,
+    JobListPage,
+    JobStoreBase,
+    UserStoreBase,
+)
 from app.store.billing import (
     ACTIVE_SUBSCRIPTION_STATUSES,
     CANCELED_SUBSCRIPTION_STATUS,
@@ -75,6 +80,7 @@ __all__ = [
     "DatabaseConfig",
     "Job",
     "JobEvent",
+    "JobListPage",
     "JobStoreBase",
     "SQLAlchemyBillingStore",
     "SQLAlchemyJobStore",

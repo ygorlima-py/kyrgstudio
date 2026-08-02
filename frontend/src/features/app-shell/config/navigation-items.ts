@@ -14,6 +14,11 @@ export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
     exact: true,
   },
   {
+    label: 'History',
+    path: '/app/jobs',
+    exact: true,
+  },
+  {
     label: 'New project',
     path: '/app/jobs/new',
     exact: false,

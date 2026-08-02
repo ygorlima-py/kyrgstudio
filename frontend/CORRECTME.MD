@@ -13,7 +13,7 @@ erros internos. Uma busca textual por nome exige adicionar um campo publico de
 nome do projeto em uma evolucao separada.
 
 ## 1. Expandir A Consulta No Backend
-
+[FEITO]
 Arquivos principais:
 
 - `src/app/store/jobs.py`;
@@ -34,7 +34,7 @@ Implementar:
   crescer.
 
 ## 2. Atualizar Contrato E Cliente
-
+[FEITO]
 Arquivos principais:
 
 - `frontend/src/shared/api/generated/schema.ts`;
@@ -52,6 +52,7 @@ Implementar:
 - usar os tipos gerados pelo OpenAPI sem duplicar contratos manualmente.
 
 ## 3. Construir A Pagina De Historico
+[FEITO]
 
 Arquivos principais:
 
@@ -71,6 +72,7 @@ Implementar:
   metadados internos.
 
 ## 4. Adicionar Busca, Filtros E Paginacao
+[FEITO]
 
 Arquivos principais:
 
@@ -90,6 +92,7 @@ Implementar:
 - preservar os filtros quando o usuario abrir um job e voltar para a lista.
 
 ## 5. Sincronizar E Validar
+[FEITO]
 
 Implementar e verificar:
 
