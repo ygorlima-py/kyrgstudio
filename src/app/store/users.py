@@ -427,6 +427,10 @@ class SQLAlchemyAuthSessionStore(AuthSessionStoreBase):
                         details={"session_id": normalized_session_id},
                     )
 
+                # The bulk UPDATE uses database expressions such as now(), so
+                # SQLAlchemy expires the affected attributes. Reload them
+                # asynchronously before this model leaves the store boundary.
+                await self.session.refresh(current_session)
                 return replacement_session
         except StoreError:
             raise
@@ -478,6 +482,7 @@ class SQLAlchemyAuthSessionStore(AuthSessionStoreBase):
                     details={"session_id": normalized_session_id},
                 )
 
+            await self.session.refresh(auth_session)
             return auth_session
         except StoreError:
             raise
