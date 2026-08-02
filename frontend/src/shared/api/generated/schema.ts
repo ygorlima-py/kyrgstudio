@@ -151,7 +151,11 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get?: never
+    /**
+     * List the current user's jobs
+     * @description Return an ordered page containing only the caller's public job data.
+     */
+    get: operations['list_jobs_v1_jobs_get']
     put?: never
     /**
      * Submit a pipeline job
@@ -320,6 +324,18 @@ export interface components {
        * @constant
        */
       status: 'ok'
+    }
+    /**
+     * JobListResponse
+     * @description Paginated public statuses for jobs owned by one user.
+     */
+    JobListResponse: {
+      /** Items */
+      items: components['schemas']['JobStatusResponse'][]
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
     }
     /**
      * JobResultOutput
@@ -682,6 +698,40 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CurrentUserResponse']
+        }
+      }
+    }
+  }
+  list_jobs_v1_jobs_get: {
+    parameters: {
+      query?: {
+        /** @description Maximum number of jobs returned. */
+        limit?: number
+        /** @description Number of newer jobs to skip. */
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['JobListResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

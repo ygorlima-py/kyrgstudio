@@ -1,0 +1,146 @@
+[1mdiff --git a/src/app/api/routers/jobs.py b/src/app/api/routers/jobs.py[m
+[1mindex 97fd679..87e2bfb 100644[m
+[1m--- a/src/app/api/routers/jobs.py[m
+[1m+++ b/src/app/api/routers/jobs.py[m
+[36m@@ -18,6 +18,7 @@[m [mfrom fastapi import ([m
+     Form,[m
+     Header,[m
+     Path,[m
+[32m+[m[32m    Query,[m
+     UploadFile,[m
+     status,[m
+ )[m
+[36m@@ -40,9 +41,11 @@[m [mfrom app.pipeline.input import PipelineInput[m
+ from app.pipeline.service import PipelineService[m
+ from app.schemas.jobs import ([m
+     CreateJobRequest,[m
+[32m+[m[32m    JobListResponse,[m
+     JobResultResponse,[m
+     JobStatusResponse,[m
+     JobSubmissionResponse,[m
+[32m+[m[32m    build_job_list_response,[m
+     build_job_result_response,[m
+     build_job_status_response,[m
+     build_job_submission_response,[m
+[36m@@ -64,6 +67,21 @@[m [mPipelineServiceDependency = Annotated[[m
+ ][m
+ SettingsDependency = Annotated[AppSettings, Depends(get_settings)][m
+ JobIdPath = Annotated[int, Path(gt=0, description="Internal job identifier.")][m
+[32m+[m[32mJobListLimitQuery = Annotated[[m
+[32m+[m[32m    int,[m
+[32m+[m[32m    Query([m
+[32m+[m[32m        ge=1,[m
+[32m+[m[32m        le=100,[m
+[32m+[m[32m        description="Maximum number of jobs returned.",[m
+[32m+[m[32m    ),[m
+[32m+[m[32m][m
+[32m+[m[32mJobListOffsetQuery = Annotated[[m
+[32m+[m[32m    int,[m
+[32m+[m[32m    Query([m
+[32m+[m[32m        ge=0,[m
+[32m+[m[32m        description="Number of newer jobs to skip.",[m
+[32m+[m[32m    ),[m
+[32m+[m[32m][m
+ [m
+ [m
+ router = APIRouter([m
+[36m@@ -113,6 +131,32 @@[m [masync def submit_job([m
+     return build_job_submission_response(result)[m
+ [m
+ [m
+[32m+[m[32m@router.get([m
+[32m+[m[32m    "",[m
+[32m+[m[32m    response_model=JobListResponse,[m
+[32m+[m[32m    status_code=status.HTTP_200_OK,[m
+[32m+[m[32m    summary="List the current user's jobs",[m
+[32m+[m[32m)[m
+[32m+[m[32masync def list_jobs([m
+[32m+[m[32m    current_user: CurrentUserDependency,[m
+[32m+[m[32m    job_store: JobStoreDependency,[m
+[32m+[m[32m    limit: JobListLimitQuery = 20,[m
+[32m+[m[32m    offset: JobListOffsetQuery = 0,[m
+[32m+[m[32m) -> JobListResponse:[m
+[32m+[m[32m    """Return an ordered page containing only the caller's public job data."""[m
+[32m+[m
+[32m+[m[32m    jobs = await job_store.list_user_jobs([m
+[32m+[m[32m        current_user.user_id,[m
+[32m+[m[32m        limit=limit,[m
+[32m+[m[32m        offset=offset,[m
+[32m+[m[32m    )[m
+[32m+[m[32m    return build_job_list_response([m
+[32m+[m[32m        jobs,[m
+[32m+[m[32m        limit=limit,[m
+[32m+[m[32m        offset=offset,[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m
+ @router.get([m
+     "/{job_id}",[m
+     response_model=JobStatusResponse,[m
+[1mdiff --git a/src/app/schemas/jobs.py b/src/app/schemas/jobs.py[m
+[1mindex 201c3c0..9fe6877 100644[m
+[1m--- a/src/app/schemas/jobs.py[m
+[1m+++ b/src/app/schemas/jobs.py[m
+[36m@@ -7,7 +7,7 @@[m [mdo not expose storage paths or internal configuration.[m
+ [m
+ from __future__ import annotations[m
+ [m
+[31m-from collections.abc import Mapping[m
+[32m+[m[32mfrom collections.abc import Mapping, Sequence[m
+ from datetime import datetime[m
+ from typing import ([m
+     Annotated,[m
+[36m@@ -129,6 +129,16 @@[m [mclass JobStatusResponse(BaseModel):[m
+     error: ApiErrorResponse | None = None[m
+ [m
+ [m
+[32m+[m[32mclass JobListResponse(BaseModel):[m
+[32m+[m[32m    """Paginated public statuses for jobs owned by one user."""[m
+[32m+[m
+[32m+[m[32m    model_config = ConfigDict(extra="forbid")[m
+[32m+[m
+[32m+[m[32m    items: list[JobStatusResponse][m
+[32m+[m[32m    limit: int = Field(ge=1, le=100)[m
+[32m+[m[32m    offset: int = Field(ge=0)[m
+[32m+[m
+[32m+[m
+ class PublicTranscriptionOutput(TypedDict):[m
+     """User-facing transcription without provider or filesystem metadata."""[m
+ [m
+[36m@@ -274,6 +284,21 @@[m [mdef build_job_status_response(job: object) -> JobStatusResponse:[m
+     )[m
+ [m
+ [m
+[32m+[m[32mdef build_job_list_response([m
+[32m+[m[32m    jobs: Sequence[object],[m
+[32m+[m[32m    *,[m
+[32m+[m[32m    limit: int,[m
+[32m+[m[32m    offset: int,[m
+[32m+[m[32m) -> JobListResponse:[m
+[32m+[m[32m    """Map an ordered page of persisted jobs to public status records."""[m
+[32m+[m
+[32m+[m[32m    return JobListResponse([m
+[32m+[m[32m        items=[build_job_status_response(job) for job in jobs],[m
+[32m+[m[32m        limit=limit,[m
+[32m+[m[32m        offset=offset,[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m
+ def build_job_result_response(job: object) -> JobResultResponse:[m
+     """Map a completed persisted job to its public result response."""[m
+ [m
+[36m@@ -557,12 +582,14 @@[m [m__all__ = [[m
+     "CreateCopyAdaptationJobRequest",[m
+     "CreateCopyAnalysisJobRequest",[m
+     "CreateJobRequest",[m
+[32m+[m[32m    "JobListResponse",[m
+     "JobResultOutput",[m
+     "JobResultResponse",[m
+     "JobStatusResponse",[m
+     "JobSubmissionResponse",[m
+     "PublicAdaptedScriptOutput",[m
+     "PublicTranscriptionOutput",[m
+[32m+[m[32m    "build_job_list_response",[m
+     "build_job_result_response",[m
+     "build_job_status_response",[m
+     "build_job_submission_response",[m

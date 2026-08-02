@@ -1,6 +1,13 @@
 import { Link } from 'react-router'
 
 import { useAuth } from '@/features/auth'
+import { ActiveJobs } from '@/features/jobs/components/active-jobs'
+import { RecentJobs } from '@/features/jobs/components/recent-jobs'
+import { isActiveJobStatus, isTerminalJobStatus } from '@/features/jobs/config/job-status'
+import { useUserJobs } from '@/features/jobs/hooks/use-user-jobs'
+import { ErrorState } from '@/shared/components/states'
+import { Button } from '@/shared/ui/button'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 const DASHBOARD_ACTIONS = [
   {
@@ -27,7 +34,19 @@ export function DashboardRoute() {
     return null
   }
 
-  const firstName = session.user.name?.trim().split(/\s+/)[0]
+  return <AuthenticatedDashboard firstName={getFirstName(session.user.name)} />
+}
+
+interface AuthenticatedDashboardProps {
+  readonly firstName: string | null
+}
+
+function AuthenticatedDashboard({ firstName }: AuthenticatedDashboardProps) {
+  const jobsQuery = useUserJobs({ limit: 20, offset: 0 })
+
+  const jobs = jobsQuery.data?.items ?? []
+  const activeJobs = jobs.filter((job) => isActiveJobStatus(job.status))
+  const recentJobs = jobs.filter((job) => isTerminalJobStatus(job.status))
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -80,38 +99,73 @@ export function DashboardRoute() {
         </div>
       </section>
 
-      <section aria-labelledby="recent-projects-heading" className="pt-10 sm:pt-12">
-        <div>
-          <h2
-            className="text-body-lg font-semibold text-text"
-            id="recent-projects-heading"
-          >
-            Recent projects
-          </h2>
+      {jobsQuery.isPending ? <JobsLoadingState /> : null}
 
-          <p className="mt-2 text-body text-text-muted">
-            Your latest analyses and adaptations will be available here.
+      {jobsQuery.isError && jobsQuery.data === undefined ? (
+        <section className="pt-10 sm:pt-12">
+          <ErrorState
+            action={
+              <Button onClick={() => void jobsQuery.refetch()} size="sm" variant="secondary">
+                Try again
+              </Button>
+            }
+            description="We could not load your projects. Your existing work was not affected."
+            title="Projects are temporarily unavailable"
+          />
+        </section>
+      ) : null}
+
+      {jobsQuery.isSuccess && jobs.length === 0 ? <NoJobsState /> : null}
+
+      {jobs.length > 0 ? (
+        <>
+          <ActiveJobs jobs={activeJobs} />
+          <RecentJobs jobs={recentJobs} />
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+function JobsLoadingState() {
+  return (
+    <section aria-label="Loading projects" aria-live="polite" className="pt-10 sm:pt-12">
+      <span className="sr-only">Loading your projects</span>
+      <Skeleton className="h-6 w-36" />
+      <div className="mt-5 space-y-3" aria-hidden="true">
+        <Skeleton className="h-24 w-full" variant="block" />
+        <Skeleton className="h-24 w-full" variant="block" />
+      </div>
+    </section>
+  )
+}
+
+function NoJobsState() {
+  return (
+    <section aria-labelledby="empty-projects-heading" className="pt-10 sm:pt-12">
+      <div className="border-y border-border py-7 sm:flex sm:items-center sm:justify-between sm:gap-8">
+        <div>
+          <h2 className="text-body font-medium text-text" id="empty-projects-heading">
+            No projects yet
+          </h2>
+          <p className="mt-1 max-w-2xl text-body-sm text-text-muted">
+            Your analyses and adaptations will appear here after you create them.
           </p>
         </div>
 
-        <div className="mt-5 border-y border-border py-7 sm:flex sm:items-center sm:justify-between sm:gap-8">
-          <div>
-            <p className="text-body font-medium text-text">No projects yet</p>
-            <p className="mt-1 max-w-2xl text-body-sm text-text-muted">
-              Your completed analyses and adaptations will appear here.
-            </p>
-          </div>
-
-          <Link
-            className="mt-4 inline-flex text-label text-action underline-offset-4 hover:underline sm:mt-0 sm:shrink-0"
-            to="/app/jobs/new"
-          >
-            Start your first project
-          </Link>
-        </div>
-      </section>
-    </div>
+        <Link
+          className="mt-4 inline-flex text-label text-action underline-offset-4 hover:underline sm:mt-0 sm:shrink-0"
+          to="/app/jobs/new"
+        >
+          Start your first project
+        </Link>
+      </div>
+    </section>
   )
+}
+
+function getFirstName(name: string | null | undefined): string | null {
+  return name?.trim().split(/\s+/)[0] || null
 }
 
 function ArrowIcon() {

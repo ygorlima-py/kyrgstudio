@@ -6,6 +6,7 @@ import type {
 import type { UserProfileData } from '@/features/user-profile/schemas/user-profile-schema'
 import {
   apiClient,
+  type ApiOperations,
   type ApiRequestOptions,
   type JobResultResponse,
   type JobStatusResponse,
@@ -44,6 +45,21 @@ export interface SubmitJobRequest {
   readonly metadata: JobRequestMetadata
   readonly idempotencyKey: string
 }
+
+type ListUserJobsOperation = ApiOperations['list_jobs_v1_jobs_get']
+
+type ListUserJobsQuery = NonNullable<ListUserJobsOperation['parameters']['query']>
+
+export type JobListResponse = ListUserJobsOperation['responses'][200]['content']['application/json']
+
+export interface ListUserJobsOptions extends ApiRequestOptions {
+  readonly limit?: ListUserJobsQuery['limit']
+  readonly offset?: ListUserJobsQuery['offset']
+}
+
+export const DEFAULT_USER_JOBS_LIMIT = 20
+export const DEFAULT_USER_JOBS_OFFSET = 0
+const MAX_USER_JOBS_LIMIT = 100
 
 /**
  * Uploads a media file and its pipeline configuration as multipart data.
@@ -132,6 +148,39 @@ export async function getJobResult(
   )
 
   return response.data
+}
+
+/** Fetch one page of jobs owned by the authenticated user. */
+export async function listUserJobs(options: ListUserJobsOptions = {}): Promise<JobListResponse> {
+  const limit = options.limit ?? DEFAULT_USER_JOBS_LIMIT
+  const offset = options.offset ?? DEFAULT_USER_JOBS_OFFSET
+
+  validateUserJobsPagination(limit, offset)
+
+  const requestConfig: AxiosRequestConfig = {
+    params: {
+      limit,
+      offset,
+    } satisfies ListUserJobsQuery,
+  }
+
+  if (options.signal !== undefined) {
+    requestConfig.signal = options.signal
+  }
+
+  const response = await apiClient.get<JobListResponse>('/jobs', requestConfig)
+
+  return response.data
+}
+
+function validateUserJobsPagination(limit: number, offset: number): void {
+  if (!Number.isSafeInteger(limit) || limit <= 0 || limit > MAX_USER_JOBS_LIMIT) {
+    throw new TypeError(`Job list limit must be an integer between 1 and ${MAX_USER_JOBS_LIMIT}.`)
+  }
+
+  if (!Number.isSafeInteger(offset) || offset < 0) {
+    throw new TypeError('Job list offset must be a non-negative integer.')
+  }
 }
 
 function normalizeUploadProgress(

@@ -12,6 +12,12 @@ import { Link } from 'react-router'
 
 import { Container } from '@/shared/ui/container'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRightToBracket } from '@fortawesome/free-solid-svg-icons'
+import { faUserPlus } from '@fortawesome/free-solid-svg-icons'
+import {faScrewdriverWrench} from '@fortawesome/free-solid-svg-icons'
+import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons'
+
 /**
  * Public navigation displayed at the top of marketing pages.
  */
@@ -37,30 +43,34 @@ export function MarketingHeader() {
             </a>
 
             <a
-              className="text-label text-text-muted transition-colors hover:text-text"
+              className="flex items-center gap-2 text-label text-text-muted transition-colors hover:text-text"
               href="#features"
             >
+               <FontAwesomeIcon icon={faScrewdriverWrench} />
               Features
             </a>
 
-            <a className="text-label text-text-muted transition-colors hover:text-text" href="#faq">
+            <a className="flex items-center gap-2 text-label text-text-muted transition-colors hover:text-text" href="#faq">
+              <FontAwesomeIcon icon={faCircleQuestion} />
               FAQ
             </a>
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
             <Link
-              className="px-3 py-2 text-label text-text-muted transition-colors hover:text-text"
+              className="flex items-center gap-2 px-3 py-2 text-label text-text-muted transition-colors hover:text-text"
               to="/login"
             >
+              <FontAwesomeIcon icon={faRightToBracket} />
               Log in
             </Link>
 
             <Link
-              className="rounded-md bg-action px-4 py-2.5 text-label text-text-inverse transition-colors hover:bg-action-hover"
+              className="flex items-center gap-2 rounded-md bg-action px-4 py-2.5 text-label text-text-inverse transition-colors hover:bg-action-hover"
               to="/register"
             >
-              Create account
+              <FontAwesomeIcon icon={faUserPlus} />
+              Adapt now
             </Link>
           </div>
 
@@ -96,7 +106,7 @@ export function MarketingHeader() {
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link to="/register">Create account</Link>
+                <Link to="/register">Adapt now</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

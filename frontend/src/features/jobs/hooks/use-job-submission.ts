@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
 
 import {
@@ -15,6 +16,7 @@ import {
 import { submitJob } from '../api/jobs-api'
 import type { JobCreationData } from '../schemas/job-creation-schema'
 import { buildJobRequestMetadata } from '../utils/build-job-request'
+import { userJobsQueryRootKey } from './use-user-jobs'
 
 export interface UseJobSubmissionResult {
   readonly isSubmitting: boolean
@@ -35,6 +37,7 @@ export interface UseJobSubmissionResult {
  */
 export function useJobSubmission(): UseJobSubmissionResult {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const activeRequestRef = useRef<AbortController | null>(null)
   const submissionInProgressRef = useRef(false)
   const idempotencyKeyRef = useRef<string | null>(null)
@@ -104,6 +107,10 @@ export function useJobSubmission(): UseJobSubmissionResult {
         submissionIdentityRef.current = null
         lastSubmissionRef.current = null
 
+        void queryClient.invalidateQueries({
+          queryKey: userJobsQueryRootKey,
+        })
+
         void navigate(`/app/jobs/${response.job_id}`)
       } catch (submissionError) {
         const normalizedError =
@@ -120,7 +127,7 @@ export function useJobSubmission(): UseJobSubmissionResult {
         setIsSubmitting(false)
       }
     },
-    [navigate],
+    [navigate, queryClient],
   )
 
   const cancel = useCallback(() => {

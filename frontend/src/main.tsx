@@ -6,6 +6,8 @@ import '@fontsource-variable/instrument-sans/wght.css'
 import '@fontsource/ibm-plex-mono/latin-400.css'
 import '@fontsource/ibm-plex-mono/latin-500.css'
 
+import '@fortawesome/fontawesome-free/css/all.min.css'
+
 import '@/styles/globals.css'
 import { App } from '@/app/app'
 const rootElement = document.getElementById('root')

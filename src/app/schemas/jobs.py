@@ -7,7 +7,7 @@ do not expose storage paths or internal configuration.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import (
     Annotated,
@@ -127,6 +127,16 @@ class JobStatusResponse(BaseModel):
     finished_at: datetime | None = None
     execution_time_seconds: float | None = None
     error: ApiErrorResponse | None = None
+
+
+class JobListResponse(BaseModel):
+    """Paginated public statuses for jobs owned by one user."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[JobStatusResponse]
+    limit: int = Field(ge=1, le=100)
+    offset: int = Field(ge=0)
 
 
 class PublicTranscriptionOutput(TypedDict):
@@ -271,6 +281,21 @@ def build_job_status_response(job: object) -> JobStatusResponse:
             _job_value(job, "execution_time_seconds")
         ),
         error=error,
+    )
+
+
+def build_job_list_response(
+    jobs: Sequence[object],
+    *,
+    limit: int,
+    offset: int,
+) -> JobListResponse:
+    """Map an ordered page of persisted jobs to public status records."""
+
+    return JobListResponse(
+        items=[build_job_status_response(job) for job in jobs],
+        limit=limit,
+        offset=offset,
     )
 
 
@@ -557,12 +582,14 @@ __all__ = [
     "CreateCopyAdaptationJobRequest",
     "CreateCopyAnalysisJobRequest",
     "CreateJobRequest",
+    "JobListResponse",
     "JobResultOutput",
     "JobResultResponse",
     "JobStatusResponse",
     "JobSubmissionResponse",
     "PublicAdaptedScriptOutput",
     "PublicTranscriptionOutput",
+    "build_job_list_response",
     "build_job_result_response",
     "build_job_status_response",
     "build_job_submission_response",

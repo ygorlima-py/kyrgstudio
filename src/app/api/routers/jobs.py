@@ -18,6 +18,7 @@ from fastapi import (
     Form,
     Header,
     Path,
+    Query,
     UploadFile,
     status,
 )
@@ -40,9 +41,11 @@ from app.pipeline.input import PipelineInput
 from app.pipeline.service import PipelineService
 from app.schemas.jobs import (
     CreateJobRequest,
+    JobListResponse,
     JobResultResponse,
     JobStatusResponse,
     JobSubmissionResponse,
+    build_job_list_response,
     build_job_result_response,
     build_job_status_response,
     build_job_submission_response,
@@ -64,6 +67,21 @@ PipelineServiceDependency = Annotated[
 ]
 SettingsDependency = Annotated[AppSettings, Depends(get_settings)]
 JobIdPath = Annotated[int, Path(gt=0, description="Internal job identifier.")]
+JobListLimitQuery = Annotated[
+    int,
+    Query(
+        ge=1,
+        le=100,
+        description="Maximum number of jobs returned.",
+    ),
+]
+JobListOffsetQuery = Annotated[
+    int,
+    Query(
+        ge=0,
+        description="Number of newer jobs to skip.",
+    ),
+]
 
 
 router = APIRouter(
@@ -111,6 +129,32 @@ async def submit_job(
         file=validated_upload.file,
     )
     return build_job_submission_response(result)
+
+
+@router.get(
+    "",
+    response_model=JobListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List the current user's jobs",
+)
+async def list_jobs(
+    current_user: CurrentUserDependency,
+    job_store: JobStoreDependency,
+    limit: JobListLimitQuery = 20,
+    offset: JobListOffsetQuery = 0,
+) -> JobListResponse:
+    """Return an ordered page containing only the caller's public job data."""
+
+    jobs = await job_store.list_user_jobs(
+        current_user.user_id,
+        limit=limit,
+        offset=offset,
+    )
+    return build_job_list_response(
+        jobs,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get(
