@@ -14,6 +14,7 @@ import { DashboardRoute } from '@/routes/dashboard-route'
 
 import { NewJobRoute } from '@/routes/new-job-route'
 import { JobStatusRoute } from '@/routes/job-status-route'
+import { JobResultRoute } from '@/routes/job-result-route'
 
 export const router = createBrowserRouter([
   {
@@ -34,8 +35,8 @@ export const router = createBrowserRouter([
         Component: RegisterRoute,
       },
       {
-      path: '/login',
-      Component: LoginRoute,
+        path: '/login',
+        Component: LoginRoute,
       },
     ],
   },
@@ -57,6 +58,10 @@ export const router = createBrowserRouter([
           {
             path: 'jobs/:jobId',
             Component: JobStatusRoute,
+          },
+          {
+            path: 'jobs/:jobId/result',
+            Component: JobResultRoute,
           },
         ],
       },

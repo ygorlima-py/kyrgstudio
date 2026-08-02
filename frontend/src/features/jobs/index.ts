@@ -1,4 +1,4 @@
-export { getJobStatus, submitJob } from './api/jobs-api'
+export { getJobResult, getJobStatus, submitJob } from './api/jobs-api'
 export { buildJobRequestMetadata } from './utils/build-job-request'
 export { JobCreationForm } from './components/job-creation-form'
 export { JobTypeStep } from './components/job-type-step'

@@ -7,6 +7,7 @@ import type { UserProfileData } from '@/features/user-profile/schemas/user-profi
 import {
   apiClient,
   type ApiRequestOptions,
+  type JobResultResponse,
   type JobStatusResponse,
   type JobSubmissionResponse,
   type UploadProgress,
@@ -104,6 +105,29 @@ export async function getJobStatus(
 
   const response = await apiClient.get<JobStatusResponse>(
     `/jobs/${jobId}`,
+    requestConfig,
+  )
+
+  return response.data
+}
+
+/** Fetch the completed public result of one job owned by the current user. */
+export async function getJobResult(
+  jobId: number,
+  options: ApiRequestOptions = {},
+): Promise<JobResultResponse> {
+  if (!Number.isSafeInteger(jobId) || jobId <= 0) {
+    throw new TypeError('Job id must be a positive integer.')
+  }
+
+  const requestConfig: AxiosRequestConfig = {}
+
+  if (options.signal !== undefined) {
+    requestConfig.signal = options.signal
+  }
+
+  const response = await apiClient.get<JobResultResponse>(
+    `/jobs/${jobId}/result`,
     requestConfig,
   )
 
