@@ -4,7 +4,7 @@ import { cn } from '@/shared/utils/class-names'
 import type { NormalizedPersuasionStrengths } from '../utils/normalize-analysis-result'
 
 const STRENGTH_ITEMS = [
-  ['Hook', 'hook'],
+  ['Hook effectiveness', 'hook'],
   ['Promise clarity', 'promiseClarity'],
   ['Proof', 'proof'],
   ['Urgency', 'urgency'],
@@ -27,7 +27,7 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="persuasion-scores-heading">
-          Strength by element
+          Overall effectiveness by element
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">
