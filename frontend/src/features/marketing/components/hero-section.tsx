@@ -1,39 +1,18 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { Badge } from '@/shared/ui/badge'
-import { Card } from '@/shared/ui/card'
 import { Container } from '@/shared/ui/container'
 import { Inline } from '@/shared/ui/inline'
 import { Stack } from '@/shared/ui/stack'
-
-const copySections = [
-  {
-    label: 'Hook',
-    width: 'w-full',
-  },
-  {
-    label: 'Problem',
-    width: 'w-4/5',
-  },
-  {
-    label: 'Mechanism',
-    width: 'w-3/5',
-  },
-  {
-    label: 'Proof',
-    width: 'w-2/3',
-  },
-  {
-    label: 'CTA',
-    width: 'w-1/2',
-  },
-] as const
 
 /**
  * Introduces the product value proposition and directs visitors toward the
  * primary conversion or product explanation.
  */
 export function HeroSection() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="hero-title"
@@ -47,16 +26,15 @@ export function HeroSection() {
       <Container className="relative z-10">
         <div className="grid items-center gap-16 lg:grid-cols-[1.08fr_0.92fr]">
           <Stack align="start" gap="lg">
-            <Badge variant="action">Creative intelligence for direct response</Badge>
+            <Badge variant="action">{t("marketing.hero.badge")}</Badge>
 
             <Stack gap="md">
               <h1 className="max-w-4xl font-heading text-heading-1 text-text" id="hero-title">
-                See the strategy inside any sales video. Then make it yours.
+                {t("marketing.hero.title")}
               </h1>
 
               <p className="max-w-2xl text-body-lg text-text-muted">
-                Upload a video or audio file. Kyrg Studio identifies its copy structure, offer,
-                persuasion strategy and gaps, then helps you adapt the strategy to your own offer.
+                {t("marketing.hero.description")} 
               </p>
             </Stack>
 
@@ -73,7 +51,7 @@ export function HeroSection() {
                 ].join(' ')}
                 to="/register"
               >
-                Analyze a copy
+                {t("marketing.hero.primaryAction")} 
               </Link>
 
               <a
@@ -88,12 +66,14 @@ export function HeroSection() {
                 ].join(' ')}
                 href="#how-it-works"
               >
-                See how it works
+                {t("marketing.hero.secondaryAction")} 
               </a>
             </Inline>
 
-            <p className="font-mono text-meta text-text-subtle">
-              ANALYSIS · ADAPTATION · STRUCTURED OUTPUT
+            <p className="font-mono text-meta text-text-subtle"> 
+                {t('marketing.hero.meta.analysis')} ·{' '}
+                {t('marketing.hero.meta.adaptation')} ·{' '}
+                {t('marketing.hero.meta.structuredOutput')}
             </p>
           </Stack>
 
@@ -110,46 +90,22 @@ export function HeroSection() {
  */
 function HeroProductIllustration() {
   return (
-    <div aria-hidden="true" className="relative mx-auto w-full max-w-xl">
+    <div className="relative mx-auto w-full max-w-2xl">
       <div className="absolute -inset-6 rotate-2 rounded-xl border border-border bg-surface-muted" />
 
-      <Card className="relative overflow-hidden" padding="lg" variant="elevated">
-        <Stack gap="lg">
-          <Inline justify="between">
-            <Badge variant="processing">Reference analysis</Badge>
-
-            <span className="font-mono text-meta text-text-subtle">COPY MAP</span>
-          </Inline>
-
-          <Stack gap="sm">
-            <span className="text-label text-text-muted">Persuasion structure</span>
-
-            {copySections.map((section, index) => (
-              <div className="grid grid-cols-[2rem_1fr] items-center gap-3" key={section.label}>
-                <span className="font-mono text-meta text-text-subtle">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-
-                <div
-                  className={[
-                    'rounded-sm border border-border bg-surface-muted px-3 py-2',
-                    section.width,
-                  ].join(' ')}
-                >
-                  <span className="text-label text-text">{section.label}</span>
-                </div>
-              </div>
-            ))}
-          </Stack>
-
-          <div className="rounded-md bg-processing-muted p-4">
-            <p className="text-label text-processing">Strategic insight</p>
-            <p className="mt-1 text-body-sm text-text-muted">
-              Structure, offer and persuasion mapped into an editable result.
-            </p>
-          </div>
-        </Stack>
-      </Card>
+      <div className="relative overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="aspect-video w-full object-cover"
+        >
+          <source src="/videos/video_hero.mp4" type="video/mp4" />
+        </video>
+      </div>
     </div>
   )
 }
+

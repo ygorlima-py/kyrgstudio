@@ -1,0 +1,29 @@
+{
+    "language": {
+    "selector": "Selecionar idioma"
+  },
+
+    "marketing": {
+        "header": {
+            "mainNavigation": "Navegação principal",
+            "howItWorks": "Como funciona",
+            "features": "Recursos",
+            "faq": "Perguntas frequentes",
+            "login": "Entrar",
+            "register": "Comece Grátis",
+            "openMenu": "Abrir menu de navegação"
+    },
+
+    "hero": { 
+      "badge": "ANÁLISE DE COPY COM IA PARA VÍDEOS DE VENDAS", 
+      "title": "Analise qualquer vídeo de vendas. Adapte a estratégia para sua oferta.", 
+      "description": "Envie um vídeo ou áudio de vendas. O Kyrg Studio identifica o gancho, a oferta, a estrutura da copy, as estratégias de persuasão e os pontos ausentes para ajudar você a criar uma versão adaptada ao seu produto.", 
+      "primaryAction": "Analisar meu vídeo", 
+      "secondaryAction": "Veja como funciona", 
+      "meta": { 
+        "analysis": "ANÁLISE DE COPY", 
+        "adaptation": "ADAPTAÇÃO DA OFERTA", 
+        "structuredOutput": "INSIGHTS PRÁTICOS"
+         }}
+      
+}}

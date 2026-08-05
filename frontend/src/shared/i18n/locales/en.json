@@ -1,0 +1,30 @@
+{
+    "language": {
+        "selector": "Select language"
+  },
+    "marketing": {
+        "header": {
+            "mainNavigation": "Main navigation",
+            "howItWorks": "How it works",
+            "features": "Features",
+            "faq": "FAQ",
+            "login": "Log in",
+            "register": "Start Free",
+            "openMenu": "Open navigation menu"
+    },
+
+        "hero": {
+                "badge": "AI COPY ANALYSIS FOR SALES VIDEOS",
+                "title": "Analyze Any Sales Video. Adapt the Strategy to Your Offer.",
+                "description": "Upload a sales video or audio file. Kyrg Studio breaks down the hook, offer, copy structure, persuasion strategy and missing elements, then helps you create a version tailored to your product.",
+                "primaryAction": "Analyze Your Video",
+                "secondaryAction": "See How It Works",
+                "meta": {
+                    "analysis": "COPY ANALYSIS",
+                    "adaptation": "OFFER ADAPTATION",
+                    "structuredOutput": "ACTIONABLE INSIGHTS"
+                }
+            }
+    
+}
+}
