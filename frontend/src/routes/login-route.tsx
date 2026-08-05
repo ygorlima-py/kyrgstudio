@@ -18,15 +18,15 @@ export function LoginRoute() {
 
   return (
     <div>
-      <p className="font-mono text-meta uppercase tracking-[0.16em] text-action">
+      <p className="text-center font-mono text-meta uppercase tracking-[0.16em] text-action">
         Welcome back
       </p>
 
-      <h1 className="mt-3 font-heading text-heading-xl text-text">
+      <h1 className="text-center font-heading text-[2.25rem] leading-none font-semibold text-text">
         Log in to your account
       </h1>
 
-      <p className="mt-3 text-body text-text-muted">
+      <p className="text-center mt-3 text-body text-text-muted">
         Continue analyzing references and building adaptations for your offers.
       </p>
 

@@ -1,30 +1,258 @@
 {
-    "language": {
-        "selector": "Select language"
+  "language": {
+    "selector": "Select language"
   },
-    "marketing": {
-        "header": {
-            "mainNavigation": "Main navigation",
-            "howItWorks": "How it works",
-            "features": "Features",
-            "faq": "FAQ",
-            "login": "Log in",
-            "register": "Start Free",
-            "openMenu": "Open navigation menu"
+  "marketing": {
+    "header": {
+      "mainNavigation": "Main navigation",
+      "howItWorks": "How it works",
+      "features": "Features",
+      "faq": "FAQ",
+      "login": "Log in",
+      "register": "Start Free",
+      "openMenu": "Open navigation menu"
     },
-
-        "hero": {
-                "badge": "AI COPY ANALYSIS FOR SALES VIDEOS",
-                "title": "Analyze Any Sales Video. Adapt the Strategy to Your Offer.",
-                "description": "Upload a sales video or audio file. Kyrg Studio breaks down the hook, offer, copy structure, persuasion strategy and missing elements, then helps you create a version tailored to your product.",
-                "primaryAction": "Analyze Your Video",
-                "secondaryAction": "See How It Works",
-                "meta": {
-                    "analysis": "COPY ANALYSIS",
-                    "adaptation": "OFFER ADAPTATION",
-                    "structuredOutput": "ACTIONABLE INSIGHTS"
-                }
-            }
-    
-}
+    "hero": {
+      "badge": "AI COPY ANALYSIS FOR SALES VIDEOS",
+      "title": "Analyze Any Sales Video. Adapt the Strategy to Your Offer.",
+      "description": "Upload a sales video or audio file. Kyrg Studio breaks down the hook, offer, copy structure, persuasion strategy and missing elements, then helps you create a version tailored to your product.",
+      "primaryAction": "Analyze Your Video",
+      "secondaryAction": "See How It Works",
+      "meta": {
+        "analysis": "COPY ANALYSIS",
+        "adaptation": "OFFER ADAPTATION",
+        "structuredOutput": "ACTIONABLE INSIGHTS"
+      }
+    },
+    "preview": {
+      "badge": "PRODUCT PREVIEW",
+      "title": "From a sales video to a clear copy strategy.",
+      "description": "See how Kyrg Studio turns a reference video into a structured analysis and an adapted script for another offer.",
+      "tabsLabel": "Product result preview",
+      "analysisTab": "Copy analysis",
+      "adaptationTab": "Adapted script",
+      "analysisImageAlt": "Kyrg Studio copy analysis result screen",
+      "adaptationImageAlt": "Kyrg Studio adapted script result screen"
+    },
+    "howItWorks": {
+      "badge": "HOW IT WORKS",
+      "title": "From reference to understanding in three steps.",
+      "description": "Upload a sales video or audio file, choose your objective, and receive a structured analysis or an adapted script.",
+      "stepLabel": "STEP",
+      "steps": {
+        "upload": {
+          "number": "01",
+          "title": "Upload the reference",
+          "description": "Select a sales video or audio file that you want to understand or adapt."
+        },
+        "process": {
+          "number": "02",
+          "title": "Choose the result",
+          "description": "Request a strategic copy analysis or describe your offer to generate an adaptation."
+        },
+        "result": {
+          "number": "03",
+          "title": "Explore the result",
+          "description": "Review the structure, offer, and persuasive elements or work with a newly adapted script."
+        }
+      },
+      "outputs": {
+        "analysis": {
+          "badge": "Copy analysis",
+          "title": "Understand what is already working.",
+          "description": "Explore the copy structure, offer, persuasion patterns, objections, proof, strategic gaps, and complete transcription."
+        },
+        "adaptation": {
+          "badge": "Copy adaptation",
+          "title": "Apply the strategy to your offer.",
+          "description": "Combine the reference strategy with your product, audience, available proof, restrictions, and desired platform."
+        }
+      }
+    },
+    "features": {
+      "badge": "BUILT FOR REAL CREATIVE WORK",
+      "title": "Move from content to decisions without losing the strategy.",
+      "description": "Kyrg Studio turns an existing sales message into a structured workspace you can inspect, question, and adapt.",
+      "items": {
+        "structure": {
+          "number": "01",
+          "category": "Structure",
+          "title": "See the architecture behind the words.",
+          "description": "Understand how the hook, problem, promise, mechanism, proof, offer, and call to action work together."
+        },
+        "offer": {
+          "number": "02",
+          "category": "Offer",
+          "title": "Extract what is actually being sold.",
+          "description": "Identify the audience, pain, desire, promise, benefits, objections, and commercial conditions."
+        },
+        "gaps": {
+          "number": "03",
+          "category": "Gaps",
+          "title": "Find what weakens the message.",
+          "description": "Surface missing proof, unsupported claims, unclear mechanisms, and persuasion gaps."
+        },
+        "adaptation": {
+          "number": "04",
+          "category": "Adaptation",
+          "title": "Reuse the strategy without copying the original offer.",
+          "description": "Apply the reference structure to another product while respecting the new audience, promise, and restrictions."
+        },
+        "integrity": {
+          "number": "05",
+          "category": "Integrity",
+          "title": "Keep claims and proof under control.",
+          "description": "Prevent invented testimonials, guarantees, urgency, and commercial details from entering the adapted script."
+        },
+        "output": {
+          "number": "06",
+          "category": "Output",
+          "title": "Work with structured results, not raw AI chat.",
+          "description": "Review organized sections, validation findings, token usage, and an editable final script."
+        }
+      }
+    },
+    "whoItIsFor": {
+    "badge": "WHO IT IS FOR",
+    "title": "A clearer workspace for people responsible for the message.",
+    "description": "Kyrg Studio helps creative professionals understand, review, and adapt direct-response content without reducing the work to a generic AI conversation.",
+    "audiences": {
+      "copywriters": {
+        "role": "Copywriters",
+        "title": "Study the strategy, not only the words.",
+        "description": "Turn reference videos into structured material you can inspect and use while developing new scripts.",
+        "benefits": {
+          "strategy": "Map hooks, mechanisms, proof, and calls to action",
+          "gaps": "Identify persuasion patterns and strategic gaps",
+          "adaptation": "Adapt the structure to a different offer"
+        }
+      },
+      "marketers": {
+        "role": "Marketers",
+        "title": "Review the message before investing in distribution.",
+        "description": "Understand how an offer is presented and where the copy needs stronger clarity, proof, or positioning.",
+        "benefits": {
+          "promises": "Review promises and offer consistency",
+          "proof": "Find unsupported claims and missing proof",
+          "briefs": "Create clearer briefs for creative teams"
+        }
+      },
+      "producers": {
+        "role": "Producers",
+        "title": "Turn spoken content into an organized creative asset.",
+        "description": "Move from a raw video or audio file to structured analysis and an editable script without reading raw JSON.",
+        "benefits": {
+          "transcription": "Work from a complete transcription",
+          "navigation": "Navigate the content by strategic section",
+          "editing": "Review an adapted script in an editable format"
+        }
+      }
+    }
+  },
+   "faq": {
+    "badge": "COMMON QUESTIONS",
+    "title": "Before you turn a reference into your next script.",
+    "description": "What copywriters and marketers usually want to know before analyzing or adapting a sales message.",
+    "items": {
+      "analysisAndAdaptation": {
+        "question": "What exactly do I get from Kyrg Studio?",
+        "answer": "Choose analysis to uncover the hook, structure, offer, persuasion, proof, objections, and weak points inside a sales message. Choose adaptation to use those insights as the strategic foundation for a new script built around your own offer."
+      },
+      "supportedFiles": {
+        "question": "Is adaptation the same as copying someone else's VSL?",
+        "answer": "No. Kyrg Studio studies how the reference builds its argument and persuasion, then applies that strategic logic to the audience, promise, proof, and constraints of your offer. The goal is a new script, not a reproduction of the original wording or claims."
+      },
+      "processing": {
+        "question": "Do I need to be an experienced copywriter to use it?",
+        "answer": "No. The result is organized so marketers, producers, and founders can understand the reasoning behind the message. Experienced copywriters can use it to accelerate research and diagnosis, while still applying their own judgment to the final copy."
+      },
+      "closeBrowser": {
+        "question": "How long does it take, and do I need to keep the page open?",
+        "answer": "Processing time varies with the length of the reference and the result you request. You do not need to watch the screen: after submitting the file, you can close the page and return later to see the result in your account."
+      },
+      "uploadedFile": {
+        "question": "What happens to the video or audio I upload?",
+        "answer": "The original media is used only while your analysis or adaptation is being processed. When processing finishes or cannot be completed, the uploaded file is removed. Your structured result remains available in your account."
+      },
+      "offerProfile": {
+        "question": "What should I provide to get a strong adaptation?",
+        "answer": "Describe your audience, the problem they face, the outcome they want, your promise, mechanism, benefits, objections, available proof, offer terms, tone, and restrictions. The more specific and truthful your profile is, the more useful and consistent the adapted script can be."
+      },
+      "inventedInformation": {
+        "question": "Will it invent testimonials, guarantees, or results?",
+        "answer": "Kyrg Studio is designed to work only with the proof and offer details you provide and to flag important information that is still missing. Because every AI-assisted draft can require context and judgment, you should review claims, numbers, and commercial terms before publishing the final script."
+      }
+    }
+  },
+  "callToAction": {
+    "eyebrow": "YOUR NEXT REFERENCE CAN BECOME AN ACTIONABLE STRATEGY",
+    "title": "Stop guessing why a sales message works.",
+    "description": "Turn a reference video or audio file into a structured analysis and use the identified strategy to develop new copy for your offer.",
+    "createAccount": "Start Now",
+    "login": "Log in"
+  },
+  "footer": {
+    "description": "Creative intelligence for understanding and adapting direct-response copy from video and audio.",
+    "navigationLabel": "Footer navigation",
+    "meta": {
+      "analysis": "ANALYSIS",
+      "adaptation": "ADAPTATION",
+      "structuredOutput": "STRUCTURED OUTPUT"
+    },
+    "product": {
+      "title": "PRODUCT",
+      "preview": "Product preview",
+      "howItWorks": "How it works",
+      "features": "Features",
+      "faq": "FAQ"
+    },
+    "account": {
+      "title": "ACCOUNT",
+      "login": "Log in",
+      "createAccount": "Create account"
+    },
+    "copyright": "© {{year}} Kyrg Studio.",
+    "closingMessage": "Built for deliberate creative work."
+  }
+  },
+  "auth": {
+    "layout": {
+      "backHome": "Back to home"
+    },
+    "register": {
+      "title": "Create your account",
+      "description": "Start your first analysis.",
+      "loginPrompt": "Already have an account?",
+      "login": "Log in",
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "Your name",
+        "email": "Email",
+        "emailPlaceholder": "you@example.com",
+        "password": "Password",
+        "passwordHint": "Use at least 8 characters.",
+        "confirmPassword": "Confirm your password"
+      },
+      "actions": {
+        "create": "Create account",
+        "creating": "Creating account..."
+      },
+      "validation": {
+        "nameRequired": "Name is required.",
+        "nameTooLong": "Name is too long.",
+        "emailRequired": "Email is required.",
+        "emailTooLong": "Email is too long.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordMinimum": "Password must contain at least 8 characters.",
+        "passwordMaximum": "Password must contain at most 128 characters.",
+        "passwordMismatch": "Passwords do not match."
+      },
+      "errors": {
+        "heading": "Account could not be created",
+        "accountExists": "An account with this email already exists.",
+        "network": "We could not reach the server. Check your connection and try again.",
+        "invalidData": "Please review your information and try again."
+      }
+    }
+  }
 }

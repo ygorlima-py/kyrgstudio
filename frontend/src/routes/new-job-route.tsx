@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router'
 
+import { useAuth } from '@/features/auth'
 import {
   FileUploadStep,
   getInitialPipelineType,
@@ -33,9 +34,14 @@ import { ErrorState } from '@/shared/components/states'
  * Owns the complete job creation flow while keeping each form step isolated.
  */
 export function NewJobRoute() {
+  const session = useAuth()
   const [searchParams] = useSearchParams()
   const initialPipelineType = getInitialPipelineType(searchParams)
   const submission = useJobSubmission()
+
+  if (session.status !== 'authenticated') {
+    return null
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8">
@@ -55,6 +61,7 @@ export function NewJobRoute() {
       </header>
 
       <JobCreationForm
+        draftOwnerId={session.user.user_id}
         initialPipelineType={
             initialPipelineType ?? 'copy_analysis'
         }               

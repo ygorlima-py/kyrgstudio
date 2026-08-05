@@ -1,68 +1,88 @@
-import { Badge } from '@/shared/ui/badge'
-import { Card } from '@/shared/ui/card'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
 import { Container } from '@/shared/ui/container'
-import { Inline } from '@/shared/ui/inline'
-import { Separator } from '@/shared/ui/separator'
 import { Stack } from '@/shared/ui/stack'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
-const analysisSections = [
-  {
-    order: '01',
-    type: 'Hook',
-    summary: 'Interrupts the expected belief and opens a curiosity gap.',
-  },
-  {
-    order: '02',
-    type: 'Problem',
-    summary: 'Connects the audience frustration to the central problem.',
-  },
-  {
-    order: '03',
-    type: 'Mechanism',
-    summary: 'Introduces the explanation behind the proposed solution.',
-  },
-  {
-    order: '04',
-    type: 'Proof',
-    summary: 'Supports the promise with available evidence.',
-  },
-  {
-    order: '05',
-    type: 'CTA',
-    summary: 'Directs the viewer toward the next action.',
-  },
-] as const
-
-const adaptedSections = [
-  {
-    order: '01',
-    type: 'Hook',
-    text: 'You do not need more vocabulary. You need to stop translating every sentence before you speak.',
-  },
-  {
-    order: '02',
-    type: 'Problem',
-    text: 'That mental translation is why conversations feel slow, stressful and unnatural.',
-  },
-  {
-    order: '03',
-    type: 'Mechanism',
-    text: 'The method trains complete responses through situations you actually experience.',
-  },
-  {
-    order: '04',
-    type: 'Proof',
-    text: 'The script uses only the verified student experience provided in the offer profile.',
-  },
-] as const
+interface ProductScreenshotProps {
+  readonly alt: string
+  readonly label: string
+  readonly src: string
+}
 
 /**
- * Demonstrates the structured outputs produced by copy analysis and adaptation.
+ * Presents real product screenshots without exposing job or customer data.
  *
- * The preview uses static public examples and never loads job or user data.
+ * Until the matching file is added to `public/screenshots`, the frame displays
+ * a neutral placeholder instead of a broken image.
+ */
+function ProductScreenshot({ alt, label, src }: ProductScreenshotProps) {
+  const [imageUnavailable, setImageUnavailable] = useState(false)
+
+  return (
+    <figure className="overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+      <div className="relative aspect-[16/10] bg-surface-muted">
+        {imageUnavailable ? (
+          <div
+            aria-label={alt}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center"
+            role="img"
+          >
+            <svg
+              aria-hidden="true"
+              className="size-10 text-text-subtle"
+              fill="none"
+              viewBox="0 0 48 48"
+            >
+              <rect
+                height="34"
+                rx="4"
+                stroke="currentColor"
+                strokeWidth="2"
+                width="42"
+                x="3"
+                y="7"
+              />
+              <path
+                d="m10 33 9-9 6 6 5-5 8 8"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+              <circle cx="33" cy="17" fill="currentColor" r="3" />
+            </svg>
+
+            <p className="text-label text-text-muted">{label}</p>
+          </div>
+        ) : (
+          <img
+            alt={alt}
+            className="absolute inset-0 size-full object-cover object-top"
+            decoding="async"
+            loading="lazy"
+            onError={() => setImageUnavailable(true)}
+            src={src}
+          />
+        )}
+      </div>
+    </figure>
+  )
+}
+
+/**
+ * Shows localized screenshots of the analysis and adaptation results.
+ *
+ * Screenshot files are selected from the active interface language and remain
+ * static public assets; this section never loads private job data.
  */
 export function ProductPreview() {
+  const { i18n, t } = useTranslation()
+  const screenshotLanguage = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'pt'
+  const analysisScreenshot = `/screenshots/analysis-result-${screenshotLanguage}.webp`
+  const adaptationScreenshot = `/screenshots/adaptation-result-${screenshotLanguage}.webp`
+
   return (
     <section
       aria-labelledby="product-preview-title"
@@ -72,143 +92,43 @@ export function ProductPreview() {
       <Container>
         <Stack gap="xl">
           <Stack className="max-w-3xl" gap="md">
-            <Badge variant="action">Product preview</Badge>
+            <span className="inline-flex w-fit items-center rounded-pill bg-action px-3 py-1 text-label text-text-inverse">
+              {t('marketing.preview.badge')}
+            </span>
 
             <h2 className="font-heading text-heading-2 text-text" id="product-preview-title">
-              From raw video to structured creative intelligence.
+              {t('marketing.preview.title')}
             </h2>
 
-            <p className="text-body-lg text-text-muted">
-              Explore how Kyrg Studio organizes the strategy inside a reference copy and transforms
-              it into an editable script for another offer.
-            </p>
+            <p className="text-body-lg text-text-muted">{t('marketing.preview.description')}</p>
           </Stack>
 
           <Tabs defaultValue="analysis">
-            <TabsList aria-label="Product output preview">
-              <TabsTrigger value="analysis">Copy analysis</TabsTrigger>
-              <TabsTrigger value="adaptation">Adapted script</TabsTrigger>
+            <TabsList aria-label={t('marketing.preview.tabsLabel')}>
+              <TabsTrigger value="analysis">{t('marketing.preview.analysisTab')}</TabsTrigger>
+              <TabsTrigger value="adaptation">{t('marketing.preview.adaptationTab')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="analysis">
-              <AnalysisPreview />
+              <ProductScreenshot
+                alt={t('marketing.preview.analysisImageAlt')}
+                key={analysisScreenshot}
+                label={t('marketing.preview.analysisTab')}
+                src={analysisScreenshot}
+              />
             </TabsContent>
 
             <TabsContent value="adaptation">
-              <AdaptationPreview />
+              <ProductScreenshot
+                alt={t('marketing.preview.adaptationImageAlt')}
+                key={adaptationScreenshot}
+                label={t('marketing.preview.adaptationTab')}
+                src={adaptationScreenshot}
+              />
             </TabsContent>
           </Tabs>
         </Stack>
       </Container>
     </section>
-  )
-}
-
-function AnalysisPreview() {
-  return (
-    <Card className="overflow-hidden" padding="none" variant="elevated">
-      <div className="border-b border-border p-5 sm:p-6">
-        <Inline justify="between">
-          <Stack gap="xs">
-            <span className="font-mono text-meta text-text-subtle">REFERENCE COPY</span>
-            <h3 className="font-heading text-heading-3 text-text">Persuasion map</h3>
-          </Stack>
-
-          <Badge variant="processing">Analysis complete</Badge>
-        </Inline>
-      </div>
-
-      <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
-        <Stack className="p-5 sm:p-6 lg:border-r lg:border-border" gap="sm">
-          <span className="text-label text-text-muted">Copy structure</span>
-
-          {analysisSections.map((section) => (
-            <div
-              className="grid gap-2 rounded-md border border-border bg-surface p-4 sm:grid-cols-[2rem_7rem_1fr] sm:items-center"
-              key={section.order}
-            >
-              <span className="font-mono text-meta text-text-subtle">{section.order}</span>
-
-              <span className="text-label text-text">{section.type}</span>
-
-              <span className="text-body-sm text-text-muted">{section.summary}</span>
-            </div>
-          ))}
-        </Stack>
-
-        <Stack className="bg-surface-muted p-5 sm:p-6" gap="lg">
-          <Stack gap="sm">
-            <span className="text-label text-text-muted">Offer extracted</span>
-            <p className="text-body text-text">
-              A practical method that helps adults respond naturally in everyday English
-              conversations.
-            </p>
-          </Stack>
-
-          <Separator decorative />
-
-          <Stack gap="sm">
-            <span className="text-label text-text-muted">Strategic mechanism</span>
-            <p className="text-body-sm text-text-muted">
-              Conversation practice organized around real situations instead of isolated vocabulary.
-            </p>
-          </Stack>
-
-          <Separator decorative />
-
-          <Stack gap="sm">
-            <Inline gap="sm">
-              <Badge variant="warning">Gap detected</Badge>
-              <span className="text-label text-text">Proof specificity</span>
-            </Inline>
-
-            <p className="text-body-sm text-text-muted">
-              The reference makes a strong promise but needs clearer evidence before the same
-              persuasion intensity can be adapted safely.
-            </p>
-          </Stack>
-        </Stack>
-      </div>
-    </Card>
-  )
-}
-
-function AdaptationPreview() {
-  return (
-    <Card className="overflow-hidden" padding="none" variant="elevated">
-      <div className="border-b border-border p-5 sm:p-6">
-        <Inline justify="between">
-          <Stack gap="xs">
-            <span className="font-mono text-meta text-text-subtle">ADAPTED OUTPUT</span>
-            <h3 className="font-heading text-heading-3 text-text">Editable script</h3>
-          </Stack>
-
-          <Badge variant="success">Validated</Badge>
-        </Inline>
-      </div>
-
-      <Stack className="p-5 sm:p-6" gap="sm">
-        {adaptedSections.map((section) => (
-          <div
-            className="grid gap-3 rounded-md border border-border bg-surface p-4 sm:grid-cols-[2rem_7rem_1fr]"
-            key={section.order}
-          >
-            <span className="font-mono text-meta text-text-subtle">{section.order}</span>
-
-            <Badge variant="neutral">{section.type}</Badge>
-
-            <p className="text-body text-text">{section.text}</p>
-          </div>
-        ))}
-
-        <div className="mt-2 rounded-md bg-success-muted p-4">
-          <p className="text-label text-success">Validation passed</p>
-          <p className="mt-1 text-body-sm text-text-muted">
-            The adapted script preserves the reference strategy without inventing proof, guarantees
-            or commercial conditions.
-          </p>
-        </div>
-      </Stack>
-    </Card>
   )
 }

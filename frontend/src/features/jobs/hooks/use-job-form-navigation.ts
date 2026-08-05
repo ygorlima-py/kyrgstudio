@@ -1,24 +1,11 @@
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from 'react'
-import type {
-  FieldPath,
-  UseFormTrigger,
-} from 'react-hook-form'
+import { useCallback, useMemo, useState } from 'react'
+import type { FieldPath, UseFormTrigger } from 'react-hook-form'
 
-import {
-  getJobFormSteps,
-  type JobFormStep,
-  type JobFormStepId,
-} from '../config/job-form-steps'
-import type {
-  JobCreationFormInput,
-  PipelineType,
-} from '../schemas/job-creation-schema'
+import { getJobFormSteps, type JobFormStep, type JobFormStepId } from '../config/job-form-steps'
+import type { JobCreationFormInput, PipelineType } from '../schemas/job-creation-schema'
 
 export interface UseJobFormNavigationOptions {
+  readonly initialStepId?: JobFormStepId
   readonly pipelineType: PipelineType | undefined
   readonly trigger: UseFormTrigger<JobCreationFormInput>
 }
@@ -37,16 +24,13 @@ export interface JobFormNavigation {
  * Controls wizard navigation and validates only the current step.
  */
 export function useJobFormNavigation({
+  initialStepId = 'pipeline',
   pipelineType,
   trigger,
 }: UseJobFormNavigationOptions): JobFormNavigation {
-  const [currentStepId, setCurrentStepId] =
-    useState<JobFormStepId>('pipeline')
+  const [currentStepId, setCurrentStepId] = useState<JobFormStepId>(initialStepId)
 
-  const steps = useMemo(
-    () => getJobFormSteps(pipelineType),
-    [pipelineType],
-  )
+  const steps = useMemo(() => getJobFormSteps(pipelineType), [pipelineType])
 
   const currentStepIndex = Math.max(
     0,
@@ -68,9 +52,7 @@ export function useJobFormNavigation({
   }, [currentStepIndex, steps])
 
   const goNext = useCallback(async (): Promise<boolean> => {
-    const fields = [
-      ...currentStep.fields,
-    ] as FieldPath<JobCreationFormInput>[]
+    const fields = [...currentStep.fields] as FieldPath<JobCreationFormInput>[]
 
     const isValid =
       fields.length === 0
@@ -90,12 +72,7 @@ export function useJobFormNavigation({
     }
 
     return true
-  }, [
-    currentStep.fields,
-    currentStepIndex,
-    steps,
-    trigger,
-  ])
+  }, [currentStep.fields, currentStepIndex, steps, trigger])
 
   const goToStep = useCallback(
     (stepId: JobFormStepId) => {

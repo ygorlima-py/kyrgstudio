@@ -1,6 +1,7 @@
 import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 
 import { cn } from '@/shared/utils/class-names'
 
@@ -21,6 +22,7 @@ type SupportedLanguage = (typeof LANGUAGE_OPTIONS)[number]['value']
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation()
+  const navigate = useNavigate()
 
   const currentLanguage: SupportedLanguage =
     i18n.resolvedLanguage?.startsWith('en') === true ? 'en' : 'pt-BR'
@@ -33,7 +35,8 @@ export function LanguageSwitcher() {
     await i18n.changeLanguage(language)
 
     localStorage.setItem('kyrg_language', language)
-    document.documentElement.lang = language
+    document.documentElement.setAttribute('lang', language)
+    navigate(language === 'en' ? '/en' : '/pt-BR')
   }
 
   return (
@@ -42,11 +45,7 @@ export function LanguageSwitcher() {
       className="inline-flex items-center gap-2"
       role="group"
     >
-      <FontAwesomeIcon
-        aria-hidden="true"
-        className="text-text-muted"
-        icon={faGlobe}
-      />
+      <FontAwesomeIcon aria-hidden="true" className="text-text-muted" icon={faGlobe} />
 
       <div className="inline-flex rounded-pill border border-border bg-surface p-1">
         {LANGUAGE_OPTIONS.map((language) => {
@@ -58,9 +57,7 @@ export function LanguageSwitcher() {
               aria-pressed={isSelected}
               className={cn(
                 'rounded-pill px-2.5 py-1 text-xs font-semibold transition-colors',
-                isSelected
-                  ? 'bg-action text-text-inverse'
-                  : 'text-text-muted hover:text-text',
+                isSelected ? 'bg-action text-text-inverse' : 'text-text-muted hover:text-text',
               )}
               key={language.value}
               onClick={() => {

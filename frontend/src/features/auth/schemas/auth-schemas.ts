@@ -18,11 +18,11 @@ const passwordSchema = z
   .min(MIN_PASSWORD_LENGTH, `Password must contain at least ${MIN_PASSWORD_LENGTH} characters.`)
   .max(MAX_PASSWORD_LENGTH, `Password must contain at most ${MAX_PASSWORD_LENGTH} characters.`)
 
-const optionalNameSchema = z
+const nameSchema = z
   .string()
   .trim()
+  .min(1, 'Name is required.')
   .max(MAX_NAME_LENGTH, 'Name is too long.')
-  .transform((name) => (name.length > 0 ? name : undefined))
 
 export const loginFormSchema = z.object({
   email: emailSchema,
@@ -31,7 +31,7 @@ export const loginFormSchema = z.object({
 
 export const registerFormSchema = z
   .object({
-    name: optionalNameSchema,
+    name: nameSchema,
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: passwordSchema,

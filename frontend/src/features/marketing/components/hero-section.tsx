@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
-import { Badge } from '@/shared/ui/badge'
 import { Container } from '@/shared/ui/container'
 import { Inline } from '@/shared/ui/inline'
 import { Stack } from '@/shared/ui/stack'
@@ -26,8 +25,7 @@ export function HeroSection() {
       <Container className="relative z-10">
         <div className="grid items-center gap-16 lg:grid-cols-[1.08fr_0.92fr]">
           <Stack align="start" gap="lg">
-            <Badge variant="action">{t("marketing.hero.badge")}</Badge>
-
+        
             <Stack gap="md">
               <h1 className="max-w-4xl font-heading text-heading-1 text-text" id="hero-title">
                 {t("marketing.hero.title")}

@@ -1,29 +1,258 @@
 {
-    "language": {
+  "language": {
     "selector": "Selecionar idioma"
   },
-
-    "marketing": {
-        "header": {
-            "mainNavigation": "Navegação principal",
-            "howItWorks": "Como funciona",
-            "features": "Recursos",
-            "faq": "Perguntas frequentes",
-            "login": "Entrar",
-            "register": "Comece Grátis",
-            "openMenu": "Abrir menu de navegação"
+  "marketing": {
+    "header": {
+      "mainNavigation": "Navegação principal",
+      "howItWorks": "Como funciona",
+      "features": "Recursos",
+      "faq": "Perguntas frequentes",
+      "login": "Entrar",
+      "register": "Comece grátis",
+      "openMenu": "Abrir menu de navegação"
     },
-
-    "hero": { 
-      "badge": "ANÁLISE DE COPY COM IA PARA VÍDEOS DE VENDAS", 
-      "title": "Analise qualquer vídeo de vendas. Adapte a estratégia para sua oferta.", 
-      "description": "Envie um vídeo ou áudio de vendas. O Kyrg Studio identifica o gancho, a oferta, a estrutura da copy, as estratégias de persuasão e os pontos ausentes para ajudar você a criar uma versão adaptada ao seu produto.", 
-      "primaryAction": "Analisar meu vídeo", 
-      "secondaryAction": "Veja como funciona", 
-      "meta": { 
-        "analysis": "ANÁLISE DE COPY", 
-        "adaptation": "ADAPTAÇÃO DA OFERTA", 
+    "hero": {
+      "badge": "ANÁLISE DE COPY COM IA PARA VÍDEOS DE VENDAS",
+      "title": "Analise qualquer vídeo de vendas. Adapte a estratégia para sua oferta.",
+      "description": "Envie um vídeo ou áudio de vendas. O Kyrg Studio identifica o gancho, a oferta, a estrutura da copy, as estratégias de persuasão e os pontos ausentes para ajudar você a criar uma versão adaptada ao seu produto.",
+      "primaryAction": "Analisar meu vídeo",
+      "secondaryAction": "Veja como funciona",
+      "meta": {
+        "analysis": "ANÁLISE DE COPY",
+        "adaptation": "ADAPTAÇÃO DA OFERTA",
         "structuredOutput": "INSIGHTS PRÁTICOS"
-         }}
-      
-}}
+      }
+    },
+    "preview": {
+      "badge": "VISÃO DO PRODUTO",
+      "title": "De um vídeo de vendas a uma estratégia de copy clara.",
+      "description": "Veja como o Kyrg Studio transforma um vídeo de referência em uma análise estruturada e em um roteiro adaptado para outra oferta.",
+      "tabsLabel": "Prévia dos resultados do produto",
+      "analysisTab": "Análise da copy",
+      "adaptationTab": "Roteiro adaptado",
+      "analysisImageAlt": "Tela de resultado da análise de copy do Kyrg Studio",
+      "adaptationImageAlt": "Tela de resultado do roteiro adaptado no Kyrg Studio"
+    },
+    "howItWorks": {
+      "badge": "COMO FUNCIONA",
+      "title": "Da referência ao entendimento em três etapas.",
+      "description": "Envie uma copy em vídeo ou áudio, escolha o objetivo e receba uma análise estruturada ou um roteiro adaptado.",
+      "stepLabel": "ETAPA",
+      "steps": {
+        "upload": {
+          "number": "01",
+          "title": "Envie a referência",
+          "description": "Selecione um vídeo ou áudio de vendas que você deseja compreender ou adaptar."
+        },
+        "process": {
+          "number": "02",
+          "title": "Escolha o resultado",
+          "description": "Solicite uma análise estratégica da copy ou informe sua oferta para gerar uma adaptação."
+        },
+        "result": {
+          "number": "03",
+          "title": "Explore o resultado",
+          "description": "Visualize a estrutura, a oferta, os elementos persuasivos e, na adaptação, um novo roteiro para trabalhar."
+        }
+      },
+      "outputs": {
+        "analysis": {
+          "badge": "Análise de copy",
+          "title": "Entenda o que já está funcionando.",
+          "description": "Explore a estrutura da copy, a oferta, os padrões de persuasão, as objeções, as provas, as lacunas estratégicas e a transcrição completa."
+        },
+        "adaptation": {
+          "badge": "Adaptação de copy",
+          "title": "Aplique a estratégia à sua oferta.",
+          "description": "Combine a estratégia da referência com seu produto, público, provas disponíveis, restrições e plataforma desejada."
+        }
+      }
+    },
+    "features": {
+      "badge": "FEITO PARA TRABALHO CRIATIVO REAL",
+      "title": "Transforme conteúdo em decisões sem perder a estratégia.",
+      "description": "O Kyrg Studio transforma uma mensagem de vendas existente em um ambiente estruturado que você pode analisar, questionar e adaptar.",
+      "items": {
+        "structure": {
+          "number": "01",
+          "category": "Estrutura",
+          "title": "Veja a arquitetura por trás das palavras.",
+          "description": "Entenda como gancho, problema, promessa, mecanismo, prova, oferta e chamada para ação trabalham em conjunto."
+        },
+        "offer": {
+          "number": "02",
+          "category": "Oferta",
+          "title": "Identifique o que realmente está sendo vendido.",
+          "description": "Encontre o público, a dor, o desejo, a promessa, os benefícios, as objeções e as condições comerciais."
+        },
+        "gaps": {
+          "number": "03",
+          "category": "Lacunas",
+          "title": "Encontre o que enfraquece a mensagem.",
+          "description": "Identifique provas ausentes, afirmações sem sustentação, mecanismos pouco claros e lacunas de persuasão."
+        },
+        "adaptation": {
+          "number": "04",
+          "category": "Adaptação",
+          "title": "Reutilize a estratégia sem copiar a oferta original.",
+          "description": "Aplique a estrutura da referência a outro produto, respeitando o novo público, a promessa e as restrições."
+        },
+        "integrity": {
+          "number": "05",
+          "category": "Integridade",
+          "title": "Mantenha promessas e provas sob controle.",
+          "description": "Evite que depoimentos, garantias, urgência e condições comerciais inventadas entrem no roteiro adaptado."
+        },
+        "output": {
+          "number": "06",
+          "category": "Resultado",
+          "title": "Trabalhe com resultados estruturados, não com um chat de IA.",
+          "description": "Revise seções organizadas, resultados da validação, uso de tokens e um roteiro final editável."
+        }
+      }
+    },
+     "whoItIsFor": {
+    "badge": "PARA QUEM É",
+    "title": "Um ambiente mais claro para quem é responsável pela mensagem.",
+    "description": "O Kyrg Studio ajuda profissionais criativos a entender, revisar e adaptar conteúdos de resposta direta sem reduzir o trabalho a uma conversa genérica com IA.",
+    "audiences": {
+      "copywriters": {
+        "role": "Copywriters",
+        "title": "Estude a estratégia, não apenas as palavras.",
+        "description": "Transforme vídeos de referência em material estruturado para analisar e consultar durante o desenvolvimento de novos roteiros.",
+        "benefits": {
+          "strategy": "Mapeie ganchos, mecanismos, provas e chamadas para ação",
+          "gaps": "Identifique padrões de persuasão e lacunas estratégicas",
+          "adaptation": "Adapte a estrutura para uma oferta diferente"
+        }
+      },
+      "marketers": {
+        "role": "Marketing",
+        "title": "Revise a mensagem antes de investir na distribuição.",
+        "description": "Entenda como uma oferta é apresentada e onde a copy precisa de mais clareza, provas ou um posicionamento melhor.",
+        "benefits": {
+          "promises": "Revise promessas e a consistência da oferta",
+          "proof": "Encontre afirmações sem sustentação e provas ausentes",
+          "briefs": "Crie briefings mais claros para as equipes criativas"
+        }
+      },
+      "producers": {
+        "role": "Produtores",
+        "title": "Transforme conteúdo falado em um material criativo organizado.",
+        "description": "Passe de um vídeo ou áudio bruto para uma análise estruturada e um roteiro editável sem precisar interpretar JSON.",
+        "benefits": {
+          "transcription": "Trabalhe a partir de uma transcrição completa",
+          "navigation": "Navegue pelo conteúdo através das seções estratégicas",
+          "editing": "Revise o roteiro adaptado em um formato editável"
+        }
+      }
+    }
+  },
+  "faq": {
+    "badge": "DÚVIDAS FREQUENTES",
+    "title": "Antes de transformar uma referência no seu próximo roteiro.",
+    "description": "O que copywriters e profissionais de marketing normalmente querem saber antes de analisar ou adaptar uma mensagem de vendas.",
+    "items": {
+      "analysisAndAdaptation": {
+        "question": "O que eu recebo do Kyrg Studio?",
+        "answer": "Na análise, você enxerga o gancho, a estrutura, a oferta, os elementos de persuasão, as provas, as objeções e os pontos fracos da mensagem. Na adaptação, esses insights se tornam a base estratégica de um novo roteiro construído para a sua oferta."
+      },
+      "supportedFiles": {
+        "question": "Adaptar significa copiar a VSL de outra pessoa?",
+        "answer": "Não. O Kyrg Studio estuda como a referência constrói o argumento e a persuasão, depois aplica essa lógica estratégica ao público, à promessa, às provas e às limitações da sua oferta. O objetivo é criar um novo roteiro, não reproduzir as palavras ou alegações da referência."
+      },
+      "processing": {
+        "question": "Preciso ser um copywriter experiente para usar?",
+        "answer": "Não. O resultado é organizado para que profissionais de marketing, produtores e fundadores entendam o raciocínio por trás da mensagem. Copywriters experientes podem usar a ferramenta para acelerar a pesquisa e o diagnóstico, mantendo o próprio julgamento sobre a copy final."
+      },
+      "closeBrowser": {
+        "question": "Quanto tempo leva e preciso deixar a página aberta?",
+        "answer": "O tempo varia conforme a duração da referência e o resultado solicitado. Você não precisa acompanhar a tela: depois de enviar o arquivo, pode fechar a página e voltar mais tarde para consultar o resultado na sua conta."
+      },
+      "uploadedFile": {
+        "question": "O que acontece com o vídeo ou áudio que eu envio?",
+        "answer": "A mídia original é usada somente durante o processamento da sua análise ou adaptação. Quando o processamento termina ou não pode ser concluído, o arquivo enviado é removido. O resultado estruturado continua disponível na sua conta."
+      },
+      "offerProfile": {
+        "question": "O que devo informar para receber uma boa adaptação?",
+        "answer": "Descreva seu público, o problema enfrentado, o resultado desejado, sua promessa, mecanismo, benefícios, objeções, provas disponíveis, condições da oferta, tom e restrições. Quanto mais específico e verdadeiro for o perfil, mais útil e consistente poderá ser o roteiro adaptado."
+      },
+      "inventedInformation": {
+        "question": "A ferramenta pode inventar depoimentos, garantias ou resultados?",
+        "answer": "O Kyrg Studio é projetado para trabalhar somente com as provas e informações da oferta fornecidas por você e sinalizar dados importantes que ainda estejam faltando. Como todo rascunho assistido por IA pode exigir contexto e julgamento, revise alegações, números e condições comerciais antes de publicar o roteiro final."
+      }
+    }
+  },
+  "callToAction": {
+    "eyebrow": "SUA PRÓXIMA REFERÊNCIA PODE SE TORNAR UMA ESTRATÉGIA APLICÁVEL",
+    "title": "Pare de tentar adivinhar por que uma mensagem de vendas funciona.",
+    "description": "Transforme um vídeo ou áudio de referência em uma análise estruturada e use a estratégia identificada para desenvolver uma nova copy para sua oferta.",
+    "createAccount": "Comece Agora",
+    "login": "Entrar"
+  },
+   "footer": {
+    "description": "Inteligência criativa para entender e adaptar copies de resposta direta a partir de vídeos e áudios.",
+    "navigationLabel": "Navegação do rodapé",
+    "meta": {
+      "analysis": "ANÁLISE",
+      "adaptation": "ADAPTAÇÃO",
+      "structuredOutput": "RESULTADO ESTRUTURADO"
+    },
+    "product": {
+      "title": "PRODUTO",
+      "preview": "Visão do produto",
+      "howItWorks": "Como funciona",
+      "features": "Recursos",
+      "faq": "Perguntas frequentes"
+    },
+    "account": {
+      "title": "CONTA",
+      "login": "Entrar",
+      "createAccount": "Criar conta"
+    },
+    "copyright": "© {{year}} Kyrg Studio.",
+    "closingMessage": "Feito para um trabalho criativo mais consciente."
+  }
+  },
+  "auth": {
+    "layout": {
+      "backHome": "Voltar ao início"
+    },
+    "register": {
+      "title": "Crie sua conta",
+      "description": "Comece sua primeira análise.",
+      "loginPrompt": "Já possui uma conta?",
+      "login": "Entrar",
+      "fields": {
+        "name": "Nome",
+        "namePlaceholder": "Seu nome",
+        "email": "Email",
+        "emailPlaceholder": "voce@exemplo.com",
+        "password": "Senha",
+        "passwordHint": "Use pelo menos 8 caracteres.",
+        "confirmPassword": "Confirme sua senha"
+      },
+      "actions": {
+        "create": "Criar conta",
+        "creating": "Criando conta..."
+      },
+      "validation": {
+        "nameRequired": "Informe seu nome.",
+        "nameTooLong": "O nome é muito longo.",
+        "emailRequired": "Informe seu email.",
+        "emailTooLong": "O email é muito longo.",
+        "emailInvalid": "Informe um endereço de email válido.",
+        "passwordMinimum": "A senha deve possuir pelo menos 8 caracteres.",
+        "passwordMaximum": "A senha deve possuir no máximo 128 caracteres.",
+        "passwordMismatch": "As senhas não coincidem."
+      },
+      "errors": {
+        "heading": "Não foi possível criar sua conta",
+        "accountExists": "Já existe uma conta com este email.",
+        "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente novamente.",
+        "invalidData": "Revise suas informações e tente novamente."
+      }
+    }
+  }
+}

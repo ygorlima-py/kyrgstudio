@@ -1,33 +1,17 @@
-import { Badge } from '@/shared/ui/badge'
+import { useTranslation } from 'react-i18next'
+
 import { Card } from '@/shared/ui/card'
 import { Container } from '@/shared/ui/container'
 import { Stack } from '@/shared/ui/stack'
 
-const workflowSteps = [
-  {
-    number: '01',
-    title: 'Upload the reference',
-    description:
-      'Add the video or audio containing the sales message you want to understand or adapt.',
-  },
-  {
-    number: '02',
-    title: 'Reveal the strategy',
-    description:
-      'Kyrg Studio transcribes the content and maps its structure, offer, mechanism, proof and persuasion.',
-  },
-  {
-    number: '03',
-    title: 'Choose the output',
-    description:
-      'Review the complete analysis or provide your offer profile to generate an adapted and validated script.',
-  },
-] as const
+const workflowSteps = ['upload', 'process', 'result'] as const
 
 /**
  * Explains the product workflow from source upload to structured output.
  */
 export function HowItWorks() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="how-it-works-title"
@@ -37,30 +21,40 @@ export function HowItWorks() {
       <Container>
         <Stack gap="xl">
           <Stack className="max-w-3xl" gap="md">
-            <Badge variant="action">How it works</Badge>
+            <span className="inline-flex w-fit items-center rounded-pill bg-action px-3 py-1 text-label text-text-inverse">
+              {t('marketing.howItWorks.badge')}
+            </span>
 
-            <h2 className="font-heading text-heading-2 text-text" id="how-it-works-title">
-              One reference. Two ways to turn it into useful creative work.
+            <h2
+              className="font-heading text-heading-2 text-text"
+              id="how-it-works-title"
+            >
+              {t('marketing.howItWorks.title')}
             </h2>
 
             <p className="text-body-lg text-text-muted">
-              Start with an existing sales video or audio file. Kyrg Studio handles the
-              transcription, extracts the strategy and prepares the result for analysis or
-              adaptation.
+              {t('marketing.howItWorks.description')}
             </p>
           </Stack>
 
           <ol className="grid gap-4 md:grid-cols-3">
             {workflowSteps.map((step) => (
-              <li className="flex" key={step.number}>
+              <li className="flex" key={step}>
                 <Card className="w-full" padding="lg">
                   <Stack gap="lg">
-                    <span className="font-mono text-meta text-action">STEP {step.number}</span>
+                    <span className="font-mono text-meta text-action">
+                      {t('marketing.howItWorks.stepLabel')}{' '}
+                      {t(`marketing.howItWorks.steps.${step}.number`)}
+                    </span>
 
                     <Stack gap="sm">
-                      <h3 className="font-heading text-heading-3 text-text">{step.title}</h3>
+                      <h3 className="font-heading text-heading-3 text-text">
+                        {t(`marketing.howItWorks.steps.${step}.title`)}
+                      </h3>
 
-                      <p className="text-body text-text-muted">{step.description}</p>
+                      <p className="text-body text-text-muted">
+                        {t(`marketing.howItWorks.steps.${step}.description`)}
+                      </p>
                     </Stack>
                   </Stack>
                 </Card>
@@ -71,15 +65,16 @@ export function HowItWorks() {
           <Card padding="lg" variant="elevated">
             <div className="grid gap-8 md:grid-cols-2 md:gap-0">
               <Stack className="md:pr-8" gap="sm">
-                <Badge variant="processing">Copy analysis</Badge>
+                <span className="inline-flex w-fit items-center rounded-pill bg-action px-3 py-1 text-label text-text-inverse">
+                  {t('marketing.howItWorks.outputs.analysis.badge')}
+                </span>
 
                 <h3 className="font-heading text-heading-3 text-text">
-                  Understand what is already working.
+                  {t('marketing.howItWorks.outputs.analysis.title')}
                 </h3>
 
                 <p className="text-body text-text-muted">
-                  Explore the copy structure, offer, persuasion pattern, objections, proof,
-                  strategic gaps and complete transcription.
+                  {t('marketing.howItWorks.outputs.analysis.description')}
                 </p>
               </Stack>
 
@@ -87,15 +82,16 @@ export function HowItWorks() {
                 className="border-t border-border pt-8 md:border-t-0 md:border-l md:pt-0 md:pl-8"
                 gap="sm"
               >
-                <Badge variant="success">Copy adaptation</Badge>
+                <span className="inline-flex w-fit items-center rounded-pill bg-action px-3 py-1 text-label text-text-inverse">
+                  {t('marketing.howItWorks.outputs.adaptation.badge')}
+                </span>
 
                 <h3 className="font-heading text-heading-3 text-text">
-                  Apply the strategy to your offer.
+                  {t('marketing.howItWorks.outputs.adaptation.title')}
                 </h3>
 
                 <p className="text-body text-text-muted">
-                  Combine the reference strategy with your product, audience, available proof,
-                  restrictions and desired platform.
+                  {t('marketing.howItWorks.outputs.adaptation.description')}
                 </p>
               </Stack>
             </div>

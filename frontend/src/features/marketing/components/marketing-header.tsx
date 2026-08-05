@@ -27,7 +27,7 @@ export function MarketingHeader() {
   const { t } = useTranslation()
 
   return (
-    <header className="border-b border-border bg-background">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-md">
       <Container>
         <nav aria-label={t('marketing.header.mainNavigation')} className="flex min-h-16 items-center justify-between">
           <Link

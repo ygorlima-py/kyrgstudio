@@ -62,7 +62,28 @@ server {
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
     }
 
+    # A landing usa HTML pre-renderizado; as demais rotas hidratam a SPA vazia.
+    location = / {
+        try_files /index.html =404;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+
+    location = /pt-BR {
+        try_files /pt-BR/index.html =404;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+
+    location = /en {
+        try_files /en/index.html =404;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+
+    location = /spa.html {
+        internal;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/ /spa.html;
     }
 }

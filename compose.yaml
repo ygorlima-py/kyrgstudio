@@ -67,7 +67,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-kyrgstudio}:${POSTGRES_PASSWORD:-kyrgstudio_dev}@postgres:5432/${POSTGRES_DB:-kyrgstudio}
       CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-kyrgstudio}:${RABBITMQ_PASSWORD:-kyrgstudio_dev}@rabbitmq:5672//
       APP_STORAGE_DIR: /app/.storage
-      APP_API_CORS_ORIGINS: ${APP_API_CORS_ORIGINS:-http://localhost:8080}
+      APP_API_CORS_ORIGINS: ${APP_API_CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
     volumes:
       - app_storage:/app/.storage
     ports:
