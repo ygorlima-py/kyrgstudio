@@ -28,9 +28,12 @@ import {
 } from '../utils/job-form-draft'
 import { JobFormProgress } from './job-form-progress'
 
+import type { JobFormStepId } from '../config/job-form-steps'
+
 export interface JobCreationFormProps {
   readonly draftOwnerId: number
   readonly initialPipelineType?: PipelineType
+  readonly initialStepId?: JobFormStepId
   readonly onSubmit: (formData: JobCreationData) => Promise<void> | void
   readonly children: (navigation: JobFormNavigation) => ReactNode
 }
@@ -42,9 +45,16 @@ export function JobCreationForm({
   children,
   draftOwnerId,
   initialPipelineType = 'copy_analysis',
+  initialStepId = 'pipeline',
   onSubmit,
 }: JobCreationFormProps) {
-  const [initialDraft] = useState<JobFormDraft | null>(() => loadJobFormDraft(draftOwnerId))
+  const [initialDraft] = useState<JobFormDraft | null>(() => {
+    const savedDraft = loadJobFormDraft(draftOwnerId)
+
+    return savedDraft?.values.pipeline_type === initialPipelineType
+      ? savedDraft
+      : null
+  })
   const [draftMessage, setDraftMessage] = useState<string | null>(
     initialDraft === null ? null : 'Draft restored. Select the media file again before submitting.',
   )
@@ -71,7 +81,7 @@ export function JobCreationForm({
   }, [form, pipelineType])
 
   const navigation = useJobFormNavigation({
-    ...(initialDraft === null ? {} : { initialStepId: initialDraft.currentStepId }),
+    initialStepId: initialDraft?.currentStepId ?? initialStepId,
     pipelineType,
     trigger: form.trigger,
   })
@@ -100,13 +110,16 @@ export function JobCreationForm({
 
     clearJobFormDraft(draftOwnerId)
     form.reset(createDefaultValues(initialPipelineType))
-    navigation.goToStep('pipeline')
+    navigation.goToStep(initialStepId)
     setDraftMessage('Form and saved draft cleared.')
   }
 
   async function submitAndClearDraft(formData: JobCreationData): Promise<void> {
     await onSubmit(formData)
-    clearJobFormDraft(draftOwnerId)
+
+    if (formData.pipeline_type === 'copy_adaptation') {
+      clearJobFormDraft(draftOwnerId)
+    }
   }
 
   function showStepWithInvalidFields(errors: FieldErrors<JobCreationFormInput>): void {
@@ -146,7 +159,8 @@ export function JobCreationForm({
         <JobFormProgress currentStepId={navigation.currentStep.id} steps={navigation.steps} />
 
         <div>{children(navigation)}</div>
-
+      
+      {navigation.currentStep.id === 'profile' ? (
         <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p aria-live="polite" className="text-body-sm text-text-muted" role="status">
             {draftMessage ?? 'Save a draft manually to continue later on this device.'}
@@ -172,6 +186,7 @@ export function JobCreationForm({
             </Button>
           </div>
         </div>
+      ) : null }
 
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -195,6 +210,7 @@ export function JobCreationForm({
             {navigation.isLastStep ? 'Submit project' : 'Continue'}
           </Button>
         </div>
+
       </form>
     </FormProvider>
   )

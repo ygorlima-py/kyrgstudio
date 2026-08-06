@@ -1,5 +1,8 @@
 export interface AppNavigationItem {
-  readonly label: string
+  readonly labelKey:
+    | 'appNavigation.dashboard'
+    | 'appNavigation.history'
+    | 'appNavigation.newProject'
   readonly path: string
   readonly exact: boolean
 }
@@ -9,17 +12,17 @@ export interface AppNavigationItem {
  */
 export const APP_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
   {
-    label: 'Dashboard',
+    labelKey: 'appNavigation.dashboard',
     path: '/app',
     exact: true,
   },
   {
-    label: 'History',
+    labelKey: 'appNavigation.history',
     path: '/app/jobs',
     exact: true,
   },
   {
-    label: 'New project',
+    labelKey: 'appNavigation.newProject',
     path: '/app/jobs/new',
     exact: false,
   },

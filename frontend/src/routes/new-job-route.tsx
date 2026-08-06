@@ -65,6 +65,7 @@ export function NewJobRoute() {
         initialPipelineType={
             initialPipelineType ?? 'copy_analysis'
         }               
+        initialStepId={initialPipelineType === undefined ? 'pipeline' : 'file'}
         onSubmit={submission.submit}
       >
         {(navigation) => {

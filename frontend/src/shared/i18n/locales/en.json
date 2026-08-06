@@ -254,5 +254,86 @@
         "invalidData": "Please review your information and try again."
       }
     }
+  },
+
+  "dashboard": {
+    "eyebrow": "Workspace",
+    "welcome": {
+      "default": "Welcome back",
+      "withName": "Welcome back, {{name}}"
+    },
+    "actions": {
+      "title": "Start a new project",
+      "analysis": {
+        "label": "Analyze a copy",
+        "description": "Reveal the hook, argument, offer, proof, objections, and structure behind a sales message."
+      },
+      "adaptation": {
+        "label": "Adapt a copy",
+        "description": "Use the strategy of an existing message to create a new script for your own offer."
+      }
+    },
+    "error": {
+      "title": "Projects are temporarily unavailable",
+      "description": "We could not load your projects. Your existing work was not affected.",
+      "retry": "Try again"
+    },
+    "loading": {
+      "label": "Loading projects",
+      "description": "Loading your projects"
+    },
+    "empty": {
+      "title": "No projects yet",
+      "description": "Your analyses and adaptations will appear here after you create them.",
+      "action": "Start your first project"
+    },
+    "history": "View project history"
+  },
+  "jobs": {
+    "pipeline": {
+      "analysis": "Copy analysis",
+      "adaptation": "Copy adaptation"
+    },
+    "dateUnavailable": "Date unavailable",
+    "active": {
+      "title": "In progress",
+      "description": "These projects keep running even when you leave this page.",
+      "count_one": "{{count}} project",
+      "count_other": "{{count}} projects",
+      "status": {
+        "processing": "Processing",
+        "waiting": "Waiting to start"
+      },
+      "message": {
+        "processing": "Your reference is being processed in the background.",
+        "waiting": "Your file is ready and waiting for an available worker."
+      }
+    },
+    "projectNumber": "Project #{{id}}",
+    "recent": {
+      "title": "Recent projects",
+      "description": "Return to a finished result or review a project that could not be completed.",
+      "status": {
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "viewResult": "View result",
+      "viewDetails": "View details"
+    }
+  },
+  "appNavigation": {
+    "ariaLabel": "Application navigation",
+    "dashboard": "Dashboard",
+    "history": "History",
+    "newProject": "New project",
+    "workspace": "Analysis workspace",
+    "mobileAriaLabel": "Mobile application navigation"
+  },
+  "appHeader": {
+    "openUserMenu": "Open user menu",
+    "logout": "Log out"
+  },
+  "appLayout": {
+    "skipToContent": "Skip to content"
   }
 }

@@ -10,10 +10,15 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 
+import { LanguageSwitcher } from '@/shared/components/language-switcher'
+
+import { useTranslation } from 'react-i18next'
+
 /**
  * Application header containing mobile branding and the authenticated user menu.
  */
 export function AppHeader() {
+  const { t } = useTranslation()
   const session = useAuth()
 
   if (session.status !== 'authenticated') {
@@ -39,7 +44,7 @@ export function AppHeader() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            aria-label="Open user menu"
+            aria-label={t('appHeader.openUserMenu')}
             className="flex items-center gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
             type="button"
           >
@@ -66,9 +71,16 @@ export function AppHeader() {
 
           <DropdownMenuSeparator />
 
+          <div className="px-3 py-3">
+            <LanguageSwitcher />
+          </div>
+
+          <DropdownMenuSeparator />
+
           <DropdownMenuItem onSelect={handleLogout}>
-            Log out
+            {t('appHeader.logout')}
           </DropdownMenuItem>
+          
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

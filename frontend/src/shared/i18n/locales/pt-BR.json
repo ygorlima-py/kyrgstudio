@@ -254,5 +254,86 @@
         "invalidData": "Revise suas informações e tente novamente."
       }
     }
+  },
+
+  "dashboard": {
+    "eyebrow": "Área de trabalho",
+    "welcome": {
+      "default": "Que bom ter você de volta",
+      "withName": "Que bom ter você de volta, {{name}}"
+    },
+    "actions": {
+      "title": "Comece um novo projeto",
+      "analysis": {
+        "label": "Analisar uma copy",
+        "description": "Descubra o gancho, a argumentação, a oferta, as provas, as objeções e a estrutura por trás de uma mensagem de vendas."
+      },
+      "adaptation": {
+        "label": "Adaptar uma copy",
+        "description": "Use a estratégia de uma mensagem existente para criar um novo roteiro para a sua própria oferta."
+      }
+    },
+    "error": {
+      "title": "Seus projetos estão temporariamente indisponíveis",
+      "description": "Não foi possível carregar seus projetos. O trabalho existente não foi afetado.",
+      "retry": "Tentar novamente"
+    },
+    "loading": {
+      "label": "Carregando projetos",
+      "description": "Carregando seus projetos"
+    },
+    "empty": {
+      "title": "Nenhum projeto ainda",
+      "description": "Suas análises e adaptações aparecerão aqui depois que você criar o primeiro projeto.",
+      "action": "Criar primeiro projeto"
+    },
+    "history": "Ver histórico de projetos"
+  },
+  "jobs": {
+    "pipeline": {
+      "analysis": "Análise de copy",
+      "adaptation": "Adaptação de copy"
+    },
+    "dateUnavailable": "Data indisponível",
+    "active": {
+      "title": "Em processamento",
+      "description": "Estes projetos continuam sendo processados mesmo quando você sai desta página.",
+      "count_one": "{{count}} projeto",
+      "count_other": "{{count}} projetos",
+      "status": {
+        "processing": "Processando",
+        "waiting": "Aguardando início"
+      },
+      "message": {
+        "processing": "Sua referência está sendo processada em segundo plano.",
+        "waiting": "Seu arquivo está pronto e aguarda um worker disponível."
+      }
+    },
+    "projectNumber": "Projeto #{{id}}",
+    "recent": {
+      "title": "Projetos recentes",
+      "description": "Acesse um resultado concluído ou revise um projeto que não pôde ser finalizado.",
+      "status": {
+        "completed": "Concluído",
+        "failed": "Falhou"
+      },
+      "viewResult": "Ver resultado",
+      "viewDetails": "Ver detalhes"
+    }
+  },
+  "appNavigation": {
+    "ariaLabel": "Navegação da aplicação",
+    "dashboard": "Painel",
+    "history": "Histórico",
+    "newProject": "Novo projeto",
+    "workspace": "Área de análise",
+    "mobileAriaLabel": "Navegação móvel da aplicação"
+  },
+  "appHeader": {
+    "openUserMenu": "Abrir menu do usuário",
+    "logout": "Sair"
+  },
+  "appLayout": {
+    "skipToContent": "Ir para o conteúdo"
   }
 }

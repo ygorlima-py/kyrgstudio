@@ -1,7 +1,7 @@
 import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import { cn } from '@/shared/utils/class-names'
 
@@ -23,6 +23,7 @@ type SupportedLanguage = (typeof LANGUAGE_OPTIONS)[number]['value']
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const currentLanguage: SupportedLanguage =
     i18n.resolvedLanguage?.startsWith('en') === true ? 'en' : 'pt-BR'
@@ -36,7 +37,14 @@ export function LanguageSwitcher() {
 
     localStorage.setItem('kyrg_language', language)
     document.documentElement.setAttribute('lang', language)
-    navigate(language === 'en' ? '/en' : '/pt-BR')
+    
+    const isLandingPage = ['/', '/en', '/pt-BR'].includes(
+    location.pathname,
+  )
+
+    if (isLandingPage) {
+      navigate(language === 'en' ? '/en' : '/pt-BR')
+    }
   }
 
   return (
