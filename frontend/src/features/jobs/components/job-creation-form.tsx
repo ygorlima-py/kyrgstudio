@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -48,6 +49,7 @@ export function JobCreationForm({
   initialStepId = 'pipeline',
   onSubmit,
 }: JobCreationFormProps) {
+  const { t } = useTranslation()
   const [initialDraft] = useState<JobFormDraft | null>(() => {
     const savedDraft = loadJobFormDraft(draftOwnerId)
 
@@ -56,7 +58,7 @@ export function JobCreationForm({
       : null
   })
   const [draftMessage, setDraftMessage] = useState<string | null>(
-    initialDraft === null ? null : 'Draft restored. Select the media file again before submitting.',
+    initialDraft === null ? null : t('newJob.form.draft.restored'),
   )
 
   const form = useForm<JobCreationFormInput, unknown, JobCreationData>({
@@ -97,12 +99,12 @@ export function JobCreationForm({
     )
 
     setDraftMessage(
-      wasSaved ? 'Draft saved on this device.' : 'The draft could not be saved in this browser.',
+      wasSaved ? t('newJob.form.draft.saved') : t('newJob.form.draft.saveFailed'),
     )
   }
 
   function handleClearForm(): void {
-    const shouldClear = window.confirm('Clear every field and delete the saved draft?')
+    const shouldClear = window.confirm(t('newJob.form.draft.clearConfirm'))
 
     if (!shouldClear) {
       return
@@ -111,7 +113,7 @@ export function JobCreationForm({
     clearJobFormDraft(draftOwnerId)
     form.reset(createDefaultValues(initialPipelineType))
     navigation.goToStep(initialStepId)
-    setDraftMessage('Form and saved draft cleared.')
+    setDraftMessage(t('newJob.form.draft.cleared'))
   }
 
   async function submitAndClearDraft(formData: JobCreationData): Promise<void> {
@@ -163,7 +165,7 @@ export function JobCreationForm({
       {navigation.currentStep.id === 'profile' ? (
         <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p aria-live="polite" className="text-body-sm text-text-muted" role="status">
-            {draftMessage ?? 'Save a draft manually to continue later on this device.'}
+            {draftMessage ??  t('newJob.form.draft.defaultMessage')}
           </p>
 
           <div className="flex flex-wrap gap-2">
@@ -173,7 +175,7 @@ export function JobCreationForm({
               type="button"
               variant="secondary"
             >
-              Save draft
+              {t('newJob.form.draft.save')}
             </Button>
 
             <Button
@@ -182,7 +184,7 @@ export function JobCreationForm({
               type="button"
               variant="ghost"
             >
-              Clear form
+              {t('newJob.form.draft.clear')}
             </Button>
           </div>
         </div>
@@ -197,17 +199,19 @@ export function JobCreationForm({
                 type="button"
                 variant="ghost"
               >
-                Back
+                {t('newJob.form.navigation.back')}
               </Button>
             ) : null}
           </div>
 
           <Button
-            isLoading={form.formState.isSubmitting}
-            loadingContent="Submitting..."
-            type="submit"
-          >
-            {navigation.isLastStep ? 'Submit project' : 'Continue'}
+          isLoading={form.formState.isSubmitting}
+          loadingContent={t('newJob.form.navigation.submitting')}
+          type="submit"
+        >
+          {navigation.isLastStep
+            ? t('newJob.form.navigation.submit')
+            : t('newJob.form.navigation.continue')}
           </Button>
         </div>
 

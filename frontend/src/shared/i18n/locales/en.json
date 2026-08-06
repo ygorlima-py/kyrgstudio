@@ -335,5 +335,30 @@
   },
   "appLayout": {
     "skipToContent": "Skip to content"
+  },
+  "newJob": {
+    "page": {
+      "eyebrow": "New reference",
+      "title": "Create a new analysis",
+      "description": "Upload a sales video or audio file, then choose whether to analyze the reference or adapt its strategy to your offer."
+    },
+    "form": {
+      "draft": {
+        "defaultMessage": "Save a draft manually to continue later on this device.",
+        "save": "Save draft",
+        "clear": "Clear form",
+        "restored": "Draft restored. Select the media file again before submitting.",
+        "saved": "Draft saved on this device.",
+        "saveFailed": "The draft could not be saved in this browser.",
+        "clearConfirm": "Clear every field and delete the saved draft?",
+        "cleared": "Form and saved draft cleared."
+      },
+      "navigation": {
+        "back": "Back",
+        "continue": "Continue",
+        "submit": "Submit project",
+        "submitting": "Submitting..."
+      }
+    }
   }
 }

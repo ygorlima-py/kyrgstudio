@@ -335,5 +335,30 @@
   },
   "appLayout": {
     "skipToContent": "Ir para o conteúdo"
+  },
+  "newJob": {
+    "page": {
+      "eyebrow": "Nova referência",
+      "title": "Criar nova análise",
+      "description": "Envie um vídeo ou áudio de vendas e escolha se deseja analisar a referência ou adaptar a estratégia para sua oferta."
+    },
+    "form": {
+      "draft": {
+        "defaultMessage": "Salve um rascunho manualmente para continuar depois neste dispositivo.",
+        "save": "Salvar rascunho",
+        "clear": "Limpar formulário",
+        "restored": "Rascunho restaurado. Selecione o arquivo novamente antes de enviar.",
+        "saved": "Rascunho salvo neste dispositivo.",
+        "saveFailed": "Não foi possível salvar o rascunho neste navegador.",
+        "clearConfirm": "Limpar todos os campos e apagar o rascunho salvo?",
+        "cleared": "Formulário e rascunho salvos foram limpos."
+      },
+      "navigation": {
+        "back": "Voltar",
+        "continue": "Continuar",
+        "submit": "Enviar projeto",
+        "submitting": "Enviando..."
+      }
+    }
   }
 }

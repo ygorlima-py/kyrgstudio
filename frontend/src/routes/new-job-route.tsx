@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '@/features/auth'
 import {
@@ -38,7 +39,8 @@ export function NewJobRoute() {
   const [searchParams] = useSearchParams()
   const initialPipelineType = getInitialPipelineType(searchParams)
   const submission = useJobSubmission()
-
+  const { t } = useTranslation()
+  
   if (session.status !== 'authenticated') {
     return null
   }
@@ -47,16 +49,15 @@ export function NewJobRoute() {
     <div className="mx-auto w-full max-w-5xl space-y-8">
       <header className="space-y-2">
         <p className="text-meta font-medium uppercase tracking-wide text-action">
-          New project
+          {t('newJob.page.eyebrow')}
         </p>
 
         <h1 className="font-heading text-heading-lg text-text">
-          Analyze or adapt a reference
+          {t('newJob.page.title')}
         </h1>
 
         <p className="max-w-2xl text-body text-text-muted">
-          Configure the project, upload your reference, and review everything
-          before processing begins.
+          {t('newJob.page.description')}
         </p>
       </header>
 
