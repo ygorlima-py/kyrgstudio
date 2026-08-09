@@ -241,6 +241,13 @@
       "backHome": "Back to home"
     },
     "login": {
+      "page": {
+        "eyebrow": "Welcome back",
+        "title": "Log in to your account",
+        "description": "Continue analyzing references and building adaptations for your offers.",
+        "registerPrompt": "Do not have an account?",
+        "register": "Create account"
+      },
       "fields": {
         "email": "Email",
         "emailPlaceholder": "you@example.com",

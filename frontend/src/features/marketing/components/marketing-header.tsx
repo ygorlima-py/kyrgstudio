@@ -36,7 +36,7 @@ export function MarketingHeader() {
           >
             <img src="/kyrglogo.png" alt="" aria-hidden="true" className="size-9 object-contain" />
 
-            <span>VSLAdapater</span>
+            <span>Kyrg Studio</span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <a

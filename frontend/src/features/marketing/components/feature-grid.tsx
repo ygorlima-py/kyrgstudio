@@ -1,40 +1,55 @@
 import { useTranslation } from 'react-i18next'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { Card } from '@/shared/ui/card'
 import { Container } from '@/shared/ui/container'
 import { Stack } from '@/shared/ui/stack'
 import { cn } from '@/shared/utils/class-names'
+import {
+  faBullseye,
+  faClipboardCheck,
+  faDiagramProject,
+  faMagnifyingGlassChart,
+  faPenNib,
+  faShieldHalved,
+} from '@fortawesome/free-solid-svg-icons'
 
 const features = [
   {
     id: 'structure',
     layout: 'md:col-span-2',
     accent: 'border-2 border-action bg-transparent text-action',
+    icon: faDiagramProject,
   },
   {
     id: 'offer',
     layout: 'md:col-span-1',
     accent: 'border-2 border-action bg-transparent text-action',
+    icon: faBullseye,
   },
   {
     id: 'gaps',
     layout: 'md:col-span-1',
     accent: 'border-2 border-action bg-transparent text-action',
+    icon: faMagnifyingGlassChart,
   },
   {
     id: 'adaptation',
     layout: 'md:col-span-2',
     accent: 'border-2 border-action bg-transparent text-action',
+    icon: faPenNib,
   },
   {
     id: 'integrity',
     layout: 'md:col-span-2',
     accent: 'border-2 border-action bg-transparent text-action',
+    icon: faShieldHalved,
   },
   {
     id: 'output',
     layout: 'md:col-span-1',
     accent: 'border-2 border-action bg-transparent text-action',
+    icon: faClipboardCheck,
   },
 ] as const
 
@@ -91,7 +106,7 @@ export function FeatureGrid() {
                           feature.accent,
                         )}
                       >
-                        {t(`${translationPath}.number`)}
+                        <FontAwesomeIcon icon={feature.icon} className="size-4" />
                       </div>
 
                       <Stack gap="sm">

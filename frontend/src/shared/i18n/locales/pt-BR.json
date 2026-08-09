@@ -241,6 +241,13 @@
       "backHome": "Voltar ao início"
     },
     "login": {
+      "page": {
+        "eyebrow": "Bem-vindo de volta",
+        "title": "Entre na sua conta",
+        "description": "Continue analisando referências e criando adaptações para suas ofertas.",
+        "registerPrompt": "Ainda não tem uma conta?",
+        "register": "Criar conta"
+      },
       "fields": {
         "email": "Email",
         "emailPlaceholder": "voce@exemplo.com",
@@ -1180,13 +1187,5 @@
         }
       }
     }
-  },
-  "adaptationResult": {
-    "scriptEditor": {},
-    "scriptSections": {},
-    "validation": {},
-    "missingProofs": {},
-    "referenceAnalysis": {},
-    "common": {}
   }
 }
