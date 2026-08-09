@@ -2,6 +2,27 @@
   "language": {
     "selector": "Select language"
   },
+  "notFound": {
+    "title": "Page not found"
+  },
+  "shared": {
+    "api": {
+      "genericRequestError": "The request could not be completed."
+    },
+    "ui": {
+      "select": {
+        "placeholder": "Select an option"
+      },
+      "dialog": {
+        "close": "Close dialog"
+      }
+    },
+    "states": {
+      "loading": {
+        "defaultLabel": "Loading content"
+      }
+    }
+  },
   "marketing": {
     "header": {
       "mainNavigation": "Main navigation",
@@ -113,111 +134,143 @@
       }
     },
     "whoItIsFor": {
-    "badge": "WHO IT IS FOR",
-    "title": "A clearer workspace for people responsible for the message.",
-    "description": "Kyrg Studio helps creative professionals understand, review, and adapt direct-response content without reducing the work to a generic AI conversation.",
-    "audiences": {
-      "copywriters": {
-        "role": "Copywriters",
-        "title": "Study the strategy, not only the words.",
-        "description": "Turn reference videos into structured material you can inspect and use while developing new scripts.",
-        "benefits": {
-          "strategy": "Map hooks, mechanisms, proof, and calls to action",
-          "gaps": "Identify persuasion patterns and strategic gaps",
-          "adaptation": "Adapt the structure to a different offer"
-        }
-      },
-      "marketers": {
-        "role": "Marketers",
-        "title": "Review the message before investing in distribution.",
-        "description": "Understand how an offer is presented and where the copy needs stronger clarity, proof, or positioning.",
-        "benefits": {
-          "promises": "Review promises and offer consistency",
-          "proof": "Find unsupported claims and missing proof",
-          "briefs": "Create clearer briefs for creative teams"
-        }
-      },
-      "producers": {
-        "role": "Producers",
-        "title": "Turn spoken content into an organized creative asset.",
-        "description": "Move from a raw video or audio file to structured analysis and an editable script without reading raw JSON.",
-        "benefits": {
-          "transcription": "Work from a complete transcription",
-          "navigation": "Navigate the content by strategic section",
-          "editing": "Review an adapted script in an editable format"
+      "badge": "WHO IT IS FOR",
+      "title": "A clearer workspace for people responsible for the message.",
+      "description": "Kyrg Studio helps creative professionals understand, review, and adapt direct-response content without reducing the work to a generic AI conversation.",
+      "audiences": {
+        "copywriters": {
+          "role": "Copywriters",
+          "title": "Study the strategy, not only the words.",
+          "description": "Turn reference videos into structured material you can inspect and use while developing new scripts.",
+          "benefits": {
+            "strategy": "Map hooks, mechanisms, proof, and calls to action",
+            "gaps": "Identify persuasion patterns and strategic gaps",
+            "adaptation": "Adapt the structure to a different offer"
+          }
+        },
+        "marketers": {
+          "role": "Marketers",
+          "title": "Review the message before investing in distribution.",
+          "description": "Understand how an offer is presented and where the copy needs stronger clarity, proof, or positioning.",
+          "benefits": {
+            "promises": "Review promises and offer consistency",
+            "proof": "Find unsupported claims and missing proof",
+            "briefs": "Create clearer briefs for creative teams"
+          }
+        },
+        "producers": {
+          "role": "Producers",
+          "title": "Turn spoken content into an organized creative asset.",
+          "description": "Move from a raw video or audio file to structured analysis and an editable script without reading raw JSON.",
+          "benefits": {
+            "transcription": "Work from a complete transcription",
+            "navigation": "Navigate the content by strategic section",
+            "editing": "Review an adapted script in an editable format"
+          }
         }
       }
-    }
-  },
-   "faq": {
-    "badge": "COMMON QUESTIONS",
-    "title": "Before you turn a reference into your next script.",
-    "description": "What copywriters and marketers usually want to know before analyzing or adapting a sales message.",
-    "items": {
-      "analysisAndAdaptation": {
-        "question": "What exactly do I get from Kyrg Studio?",
-        "answer": "Choose analysis to uncover the hook, structure, offer, persuasion, proof, objections, and weak points inside a sales message. Choose adaptation to use those insights as the strategic foundation for a new script built around your own offer."
-      },
-      "supportedFiles": {
-        "question": "Is adaptation the same as copying someone else's VSL?",
-        "answer": "No. Kyrg Studio studies how the reference builds its argument and persuasion, then applies that strategic logic to the audience, promise, proof, and constraints of your offer. The goal is a new script, not a reproduction of the original wording or claims."
-      },
-      "processing": {
-        "question": "Do I need to be an experienced copywriter to use it?",
-        "answer": "No. The result is organized so marketers, producers, and founders can understand the reasoning behind the message. Experienced copywriters can use it to accelerate research and diagnosis, while still applying their own judgment to the final copy."
-      },
-      "closeBrowser": {
-        "question": "How long does it take, and do I need to keep the page open?",
-        "answer": "Processing time varies with the length of the reference and the result you request. You do not need to watch the screen: after submitting the file, you can close the page and return later to see the result in your account."
-      },
-      "uploadedFile": {
-        "question": "What happens to the video or audio I upload?",
-        "answer": "The original media is used only while your analysis or adaptation is being processed. When processing finishes or cannot be completed, the uploaded file is removed. Your structured result remains available in your account."
-      },
-      "offerProfile": {
-        "question": "What should I provide to get a strong adaptation?",
-        "answer": "Describe your audience, the problem they face, the outcome they want, your promise, mechanism, benefits, objections, available proof, offer terms, tone, and restrictions. The more specific and truthful your profile is, the more useful and consistent the adapted script can be."
-      },
-      "inventedInformation": {
-        "question": "Will it invent testimonials, guarantees, or results?",
-        "answer": "Kyrg Studio is designed to work only with the proof and offer details you provide and to flag important information that is still missing. Because every AI-assisted draft can require context and judgment, you should review claims, numbers, and commercial terms before publishing the final script."
+    },
+    "faq": {
+      "badge": "COMMON QUESTIONS",
+      "title": "Before you turn a reference into your next script.",
+      "description": "What copywriters and marketers usually want to know before analyzing or adapting a sales message.",
+      "items": {
+        "analysisAndAdaptation": {
+          "question": "What exactly do I get from Kyrg Studio?",
+          "answer": "Choose analysis to uncover the hook, structure, offer, persuasion, proof, objections, and weak points inside a sales message. Choose adaptation to use those insights as the strategic foundation for a new script built around your own offer."
+        },
+        "supportedFiles": {
+          "question": "Is adaptation the same as copying someone else's VSL?",
+          "answer": "No. Kyrg Studio studies how the reference builds its argument and persuasion, then applies that strategic logic to the audience, promise, proof, and constraints of your offer. The goal is a new script, not a reproduction of the original wording or claims."
+        },
+        "processing": {
+          "question": "Do I need to be an experienced copywriter to use it?",
+          "answer": "No. The result is organized so marketers, producers, and founders can understand the reasoning behind the message. Experienced copywriters can use it to accelerate research and diagnosis, while still applying their own judgment to the final copy."
+        },
+        "closeBrowser": {
+          "question": "How long does it take, and do I need to keep the page open?",
+          "answer": "Processing time varies with the length of the reference and the result you request. You do not need to watch the screen: after submitting the file, you can close the page and return later to see the result in your account."
+        },
+        "uploadedFile": {
+          "question": "What happens to the video or audio I upload?",
+          "answer": "The original media is used only while your analysis or adaptation is being processed. When processing finishes or cannot be completed, the uploaded file is removed. Your structured result remains available in your account."
+        },
+        "offerProfile": {
+          "question": "What should I provide to get a strong adaptation?",
+          "answer": "Describe your audience, the problem they face, the outcome they want, your promise, mechanism, benefits, objections, available proof, offer terms, tone, and restrictions. The more specific and truthful your profile is, the more useful and consistent the adapted script can be."
+        },
+        "inventedInformation": {
+          "question": "Will it invent testimonials, guarantees, or results?",
+          "answer": "Kyrg Studio is designed to work only with the proof and offer details you provide and to flag important information that is still missing. Because every AI-assisted draft can require context and judgment, you should review claims, numbers, and commercial terms before publishing the final script."
+        }
       }
+    },
+    "callToAction": {
+      "eyebrow": "YOUR NEXT REFERENCE CAN BECOME AN ACTIONABLE STRATEGY",
+      "title": "Stop guessing why a sales message works.",
+      "description": "Turn a reference video or audio file into a structured analysis and use the identified strategy to develop new copy for your offer.",
+      "createAccount": "Start Now",
+      "login": "Log in"
+    },
+    "footer": {
+      "description": "Creative intelligence for understanding and adapting direct-response copy from video and audio.",
+      "navigationLabel": "Footer navigation",
+      "meta": {
+        "analysis": "ANALYSIS",
+        "adaptation": "ADAPTATION",
+        "structuredOutput": "STRUCTURED OUTPUT"
+      },
+      "product": {
+        "title": "PRODUCT",
+        "preview": "Product preview",
+        "howItWorks": "How it works",
+        "features": "Features",
+        "faq": "FAQ"
+      },
+      "account": {
+        "title": "ACCOUNT",
+        "login": "Log in",
+        "createAccount": "Create account"
+      },
+      "copyright": "© {{year}} Kyrg Studio.",
+      "closingMessage": "Built for deliberate creative work."
     }
-  },
-  "callToAction": {
-    "eyebrow": "YOUR NEXT REFERENCE CAN BECOME AN ACTIONABLE STRATEGY",
-    "title": "Stop guessing why a sales message works.",
-    "description": "Turn a reference video or audio file into a structured analysis and use the identified strategy to develop new copy for your offer.",
-    "createAccount": "Start Now",
-    "login": "Log in"
-  },
-  "footer": {
-    "description": "Creative intelligence for understanding and adapting direct-response copy from video and audio.",
-    "navigationLabel": "Footer navigation",
-    "meta": {
-      "analysis": "ANALYSIS",
-      "adaptation": "ADAPTATION",
-      "structuredOutput": "STRUCTURED OUTPUT"
-    },
-    "product": {
-      "title": "PRODUCT",
-      "preview": "Product preview",
-      "howItWorks": "How it works",
-      "features": "Features",
-      "faq": "FAQ"
-    },
-    "account": {
-      "title": "ACCOUNT",
-      "login": "Log in",
-      "createAccount": "Create account"
-    },
-    "copyright": "© {{year}} Kyrg Studio.",
-    "closingMessage": "Built for deliberate creative work."
-  }
   },
   "auth": {
     "layout": {
       "backHome": "Back to home"
+    },
+    "login": {
+      "fields": {
+        "email": "Email",
+        "emailPlaceholder": "you@example.com",
+        "password": "Password",
+        "forgotPassword": "Forgot password?"
+      },
+      "actions": {
+        "submit": "Log in",
+        "loggingIn": "Logging in..."
+      },
+      "validation": {
+        "emailRequired": "Email is required.",
+        "emailTooLong": "Email is too long.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordMinimum": "Password must contain at least 8 characters.",
+        "passwordMaximum": "Password must contain at most 128 characters."
+      },
+      "errors": {
+        "heading": "Login failed",
+        "invalidCredentials": "Email or password is incorrect.",
+        "accountDisabled": "This account is currently disabled.",
+        "emailVerificationRequired": "Verify your email before logging in.",
+        "network": "We could not reach the server. Check your connection and try again.",
+        "generic": "Login could not be completed. Please try again."
+      }
+    },
+    "session": {
+      "restoring": "Restoring your session",
+      "expiredTitle": "Your session expired",
+      "expiredDescription": "Log in again to continue where you left off."
     },
     "register": {
       "title": "Create your account",
@@ -295,6 +348,71 @@
       "adaptation": "Copy adaptation"
     },
     "dateUnavailable": "Date unavailable",
+    "history": {
+      "page": {
+        "eyebrow": "Project library",
+        "title": "Project history",
+        "description": "Reopen finished work and follow projects that are still processing.",
+        "newProject": "New project"
+      },
+      "filters": {
+        "title": "Find a project",
+        "description": "Search by project number or narrow the history by status and type.",
+        "clear": "Clear filters",
+        "projectNumber": "Project number",
+        "projectNumberPlaceholder": "e.g. 142",
+        "search": "Search",
+        "status": "Status",
+        "projectType": "Project type",
+        "allStatuses": "All statuses",
+        "allProjectTypes": "All project types"
+      },
+      "status": {
+        "preparing": "Preparing",
+        "queued": "Queued",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed",
+        "unknown": "Unknown"
+      },
+      "list": {
+        "title": "Your projects",
+        "columns": {
+          "project": "Project",
+          "status": "Status",
+          "created": "Created",
+          "open": "Open"
+        }
+      },
+      "item": {
+        "ariaLabel": "{{pipeline}}, project {{id}}, {{status}}",
+        "viewResult": "View result",
+        "viewStatus": "View status"
+      },
+      "loading": {
+        "label": "Loading project history"
+      },
+      "error": {
+        "title": "Project history is temporarily unavailable",
+        "description": "We could not load your project history. Your saved work was not affected.",
+        "retry": "Try again"
+      },
+      "empty": {
+        "title": "No projects yet",
+        "description": "Your analyses and adaptations will be kept here so you can return to them later.",
+        "action": "Start a project"
+      },
+      "noResults": {
+        "title": "No matching projects",
+        "description": "Try changing or clearing the current search and filters."
+      },
+      "pagination": {
+        "ariaLabel": "Project history pages",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {{page}}"
+      }
+    },
     "active": {
       "title": "In progress",
       "description": "These projects keep running even when you leave this page.",
@@ -321,6 +439,306 @@
       "viewDetails": "View details"
     }
   },
+  "jobResult": {
+    "loading": {
+      "project": "Loading project",
+      "analysis": "Loading copy analysis",
+      "adaptation": "Loading adapted script"
+    },
+    "adaptation": {
+      "eyebrow": "Copy adaptation",
+      "title": "Adapted script",
+      "description": "Review the adapted script, refine its wording, and verify its evidence and production-readiness checks.",
+      "newJob": "Adapt another copy"
+    },
+    "actions": {
+      "returnToDashboard": "Return to dashboard",
+      "tryAgain": "Try again",
+      "viewStatus": "View processing status"
+    },
+    "resultTypes": {
+      "analysis": "analysis",
+      "adaptation": "adaptation"
+    },
+    "errors": {
+      "invalidAddress": {
+        "description": "The project address is invalid or no longer available."
+      },
+      "projectNotFound": {
+        "title": "Project not found",
+        "description": "This project does not exist or is not available to your account."
+      },
+      "notReady": {
+        "title": "Your result is still being prepared",
+        "description": "This project has not produced a completed result yet. Return to its status page while processing continues.",
+        "progressLabel": "Project is still processing",
+        "statusLabel": "Not ready yet"
+      },
+      "failed": {
+        "title": "Project did not complete",
+        "description": "This project stopped before producing a result. Open its status page for the public failure information."
+      },
+      "unavailable": {
+        "title": "Result unavailable",
+        "description": "This project does not currently have a result that can be displayed."
+      },
+      "invalidFormat": {
+        "title": "Result format is unavailable",
+        "description": "The completed project returned a {{resultType}} format this version of the application cannot display safely."
+      },
+      "load": {
+        "description": "We could not load this result. No internal error details were exposed."
+      }
+    }
+  },
+  "analysisResult": {
+    "page": {
+      "eyebrow": "Copy analysis",
+      "title": "Analysis result",
+      "description": "A structured reading of the message, offer, persuasion strategy, and improvement opportunities.",
+      "newJob": "Analyze another copy"
+    },
+    "common": {
+      "notIdentified": "Not identified"
+    },
+    "contentTypes": {
+      "video": "Video",
+      "audio": "Audio"
+    },
+    "overview": {
+      "eyebrow": "Analysis overview",
+      "title": "Strategy at a glance",
+      "mainHook": "Main hook",
+      "noMainHook": "No single dominant hook was identified.",
+      "details": {
+        "contentType": "Content type",
+        "language": "Language",
+        "dominantEmotion": "Dominant emotion",
+        "persuasionPattern": "Persuasion pattern"
+      }
+    },
+    "structure": {
+      "eyebrow": "Message anatomy",
+      "title": "Copy structure",
+      "description": "The sequence below shows how each part advances the sales argument.",
+      "empty": "No structural sections were identified in this copy.",
+      "fromTime": "From {{time}}"
+    },
+    "sections": {
+      "hook": "Hook",
+      "problem": "Problem",
+      "pain": "Pain",
+      "agitation": "Agitation",
+      "promise": "Promise",
+      "mechanism": "Mechanism",
+      "proof": "Proof",
+      "story": "Story",
+      "objection": "Objection",
+      "offer": "Offer",
+      "cta": "Call to action",
+      "urgency": "Urgency",
+      "scarcity": "Scarcity",
+      "transition": "Transition",
+      "education": "Education",
+      "payoff": "Payoff"
+    },
+    "narrative": {
+      "eyebrow": "Strategic progression",
+      "title": "Narrative flow",
+      "description": "How the message moves the audience from attention toward action.",
+      "empty": "No narrative progression was identified in this copy."
+    },
+    "offer": {
+      "eyebrow": "Offer decomposition",
+      "title": "What is being sold",
+      "details": {
+        "productOrSolution": "Product or solution",
+        "targetAudience": "Target audience",
+        "coreProblem": "Core problem",
+        "coreDesire": "Core desire",
+        "mainPromise": "Main promise",
+        "uniqueMechanism": "Unique mechanism",
+        "priceOrTerms": "Price and terms",
+        "callToAction": "Call to action"
+      },
+      "groups": {
+        "benefits": "Benefits",
+        "proof": "Proof",
+        "objections": "Objections addressed",
+        "bonuses": "Bonuses and extras",
+        "urgencyOrScarcity": "Urgency and scarcity"
+      }
+    },
+    "persuasion": {
+      "strength": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "notRated": "Not rated"
+      },
+      "scores": {
+        "eyebrow": "Persuasion diagnosis",
+        "title": "Overall effectiveness by element",
+        "description": "Qualitative ratings found by the analysis. These are not numerical conversion scores.",
+        "items": {
+          "hook": "Hook effectiveness",
+          "promiseClarity": "Promise clarity",
+          "proof": "Proof",
+          "urgency": "Urgency",
+          "callToAction": "Call to action"
+        }
+      },
+      "signals": {
+        "eyebrow": "Detected techniques",
+        "title": "Persuasion signals",
+        "empty": "No distinct persuasion signals were identified."
+      }
+    },
+    "weaknesses": {
+      "eyebrow": "Improvement opportunities",
+      "title": "Gaps and weaknesses",
+      "description": "Elements that may reduce clarity, credibility, desire, or conversion.",
+      "sectionLabel": "{{section}} section",
+      "structuralGap": "Structural gap",
+      "persuasionIssue": "Persuasion issue",
+      "empty": "No material structural gaps or persuasive weaknesses were identified.",
+      "gapTypes": {
+        "missing": "Missing",
+        "incomplete": "Incomplete",
+        "weak": "Weak"
+      }
+    },
+    "transcription": {
+      "eyebrow": "Source material",
+      "title": "Transcription",
+      "description": "Read the source text used to produce this analysis.",
+      "viewFull": "View full transcription",
+      "empty": "A public transcription is not available for this analysis."
+    }
+  },
+  "adaptationResult": {
+    "scriptEditor": {
+      "eyebrow": "Working draft",
+      "title": "Adapted script",
+      "description": "Refine the generated copy here. Changes remain in this browser tab and are not saved to your account yet.",
+      "localChanges": "Local changes",
+      "generatedVersion": "Generated version",
+      "draftWords": "Draft words",
+      "sections": "Sections",
+      "estimatedLength": "Estimated length",
+      "hookOptions": "Hook options",
+      "fullScript": "Full script",
+      "editedLocally": "Edited locally",
+      "noLocalEdits": "No local edits",
+      "editingNote": "Editing does not change the structured sections, validation or stored result.",
+      "resetDraft": "Reset draft",
+      "contextAriaLabel": "Script context",
+      "noHookOptions": "No separate hook options were generated.",
+      "primaryCallToAction": "Primary call to action",
+      "noPrimaryCallToAction": "No primary call to action was identified.",
+      "adaptationNotes": "Adaptation notes",
+      "noAdaptationNotes": "No additional adaptation notes were provided.",
+      "notEstimated": "Not estimated"
+    },
+    "scriptSections": {
+      "eyebrow": "Script architecture",
+      "title": "Section by section",
+      "description": "Open a section to inspect its copy, strategic role, source and production timing.",
+      "empty": "No structured script sections were generated.",
+      "adapted": "Adapted",
+      "original": "Original",
+      "sectionCopy": "Section copy",
+      "purpose": "Purpose",
+      "reference": "Reference",
+      "noReference": "Created without a matching reference section",
+      "proof": "Proof",
+      "requiresProof": "Requires proof before production",
+      "noProof": "No proof attached to this section",
+      "transition": "Transition",
+      "noTransition": "No transition note provided",
+      "timing": "Timing",
+      "wordCount_one": "{{count}} word",
+      "wordCount_other": "{{count}} words",
+      "durationUnavailable": "Duration unavailable",
+      "seconds_one": "{{count}} sec",
+      "seconds_other": "{{count}} sec",
+      "timingUnavailable": "Timing unavailable",
+      "fromTime": "From {{time}}"
+    },
+    "missingProofs": {
+      "eyebrow": "Evidence check",
+      "title": "Proof requirements",
+      "description": "Claims listed here need real evidence before the script is published or recorded.",
+      "count_one": "{{count}} missing",
+      "count_other": "{{count}} missing",
+      "noGapsFound": "No gaps found",
+      "empty": "The workflow did not identify any claim that requires additional proof.",
+      "warning": "Do not invent testimonials, numbers or outcomes. Replace the claim or provide verified evidence."
+    },
+    "validation": {
+      "eyebrow": "Quality control",
+      "title": "Production readiness",
+      "blockingIssues": "Blocking issues",
+      "warnings": "Warnings",
+      "resolveBeforeProduction": "Resolve before production",
+      "reviewBeforePublishing": "Review before publishing",
+      "noIssues": "No blocking errors or review warnings were returned for this script.",
+      "notAvailable": "Not available",
+      "unavailableDescription": "This result does not include a structured validation report. Review the script manually before publishing it.",
+      "location": "Location",
+      "recommendedAction": "Recommended action",
+      "sectionNumber": "Section {{order}}",
+      "entireScript": "Entire script",
+      "status": {
+        "needsRevision": "Needs revision",
+        "needsRevisionDescription": "Blocking issues were found. Revise these points before using the script.",
+        "manualReview": "Manual review",
+        "manualReviewDescription": "Validation did not pass. Review the returned notes and the complete script.",
+        "readyWithNotes": "Ready with notes",
+        "readyWithNotesDescription": "The script has no blocking errors, but the points below deserve review.",
+        "validationPassed": "Validation passed",
+        "validationPassedDescription": "The script passed every structured production-readiness check."
+      },
+      "correctionActions": {
+        "remove": "Remove the unsupported content",
+        "soften": "Soften the claim or wording",
+        "rewrite": "Rewrite the affected passage",
+        "shorten": "Shorten the affected content",
+        "expand": "Add the missing context",
+        "align_with_profile": "Align the content with the offer profile",
+        "custom": "Apply a manual correction"
+      },
+      "categories": {
+        "claim": "Claim",
+        "proof": "Proof",
+        "offer": "Offer",
+        "cta": "Call to action",
+        "scarcity": "Scarcity",
+        "duration": "Duration",
+        "language": "Language",
+        "structure": "Structure",
+        "copy_similarity": "Copy similarity",
+        "other": "Other"
+      }
+    },
+    "referenceAnalysis": {
+      "eyebrow": "Strategic source",
+      "referenceOnly": "Reference only",
+      "title": "Original copy analysis",
+      "viewReference": "View reference",
+      "contentType": "Content type",
+      "language": "Language",
+      "persuasionPattern": "Persuasion pattern",
+      "dominantEmotion": "Dominant emotion",
+      "referenceHook": "Reference hook",
+      "noDominantHook": "No dominant hook was identified.",
+      "offerReading": "Offer reading",
+      "persuasionReading": "Persuasion reading",
+      "referenceSequence": "Reference sequence",
+      "noSequence": "No structural sequence was identified in the reference.",
+      "footer": "Use this analysis to understand the strategic pattern. The adapted script should preserve the logic, not copy the original wording or unsupported claims."
+    }
+  },
   "appNavigation": {
     "ariaLabel": "Application navigation",
     "dashboard": "Dashboard",
@@ -342,6 +760,20 @@
       "title": "Create a new analysis",
       "description": "Upload a sales video or audio file, then choose whether to analyze the reference or adapt its strategy to your offer."
     },
+    "pipeline": {
+      "title": "What do you want to create?",
+      "description": "Choose whether you only want to study the reference or also transform its strategy into a new script.",
+      "options": {
+        "analysis": {
+          "label": "Analyze a copy",
+          "description": "Understand the structure, offer, persuasion, and strategy used in an existing sales message."
+        },
+        "adaptation": {
+          "label": "Adapt a copy",
+          "description": "Analyze a reference and create a new script grounded in your product, audience, and offer."
+        }
+      }
+    },
     "form": {
       "draft": {
         "defaultMessage": "Save a draft manually to continue later on this device.",
@@ -358,6 +790,394 @@
         "continue": "Continue",
         "submit": "Submit project",
         "submitting": "Submitting..."
+      }
+    },
+    "file": {
+      "title": "Select your reference file",
+      "description": "Upload the video or audio containing the copy you want to analyze.",
+      "dropzone": {
+        "title": "Drag your video or audio here",
+        "description": "Or select a file from your device. Maximum size: {{maxSize}}."
+      },
+      "actions": {
+        "select": "Select file",
+        "replace": "Replace",
+        "remove": "Remove"
+      },
+      "validation": {
+        "missingFilename": "The selected file must have a name.",
+        "emptyFile": "The selected file is empty.",
+        "unsupportedMediaType": "Select a supported video or audio file.",
+        "fileTooLarge": "The file must be smaller than {{maxSize}}."
+      }
+    },
+    "uploadProgress": {
+      "title": "Uploading reference file",
+      "label": "File upload progress"
+    },
+    "steps": {
+      "pipeline": "Project type",
+      "file": "Reference",
+      "settings": "Settings",
+      "profile": "Offer profile",
+      "review": "Review"
+    },
+    "settings": {
+      "title": "Configure the transcription",
+      "description": "Tell us the original language and whether the transcript should receive an additional correction pass.",
+      "language": {
+        "label": "Original language",
+        "hint": "Automatic detection works well when the recording uses one main language.",
+        "options": {
+          "auto": "Detect automatically",
+          "pt": "Portuguese",
+          "en": "English",
+          "es": "Spanish"
+        }
+      },
+      "correction": {
+        "label": "Correct the transcript",
+        "hint": "Adds a correction step for recordings with transcription mistakes. Processing may take longer."
+      }
+    },
+    "profile": {
+      "title": "Describe your offer",
+      "description": "Provide accurate information so the adapted script remains grounded in your real product, audience, and available evidence."
+    },
+    "submission": {
+      "cancelUpload": "Cancel upload",
+      "actions": {
+        "retry": "Try again",
+        "review": "Review project"
+      },
+      "errors": {
+        "uploadTooLarge": {
+          "title": "File is too large",
+          "description": "Select a smaller file before trying again."
+        },
+        "unsupportedMediaType": {
+          "title": "File type is not supported",
+          "description": "Select one of the supported video or audio formats."
+        },
+        "invalidInput": {
+          "title": "Review the project information",
+          "description": "Some submitted information is missing or invalid."
+        },
+        "network": {
+          "title": "Connection interrupted",
+          "description": "Check your connection and try sending the project again."
+        },
+        "sessionExpired": {
+          "title": "Your session expired",
+          "description": "Sign in again before submitting this project."
+        },
+        "serviceUnavailable": {
+          "title": "Service temporarily unavailable",
+          "description": "The project could not be saved right now. Try again shortly."
+        },
+        "default": {
+          "title": "Project could not be submitted",
+          "description": "Review the information or try again in a few moments."
+        }
+      }
+    },
+    "review": {
+      "title": "Review your project",
+      "description": "Confirm the information below before submitting the file for processing.",
+      "edit": "Edit",
+      "sections": {
+        "projectType": "Project type",
+        "referenceFile": "Reference file",
+        "transcriptionSettings": "Transcription settings",
+        "offerProfile": "Offer profile"
+      },
+      "labels": {
+        "pipeline": "Pipeline",
+        "file": "File",
+        "size": "Size",
+        "mediaType": "Media type",
+        "originalLanguage": "Original language",
+        "transcriptCorrection": "Transcript correction",
+        "productOrSolution": "Product or solution",
+        "targetAudience": "Target audience",
+        "mainProblem": "Main problem",
+        "mainPromise": "Main promise",
+        "platform": "Platform",
+        "desiredDuration": "Desired duration",
+        "benefits": "Benefits",
+        "objections": "Objections",
+        "proofAssets": "Proof assets",
+        "restrictions": "Restrictions"
+      },
+      "pipeline": {
+        "analysis": "Copy analysis",
+        "adaptation": "Copy adaptation"
+      },
+      "media": {
+        "video": "Video",
+        "audio": "Audio"
+      },
+      "boolean": {
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "empty": {
+        "file": "No file selected",
+        "notAvailable": "Not available",
+        "notSpecified": "Not specified"
+      },
+      "durationMinutes_one": "{{count}} minute",
+      "durationMinutes_other": "{{count}} minutes"
+    },
+    "validation": {
+      "fileRequired": "Select a video or audio file."
+    }
+  },
+  "userProfile": {
+    "productOffer": {
+      "title": "Product and offer",
+      "description": "Explain clearly what you sell and what result it helps the customer achieve.",
+      "product": {
+        "label": "What product or solution are you offering?",
+        "description": "Include the type of product, its purpose, and the transformation it provides.",
+        "placeholder": "Example: An online English conversation course for Brazilian adults."
+      }
+    },
+    "audienceProblem": {
+      "title": "Audience and problem",
+      "description": "Describe the person this message should reach and the main problem they are trying to solve.",
+      "audience": {
+        "label": "Who is the target audience?",
+        "description": "Include relevant characteristics, context, experience, and current situation.",
+        "placeholder": "Example: Brazilian adults who understand English but freeze when speaking."
+      },
+      "problem": {
+        "label": "What is their main problem?",
+        "description": "Focus on the most important difficulty the offer addresses.",
+        "placeholder": "Example: They have studied for years but cannot speak naturally in real situations."
+      }
+    },
+    "desirePromise": {
+      "title": "Desire and promise",
+      "description": "Define what the audience wants and what your offer can responsibly promise.",
+      "desire": {
+        "label": "What does the audience most want?",
+        "description": "Describe the result, feeling, or situation the audience wants to reach.",
+        "placeholder": "Example: Speak English confidently in everyday and professional situations."
+      },
+      "promise": {
+        "label": "What is the main promise?",
+        "description": "Use a realistic promise that your product can support without exaggeration.",
+        "placeholder": "Example: Build the confidence and practical ability needed for real conversations."
+      }
+    },
+    "mechanism": {
+      "title": "Unique mechanism",
+      "description": "Explain what makes the approach different and why it may work better for this audience.",
+      "field": {
+        "label": "How does your solution work?",
+        "description": "This field is optional. Describe a real method, process, framework, or differentiator without inventing claims.",
+        "placeholder": "Example: Conversation practice based on situations the student encounters in everyday life."
+      }
+    },
+    "benefits": {
+      "title": "Benefits",
+      "description": "Add the most important practical or emotional benefits provided by the offer.",
+      "list": {
+        "label": "What benefits can the customer expect?",
+        "description": "Use one clear benefit per item. Avoid promises that the product cannot support.",
+        "itemLabel": "Describe a benefit",
+        "add": "Add benefit"
+      }
+    },
+    "objections": {
+      "title": "Objections",
+      "description": "List the doubts, fears, or reasons that may stop the audience from taking action.",
+      "list": {
+        "label": "What objections does the audience have?",
+        "description": "Use one objection per item and write it from the customer's perspective.",
+        "itemLabel": "Describe an objection",
+        "add": "Add objection"
+      }
+    },
+    "proofAssets": {
+      "title": "Available proof",
+      "description": "Add only evidence that already exists and can be verified. The adaptation must not invent testimonials, numbers, or results.",
+      "list": {
+        "label": "What evidence supports the offer?",
+        "description": "Examples include real testimonials, case studies, demonstrations, credentials, or documented results.",
+        "itemLabel": "Describe available proof",
+        "add": "Add proof"
+      }
+    },
+    "offerTerms": {
+      "title": "Price and conditions",
+      "description": "Describe the real commercial details that the adapted message may present.",
+      "field": {
+        "label": "What are the offer details?",
+        "description": "This field is optional. Include price, payment terms, access period, bonuses, guarantees, or relevant conditions.",
+        "placeholder": "Example: Twelve months of access, payment in up to 12 installments, and a seven-day guarantee."
+      }
+    },
+    "callToAction": {
+      "title": "Call to action",
+      "description": "Explain clearly what the audience should do after watching or listening to the adapted message.",
+      "field": {
+        "label": "What action should the audience take?",
+        "description": "Use a specific action that matches the real purchasing or contact process.",
+        "placeholder": "Example: Click the button to learn more about the course and enroll."
+      }
+    },
+    "toneLanguage": {
+      "title": "Tone and output language",
+      "description": "Define the intended voice of the adapted copy and the language of the final script.",
+      "tone": {
+        "label": "What tone should the copy use?",
+        "description": "Describe the desired communication style using a few clear characteristics.",
+        "placeholder": "Example: Direct, welcoming, confident, and conversational."
+      },
+      "language": {
+        "label": "What language should the final script use?",
+        "description": "Use a language or locale such as English, Portuguese, pt-BR, or es-MX.",
+        "placeholder": "Example: pt-BR"
+      }
+    },
+    "platformDuration": {
+      "title": "Platform and duration",
+      "description": "Define where the copy will be used and the approximate length of the final script.",
+      "platform": {
+        "label": "Where will this copy be used?",
+        "description": "Examples include Instagram, YouTube, a sales page, webinar, or paid advertisement.",
+        "placeholder": "Example: Instagram"
+      },
+      "duration": {
+        "label": "Desired duration in minutes",
+        "placeholder": "Example: 2",
+        "hint": "Use decimal values when needed, such as 1.5 for one minute and thirty seconds."
+      }
+    },
+    "restrictions": {
+      "title": "Restrictions",
+      "description": "Define the boundaries the adapted script must respect.",
+      "list": {
+        "label": "What must the adapted copy avoid?",
+        "description": "Add prohibited promises, unsupported claims, sensitive topics, words, or approaches that should not appear.",
+        "itemLabel": "Describe a restriction",
+        "add": "Add restriction"
+      }
+    },
+    "repeatable": {
+      "empty": "No items added yet.",
+      "remove": "Remove",
+      "removeItem": "Remove {{itemLabel}} {{number}}"
+    },
+    "validation": {
+      "listItemRequired": "List items cannot be empty.",
+      "productOrSolutionRequired": "Describe the product or solution.",
+      "targetAudienceRequired": "Describe the target audience.",
+      "coreProblemRequired": "Describe the main problem.",
+      "coreDesireRequired": "Describe the audience's main desire.",
+      "mainPromiseRequired": "Describe the main promise.",
+      "callToActionRequired": "Describe the desired call to action.",
+      "desiredDurationPositive": "Duration must be greater than zero."
+    }
+  },
+  "jobStatus": {
+    "page": {
+      "eyebrow": "Project status"
+    },
+    "loading": "Loading project status",
+    "actions": {
+      "returnToDashboard": "Return to dashboard",
+      "retry": "Try again",
+      "refresh": "Refresh status",
+      "startAnother": "Start another project"
+    },
+    "invalid": {
+      "title": "Project not found",
+      "description": "The project address is invalid or no longer available."
+    },
+    "notFound": {
+      "title": "Project not found",
+      "description": "This project does not exist or is not available to your account."
+    },
+    "unavailable": {
+      "title": "Status unavailable",
+      "description": "We could not load the latest project status."
+    },
+    "unknown": {
+      "description": "The project returned a status this version of the application does not recognize."
+    },
+    "reconnecting": {
+      "title": "Reconnecting",
+      "description": "The last known status is shown while we reconnect to the server."
+    },
+    "panel": {
+      "projectNumber": "Project #{{id}}",
+      "status": {
+        "uploaded": {
+          "badge": "Waiting to start",
+          "title": "Your project is in line",
+          "description": "The file was received successfully. Processing will begin as soon as a worker is available."
+        },
+        "running": {
+          "badge": "Processing",
+          "title": "We are analyzing your reference",
+          "description": "The transcription and copy analysis are running in the background. You can close this page and return later."
+        },
+        "completed": {
+          "badge": "Completed",
+          "title": "Your result is ready",
+          "description": "Processing finished successfully. We are opening the result now."
+        },
+        "failed": {
+          "badge": "Processing stopped",
+          "title": "We could not complete this project",
+          "description": "The project stopped before a result was produced. Your account and other projects were not affected."
+        }
+      },
+      "pipeline": {
+        "analysis": "Copy analysis",
+        "adaptation": "Copy adaptation"
+      },
+      "details": {
+        "projectType": "Project type",
+        "created": "Created",
+        "elapsedTime": "Elapsed time"
+      },
+      "empty": {
+        "notAvailable": "Not available",
+        "inProgress": "In progress"
+      },
+      "elapsed": {
+        "seconds_one": "{{count}} second",
+        "seconds_other": "{{count}} seconds",
+        "minutesSeconds": "{{minutes}}m {{seconds}}s"
+      },
+      "failures": {
+        "mediaProcessingFailed": "The uploaded media could not be read or prepared for analysis.",
+        "transcriptionFailed": "We could not produce a usable transcription from this reference.",
+        "structuredOutputFailed": "The analysis service could not produce a valid result for this project.",
+        "storageError": "The reference file became unavailable while the project was processing.",
+        "timeout": "Processing took longer than the allowed time and was stopped."
+      }
+    },
+    "timeline": {
+      "ariaLabel": "Project progress",
+      "failedStepDescription": "Processing stopped before this stage could finish.",
+      "steps": {
+        "fileReceived": {
+          "title": "File received",
+          "description": "Your reference is safely attached to this project."
+        },
+        "processing": {
+          "title": "Processing",
+          "description": "We transcribe and examine the sales message."
+        },
+        "resultReady": {
+          "title": "Result ready",
+          "description": "Your analysis or adapted script is available."
+        }
       }
     }
   }

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 
 import { ApiError, type PasswordLoginRequest } from '@/shared/api'
@@ -16,6 +18,16 @@ import {
   type LoginFormInput,
 } from '../schemas/auth-schemas'
 
+const validationTranslationKeys: Readonly<Record<string, string>> = {
+  'Email is required.': 'auth.login.validation.emailRequired',
+  'Email is too long.': 'auth.login.validation.emailTooLong',
+  'Enter a valid email address.': 'auth.login.validation.emailInvalid',
+  'Password must contain at least 8 characters.':
+    'auth.login.validation.passwordMinimum',
+  'Password must contain at most 128 characters.':
+    'auth.login.validation.passwordMaximum',
+}
+
 export interface LoginFormProps {
   readonly onSuccess: () => void
 }
@@ -24,6 +36,7 @@ export interface LoginFormProps {
  * Validates credentials and starts an authenticated application session.
  */
 export function LoginForm({ onSuccess }: LoginFormProps) {
+  const { t } = useTranslation()
   const { loginWithPassword } = useAuth()
   const [submissionError, setSubmissionError] = useState<string | null>(null)
 
@@ -51,20 +64,20 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       await loginWithPassword(request)
       onSuccess()
     } catch (error) {
-      setSubmissionError(loginErrorMessage(error))
+      setSubmissionError(loginErrorMessage(error, t))
     }
   }
 
   return (
     <form className="space-y-5" noValidate onSubmit={handleSubmit(submitLogin)}>
       {submissionError !== null ? (
-        <Alert heading="Login failed" variant="danger">
+        <Alert heading={t('auth.login.errors.heading')} variant="danger">
           {submissionError}
         </Alert>
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="login-email">Email</Label>
+        <Label htmlFor="login-email">{t('auth.login.fields.email')}</Label>
         <Input
           {...register('email')}
           aria-describedby={errors.email ? 'login-email-error' : undefined}
@@ -73,21 +86,23 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           disabled={isSubmitting}
           id="login-email"
           inputMode="email"
-          placeholder="you@example.com"
+          placeholder={t('auth.login.fields.emailPlaceholder')}
           type="email"
         />
         {errors.email ? (
           <FieldMessage id="login-email-error" variant="error">
-            {errors.email.message}
+            {validationErrorMessage(errors.email.message, t)}
           </FieldMessage>
         ) : null}
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="login-password">Password</Label>
+          <Label htmlFor="login-password">
+            {t('auth.login.fields.password')}
+          </Label>
           <span className="text-body-sm text-text-subtle">
-            Forgot password?
+            {t('auth.login.fields.forgotPassword')}
           </span>
         </div>
 
@@ -102,7 +117,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         />
         {errors.password ? (
           <FieldMessage id="login-password-error" variant="error">
-            {errors.password.message}
+            {validationErrorMessage(errors.password.message, t)}
           </FieldMessage>
         ) : null}
       </div>
@@ -110,34 +125,47 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       <Button
         className="w-full"
         isLoading={isSubmitting}
-        loadingContent="Logging in..."
+        loadingContent={t('auth.login.actions.loggingIn')}
         type="submit"
       >
-        Log in
+        {t('auth.login.actions.submit')}
       </Button>
     </form>
   )
 }
 
-function loginErrorMessage(error: unknown): string {
+function validationErrorMessage(
+  message: string | undefined,
+  t: TFunction,
+): string {
+  if (message === undefined) {
+    return t('auth.login.errors.generic')
+  }
+
+  const translationKey = validationTranslationKeys[message]
+
+  return translationKey !== undefined ? t(translationKey) : message
+}
+
+function loginErrorMessage(error: unknown, t: TFunction): string {
   if (error instanceof ApiError && error.code === 'invalid_credentials') {
-    return 'Email or password is incorrect.'
+    return t('auth.login.errors.invalidCredentials')
   }
 
   if (error instanceof ApiError && error.code === 'account_disabled') {
-    return 'This account is currently disabled.'
+    return t('auth.login.errors.accountDisabled')
   }
 
   if (
     error instanceof ApiError &&
     error.code === 'email_verification_required'
   ) {
-    return 'Verify your email before logging in.'
+    return t('auth.login.errors.emailVerificationRequired')
   }
 
   if (error instanceof ApiError && error.status === null) {
-    return 'We could not reach the server. Check your connection and try again.'
+    return t('auth.login.errors.network')
   }
 
-  return 'Login could not be completed. Please try again.'
+  return t('auth.login.errors.generic')
 }

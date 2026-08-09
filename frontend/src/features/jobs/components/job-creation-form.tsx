@@ -1,4 +1,10 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,7 +21,7 @@ import { Button } from '@/shared/ui/button'
 import type { JobFormNavigation } from '../hooks/use-job-form-navigation'
 import { useJobFormNavigation } from '../hooks/use-job-form-navigation'
 import {
-  jobCreationSchema,
+  createJobCreationSchema,
   type JobCreationData,
   type JobCreationFormInput,
   type PipelineType,
@@ -50,6 +56,29 @@ export function JobCreationForm({
   onSubmit,
 }: JobCreationFormProps) {
   const { t } = useTranslation()
+  const translatedJobCreationSchema = useMemo(
+    () =>
+      createJobCreationSchema({
+        fileRequired: t('newJob.validation.fileRequired'),
+        userProfile: {
+          listItemRequired: t('userProfile.validation.listItemRequired'),
+          productOrSolutionRequired: t(
+            'userProfile.validation.productOrSolutionRequired',
+          ),
+          targetAudienceRequired: t(
+            'userProfile.validation.targetAudienceRequired',
+          ),
+          coreProblemRequired: t('userProfile.validation.coreProblemRequired'),
+          coreDesireRequired: t('userProfile.validation.coreDesireRequired'),
+          mainPromiseRequired: t('userProfile.validation.mainPromiseRequired'),
+          callToActionRequired: t('userProfile.validation.callToActionRequired'),
+          desiredDurationPositive: t(
+            'userProfile.validation.desiredDurationPositive',
+          ),
+        },
+      }),
+    [t],
+  )
   const [initialDraft] = useState<JobFormDraft | null>(() => {
     const savedDraft = loadJobFormDraft(draftOwnerId)
 
@@ -62,7 +91,7 @@ export function JobCreationForm({
   )
 
   const form = useForm<JobCreationFormInput, unknown, JobCreationData>({
-    resolver: zodResolver(jobCreationSchema),
+    resolver: zodResolver(translatedJobCreationSchema),
     defaultValues: createInitialValues(initialPipelineType, initialDraft),
     shouldUnregister: false,
   })

@@ -17,37 +17,37 @@ export type JobFormField =
 
 export interface JobFormStep {
   readonly id: JobFormStepId
-  readonly label: string
+  readonly labelKey: string
   readonly fields: readonly JobFormField[]
 }
 
 const PIPELINE_STEP: JobFormStep = {
   id: 'pipeline',
-  label: 'Project type',
+  labelKey: 'newJob.steps.pipeline',
   fields: ['pipeline_type'],
 }
 
 const FILE_STEP: JobFormStep = {
   id: 'file',
-  label: 'Reference',
+  labelKey: 'newJob.steps.file',
   fields: ['file', 'source_type'],
 }
 
 const SETTINGS_STEP: JobFormStep = {
   id: 'settings',
-  label: 'Settings',
+  labelKey: 'newJob.steps.settings',
   fields: ['language', 'need_correction'],
 }
 
 const PROFILE_STEP: JobFormStep = {
   id: 'profile',
-  label: 'Offer profile',
+  labelKey: 'newJob.steps.profile',
   fields: ['user_profile'],
 }
 
 const REVIEW_STEP: JobFormStep = {
   id: 'review',
-  label: 'Review',
+  labelKey: 'newJob.steps.review',
   fields: [],
 }
 

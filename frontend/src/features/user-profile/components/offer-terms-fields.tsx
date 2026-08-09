@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { ProfileTextField } from './profile-text-field'
 
 /**
@@ -5,6 +7,8 @@ import { ProfileTextField } from './profile-text-field'
  * copy.
  */
 export function OfferTermsFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="offer-details-heading"
@@ -15,20 +19,19 @@ export function OfferTermsFields() {
           className="font-heading text-heading-sm text-text"
           id="offer-details-heading"
         >
-          Price and conditions
+          {t('userProfile.offerTerms.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Describe the real commercial details that the adapted message may
-          present.
+          {t('userProfile.offerTerms.description')}
         </p>
       </div>
 
       <ProfileTextField
-        description="This field is optional. Include price, payment terms, access period, bonuses, guarantees, or relevant conditions."
-        label="What are the offer details?"
+        description={t('userProfile.offerTerms.field.description')}
+        label={t('userProfile.offerTerms.field.label')}
         name="user_profile.offer_details"
-        placeholder="Example: Twelve months of access, payment in up to 12 installments, and a seven-day guarantee."
+        placeholder={t('userProfile.offerTerms.field.placeholder')}
       />
     </section>
   )

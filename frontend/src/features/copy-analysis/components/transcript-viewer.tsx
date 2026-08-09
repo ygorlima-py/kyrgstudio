@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import type { NormalizedTranscription } from '../utils/normalize-analysis-result'
 
 export interface TranscriptViewerProps {
@@ -6,26 +8,28 @@ export interface TranscriptViewerProps {
 
 /** Present the public transcription in a collapsible, long-form reading area. */
 export function TranscriptViewer({ transcription }: TranscriptViewerProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="transcript-heading">
       <div>
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Source material
+          {t('analysisResult.transcription.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="transcript-heading">
-          Transcription
+          {t('analysisResult.transcription.title')}
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">
-          Read the source text used to produce this analysis.
+          {t('analysisResult.transcription.description')}
         </p>
       </div>
 
       {transcription ? (
         <details className="group mt-6 border-y border-border">
           <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-label text-text focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus [&::-webkit-details-marker]:hidden">
-            <span>View full transcription</span>
+            <span>{t('analysisResult.transcription.viewFull')}</span>
             <span className="flex items-center gap-3">
               {transcription.language ? (
                 <span className="font-mono text-meta uppercase text-text-subtle">
@@ -44,7 +48,7 @@ export function TranscriptViewer({ transcription }: TranscriptViewerProps) {
         </details>
       ) : (
         <p className="mt-6 border-y border-border py-7 text-body text-text-muted">
-          A public transcription is not available for this analysis.
+          {t('analysisResult.transcription.empty')}
         </p>
       )}
     </section>

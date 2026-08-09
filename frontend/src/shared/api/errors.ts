@@ -1,8 +1,10 @@
 import { isAxiosError, isCancel } from 'axios'
 
+import { i18n } from '@/shared/i18n/i18n'
+
 import type { ApiErrorResponse } from './types'
 
-const GENERIC_REQUEST_MESSAGE = 'The request could not be completed.'
+const GENERIC_REQUEST_MESSAGE_KEY = 'shared.api.genericRequestError'
 
 interface ApiErrorOptions {
   code: string
@@ -26,7 +28,7 @@ export class ApiError extends Error {
   readonly retryable: boolean
 
   constructor(options: ApiErrorOptions) {
-    super(GENERIC_REQUEST_MESSAGE)
+    super(i18n.t(GENERIC_REQUEST_MESSAGE_KEY))
 
     this.name = 'ApiError'
     this.code = options.code

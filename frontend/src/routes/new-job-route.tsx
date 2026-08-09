@@ -103,7 +103,7 @@ export function NewJobRoute() {
             type="button"
             variant="ghost"
           >
-            Cancel upload
+            {t('newJob.submission.cancelUpload')}
           </Button>
         </div>
       ) : null}
@@ -124,6 +124,8 @@ export function NewJobRoute() {
  * Composes the independent offer-profile groups used only by adaptation jobs.
  */
 function UserProfileStep() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="user-profile-heading"
@@ -134,12 +136,11 @@ function UserProfileStep() {
           className="font-heading text-heading-md text-text"
           id="user-profile-heading"
         >
-          Describe your offer
+          {t('newJob.profile.title')}
         </h2>
 
         <p className="max-w-2xl text-body text-text-muted">
-          Provide accurate information so the adapted script remains grounded
-          in your real product, audience, and available evidence.
+          {t('newJob.profile.description')}
         </p>
       </div>
 
@@ -172,6 +173,7 @@ function JobSubmissionError({
   onDismiss,
   onRetry,
 }: JobSubmissionErrorProps) {
+  const { t } = useTranslation()
   const message = getSubmissionErrorMessage(error.code)
 
   return (
@@ -185,7 +187,7 @@ function JobSubmissionError({
               }}
               type="button"
             >
-              Try again
+              {t('newJob.submission.actions.retry')}
             </Button>
           ) : null}
 
@@ -194,19 +196,19 @@ function JobSubmissionError({
             type="button"
             variant="ghost"
           >
-            Review project
+            {t('newJob.submission.actions.review')}
           </Button>
         </>
       }
-      description={message.description}
-      title={message.title}
+      description={t(message.descriptionKey)}
+      title={t(message.titleKey)}
     />
   )
 }
 
 interface SubmissionErrorMessage {
-  readonly title: string
-  readonly description: string
+  readonly titleKey: string
+  readonly descriptionKey: string
 }
 
 function getSubmissionErrorMessage(
@@ -215,55 +217,48 @@ function getSubmissionErrorMessage(
   switch (errorCode) {
     case 'upload_too_large':
       return {
-        title: 'File is too large',
-        description:
-          'Select a smaller file before trying again.',
+        titleKey: 'newJob.submission.errors.uploadTooLarge.title',
+        descriptionKey: 'newJob.submission.errors.uploadTooLarge.description',
       }
 
     case 'unsupported_media_type':
       return {
-        title: 'File type is not supported',
-        description:
-          'Select one of the supported video or audio formats.',
+        titleKey: 'newJob.submission.errors.unsupportedMediaType.title',
+        descriptionKey: 'newJob.submission.errors.unsupportedMediaType.description',
       }
 
     case 'invalid_input':
       return {
-        title: 'Review the project information',
-        description:
-          'Some submitted information is missing or invalid.',
+        titleKey: 'newJob.submission.errors.invalidInput.title',
+        descriptionKey: 'newJob.submission.errors.invalidInput.description',
       }
 
     case 'network_error':
       return {
-        title: 'Connection interrupted',
-        description:
-          'Check your connection and try sending the project again.',
+        titleKey: 'newJob.submission.errors.network.title',
+        descriptionKey: 'newJob.submission.errors.network.description',
       }
 
     case 'authentication_required':
     case 'invalid_token':
     case 'refresh_token_invalid':
       return {
-        title: 'Your session expired',
-        description:
-          'Sign in again before submitting this project.',
+        titleKey: 'newJob.submission.errors.sessionExpired.title',
+        descriptionKey: 'newJob.submission.errors.sessionExpired.description',
       }
 
     case 'storage_error':
     case 'store_error':
     case 'job_store_error':
       return {
-        title: 'Service temporarily unavailable',
-        description:
-          'The project could not be saved right now. Try again shortly.',
+        titleKey: 'newJob.submission.errors.serviceUnavailable.title',
+        descriptionKey: 'newJob.submission.errors.serviceUnavailable.description',
       }
 
     default:
       return {
-        title: 'Project could not be submitted',
-        description:
-          'Review the information or try again in a few moments.',
+        titleKey: 'newJob.submission.errors.default.title',
+        descriptionKey: 'newJob.submission.errors.default.description',
       }
   }
 }

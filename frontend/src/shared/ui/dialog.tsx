@@ -2,6 +2,7 @@ import type { ComponentPropsWithRef, HTMLAttributes } from 'react'
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 
+import { i18n } from '@/shared/i18n/i18n'
 import { cn } from '@/shared/utils/class-names'
 
 export type DialogProps = ComponentPropsWithRef<typeof DialogPrimitive.Root>
@@ -57,7 +58,7 @@ export function DialogContent({ children, className, ...contentProps }: DialogCo
       >
         {children}
         <DialogPrimitive.Close
-          aria-label="Close dialog"
+          aria-label={i18n.t('shared.ui.dialog.close')}
           className={cn(
             'absolute top-4 right-4 inline-flex size-9 items-center justify-center',
             'rounded-md text-text-muted',

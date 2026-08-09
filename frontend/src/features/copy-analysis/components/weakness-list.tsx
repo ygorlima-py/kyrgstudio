@@ -1,3 +1,6 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 
 import type {
@@ -12,21 +15,22 @@ export interface WeaknessListProps {
 
 /** Combine structural gaps and persuasive risks into one actionable diagnosis. */
 export function WeaknessList({ gaps, weaknesses }: WeaknessListProps) {
+  const { t } = useTranslation()
   const hasFindings = gaps.length > 0 || weaknesses.length > 0
 
   return (
     <section aria-labelledby="weakness-list-heading">
       <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Improvement opportunities
+          {t('analysisResult.weaknesses.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="weakness-list-heading">
-          Gaps and weaknesses
+          {t('analysisResult.weaknesses.title')}
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">
-          Elements that may reduce clarity, credibility, desire, or conversion.
+          {t('analysisResult.weaknesses.description')}
         </p>
       </div>
 
@@ -35,13 +39,17 @@ export function WeaknessList({ gaps, weaknesses }: WeaknessListProps) {
           {gaps.map((gap, index) => (
             <article className="py-6" key={`gap-${gap.sectionType}-${index}`}>
               <div className="flex flex-wrap items-center gap-3">
-                <Badge variant={gapVariant(gap.gapType)}>{formatLabel(gap.gapType)}</Badge>
+                <Badge variant={gapVariant(gap.gapType)}>{formatGapType(gap.gapType, t)}</Badge>
                 <p className="font-mono text-meta uppercase tracking-[0.08em] text-text-subtle">
-                  {formatSectionLabel(gap.sectionType)} section
+                  {t('analysisResult.weaknesses.sectionLabel', {
+                    section: formatSectionLabel(gap.sectionType, t),
+                  })}
                 </p>
               </div>
 
-              <h3 className="mt-3 text-body-lg font-semibold text-text">Structural gap</h3>
+              <h3 className="mt-3 text-body-lg font-semibold text-text">
+                {t('analysisResult.weaknesses.structuralGap')}
+              </h3>
               <p className="mt-1 max-w-3xl text-body text-text-muted">{gap.reason}</p>
             </article>
           ))}
@@ -52,7 +60,7 @@ export function WeaknessList({ gaps, weaknesses }: WeaknessListProps) {
         </div>
       ) : (
         <p className="border-b border-border py-7 text-body text-text-muted">
-          No material structural gaps or persuasive weaknesses were identified.
+          {t('analysisResult.weaknesses.empty')}
         </p>
       )}
     </section>
@@ -60,9 +68,11 @@ export function WeaknessList({ gaps, weaknesses }: WeaknessListProps) {
 }
 
 function WeaknessItem({ weakness }: { readonly weakness: NormalizedPersuasionWeakness }) {
+  const { t } = useTranslation()
+
   return (
     <article className="py-6">
-      <Badge variant="warning">Persuasion issue</Badge>
+      <Badge variant="warning">{t('analysisResult.weaknesses.persuasionIssue')}</Badge>
       <h3 className="mt-3 text-body-lg font-semibold text-text">{weakness.issue}</h3>
       <p className="mt-1 max-w-3xl text-body text-text-muted">{weakness.impact}</p>
 
@@ -79,12 +89,10 @@ function gapVariant(value: NormalizedSectionGap['gapType']): 'danger' | 'warning
   return value === 'missing' ? 'danger' : 'warning'
 }
 
-function formatSectionLabel(value: NormalizedSectionGap['sectionType']): string {
-  if (value === 'cta') return 'Call to action'
-  return formatLabel(value)
+function formatGapType(value: NormalizedSectionGap['gapType'], t: TFunction): string {
+  return t(`analysisResult.weaknesses.gapTypes.${value}`)
 }
 
-function formatLabel(value: string): string {
-  const normalizedValue = value.trim().replaceAll(/[_-]+/g, ' ')
-  return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
+function formatSectionLabel(value: NormalizedSectionGap['sectionType'], t: TFunction): string {
+  return t(`analysisResult.sections.${value}`)
 }

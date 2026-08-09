@@ -1,5 +1,16 @@
 import { z } from 'zod'
 
+export interface UserProfileValidationMessages {
+  readonly listItemRequired: string
+  readonly productOrSolutionRequired: string
+  readonly targetAudienceRequired: string
+  readonly coreProblemRequired: string
+  readonly coreDesireRequired: string
+  readonly mainPromiseRequired: string
+  readonly callToActionRequired: string
+  readonly desiredDurationPositive: string
+}
+
 function requiredText(message: string) {
   return z.string().trim().min(1, message)
 }
@@ -10,31 +21,33 @@ const optionalText = z
   .transform((value) => (value.length > 0 ? value : undefined))
   .optional()
 
-const textList = z
-  .array(requiredText('List items cannot be empty.'))
-  .default([])
-
 /**
  * Validates the offer information required to produce a grounded adaptation.
  *
  * Field names intentionally match the public backend contract.
  */
-export const userProfileSchema = z
-  .object({
+export function createUserProfileSchema(
+  messages: UserProfileValidationMessages,
+) {
+  const textList = z
+    .array(requiredText(messages.listItemRequired))
+    .default([])
+
+  return z.object({
     product_or_solution: requiredText(
-      'Describe the product or solution.',
+      messages.productOrSolutionRequired,
     ),
     target_audience: requiredText(
-      'Describe the target audience.',
+      messages.targetAudienceRequired,
     ),
     core_problem: requiredText(
-      'Describe the main problem.',
+      messages.coreProblemRequired,
     ),
     core_desire: requiredText(
-      'Describe the audience’s main desire.',
+      messages.coreDesireRequired,
     ),
     main_promise: requiredText(
-      'Describe the main promise.',
+      messages.mainPromiseRequired,
     ),
     unique_mechanism: optionalText,
     benefits: textList,
@@ -42,17 +55,29 @@ export const userProfileSchema = z
     proof_assets: textList,
     offer_details: optionalText,
     call_to_action: requiredText(
-      'Describe the desired call to action.',
+      messages.callToActionRequired,
     ),
     tone: optionalText,
     target_language: optionalText,
     platform: optionalText,
     desired_duration: z
       .number()
-      .positive('Duration must be greater than zero.'),
+      .positive(messages.desiredDurationPositive),
     restrictions: textList,
   })
   .strict()
+}
+
+export const userProfileSchema = createUserProfileSchema({
+  listItemRequired: 'List items cannot be empty.',
+  productOrSolutionRequired: 'Describe the product or solution.',
+  targetAudienceRequired: 'Describe the target audience.',
+  coreProblemRequired: 'Describe the main problem.',
+  coreDesireRequired: 'Describe the audience’s main desire.',
+  mainPromiseRequired: 'Describe the main promise.',
+  callToActionRequired: 'Describe the desired call to action.',
+  desiredDurationPositive: 'Duration must be greater than zero.',
+})
 
 export type UserProfileFormInput = z.input<typeof userProfileSchema>
 export type UserProfileData = z.output<typeof userProfileSchema>

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import type { UploadProgress as UploadProgressData } from '@/shared/api'
 import { Progress } from '@/shared/ui/progress'
 
@@ -12,6 +14,7 @@ export interface UploadProgressProps {
 export function UploadProgress({
   progress,
 }: UploadProgressProps) {
+  const { t } = useTranslation()
   const percentage = progress.percentage ?? 0
 
   return (
@@ -21,7 +24,7 @@ export function UploadProgress({
     >
       <div className="flex items-center justify-between gap-4 text-body-sm">
         <span className="font-medium text-text">
-          Uploading reference file
+          {t('newJob.uploadProgress.title')}
         </span>
 
         <span className="text-text-muted">
@@ -32,7 +35,7 @@ export function UploadProgress({
       </div>
 
       <Progress
-        label="File upload progress"
+        label={t('newJob.uploadProgress.label')}
         value={percentage}
       />
     </div>

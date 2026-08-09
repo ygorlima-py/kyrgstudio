@@ -16,7 +16,7 @@ export type JobFileValidationResult =
   | {
       readonly valid: false
       readonly code: JobFileValidationErrorCode
-      readonly message: string
+      readonly maxUploadBytes?: number
     }
 
 /**
@@ -29,7 +29,6 @@ export function validateJobFile(
     return {
       valid: false,
       code: 'missing_filename',
-      message: 'The selected file must have a name.',
     }
   }
 
@@ -37,7 +36,6 @@ export function validateJobFile(
     return {
       valid: false,
       code: 'empty_file',
-      message: 'The selected file is empty.',
     }
   }
 
@@ -47,7 +45,6 @@ export function validateJobFile(
     return {
       valid: false,
       code: 'unsupported_media_type',
-      message: 'Select a supported video or audio file.',
     }
   }
 
@@ -55,9 +52,7 @@ export function validateJobFile(
     return {
       valid: false,
       code: 'file_too_large',
-      message: `The file must be smaller than ${formatFileSize(
-        environment.maxUploadBytes,
-      )}.`,
+      maxUploadBytes: environment.maxUploadBytes,
     }
   }
 

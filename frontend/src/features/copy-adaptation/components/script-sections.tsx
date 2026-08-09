@@ -1,25 +1,9 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 
 import type { NormalizedAdaptedScriptSection } from '../utils/normalize-adaptation-result'
-
-const SECTION_LABELS: Record<NormalizedAdaptedScriptSection['type'], string> = {
-  hook: 'Hook',
-  problem: 'Problem',
-  pain: 'Pain',
-  agitation: 'Agitation',
-  promise: 'Promise',
-  mechanism: 'Mechanism',
-  proof: 'Proof',
-  story: 'Story',
-  objection: 'Objection',
-  offer: 'Offer',
-  cta: 'Call to action',
-  urgency: 'Urgency',
-  scarcity: 'Scarcity',
-  transition: 'Transition',
-  education: 'Education',
-  payoff: 'Payoff',
-}
 
 export interface ScriptSectionsProps {
   readonly sections: readonly NormalizedAdaptedScriptSection[]
@@ -27,17 +11,19 @@ export interface ScriptSectionsProps {
 
 /** Present the generated script architecture as a compact, expandable list. */
 export function ScriptSections({ sections }: ScriptSectionsProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="adapted-sections-heading">
       <header className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Script architecture
+          {t('adaptationResult.scriptSections.eyebrow')}
         </p>
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="adapted-sections-heading">
-          Section by section
+          {t('adaptationResult.scriptSections.title')}
         </h2>
         <p className="mt-2 max-w-3xl text-body text-text-muted">
-          Open a section to inspect its copy, strategic role, source and production timing.
+          {t('adaptationResult.scriptSections.description')}
         </p>
       </header>
 
@@ -49,7 +35,7 @@ export function ScriptSections({ sections }: ScriptSectionsProps) {
         </div>
       ) : (
         <div className="border-b border-border py-8">
-          <p className="text-body text-text-muted">No structured script sections were generated.</p>
+          <p className="text-body text-text-muted">{t('adaptationResult.scriptSections.empty')}</p>
         </div>
       )}
     </section>
@@ -61,6 +47,8 @@ interface ScriptSectionProps {
 }
 
 function ScriptSection({ section }: ScriptSectionProps) {
+  const { t } = useTranslation()
+
   return (
     <details className="group">
       <summary className="grid min-h-20 cursor-pointer list-none grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-4 py-5 marker:hidden sm:grid-cols-[3rem_minmax(10rem,0.35fr)_minmax(0,1fr)_auto] sm:gap-6 [&::-webkit-details-marker]:hidden">
@@ -69,9 +57,9 @@ function ScriptSection({ section }: ScriptSectionProps) {
         </span>
 
         <div>
-          <h3 className="text-label text-text">{SECTION_LABELS[section.type]}</h3>
+          <h3 className="text-label text-text">{t(`analysisResult.sections.${section.type}`)}</h3>
           <p className="mt-1 font-mono text-meta text-text-subtle">
-            {formatDuration(section.estimatedDurationSeconds)}
+            {formatDuration(section.estimatedDurationSeconds, t)}
           </p>
         </div>
 
@@ -81,7 +69,9 @@ function ScriptSection({ section }: ScriptSectionProps) {
 
         <span className="col-start-3 row-start-1 flex items-center justify-end gap-3 sm:col-start-4">
           <Badge variant={section.missingProof ? 'warning' : 'neutral'}>
-            {section.adaptationMode === 'adapted_from_reference' ? 'Adapted' : 'Original'}
+            {section.adaptationMode === 'adapted_from_reference'
+              ? t('adaptationResult.scriptSections.adapted')
+              : t('adaptationResult.scriptSections.original')}
           </Badge>
           <ChevronIcon />
         </span>
@@ -90,34 +80,42 @@ function ScriptSection({ section }: ScriptSectionProps) {
       <div className="grid gap-6 border-t border-border bg-surface px-5 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <div>
           <p className="font-mono text-meta uppercase tracking-[0.1em] text-text-subtle">
-            Section copy
+            {t('adaptationResult.scriptSections.sectionCopy')}
           </p>
           <p className="mt-3 whitespace-pre-wrap text-body leading-7 text-text">{section.text}</p>
         </div>
 
         <dl className="divide-y divide-border border-y border-border text-body-sm">
-          <SectionDetail label="Purpose" value={section.purpose} />
           <SectionDetail
-            label="Reference"
+            label={t('adaptationResult.scriptSections.purpose')}
+            value={section.purpose}
+          />
+          <SectionDetail
+            label={t('adaptationResult.scriptSections.reference')}
             value={
-              section.sourceReferenceSectionType ?? 'Created without a matching reference section'
+              section.sourceReferenceSectionType === null
+                ? t('adaptationResult.scriptSections.noReference')
+                : t(`analysisResult.sections.${section.sourceReferenceSectionType}`)
             }
           />
           <SectionDetail
-            label="Proof"
+            label={t('adaptationResult.scriptSections.proof')}
             value={
               section.missingProof
-                ? 'Requires proof before production'
-                : (section.proofUsed ?? 'No proof attached to this section')
+                ? t('adaptationResult.scriptSections.requiresProof')
+                : (section.proofUsed ?? t('adaptationResult.scriptSections.noProof'))
             }
           />
           <SectionDetail
-            label="Transition"
-            value={section.transitionHint ?? 'No transition note provided'}
+            label={t('adaptationResult.scriptSections.transition')}
+            value={section.transitionHint ?? t('adaptationResult.scriptSections.noTransition')}
           />
           <SectionDetail
-            label="Timing"
-            value={`${formatTimeRange(section.startSeconds, section.endSeconds)} · ${section.wordCount} words`}
+            label={t('adaptationResult.scriptSections.timing')}
+            value={`${formatTimeRange(section.startSeconds, section.endSeconds, t)} · ${t(
+              'adaptationResult.scriptSections.wordCount',
+              { count: section.wordCount },
+            )}`}
           />
         </dl>
       </div>
@@ -158,22 +156,30 @@ function ChevronIcon() {
   )
 }
 
-function formatDuration(seconds: number | null): string {
+function formatDuration(seconds: number | null, t: TFunction): string {
   if (seconds === null) {
-    return 'Duration unavailable'
+    return t('adaptationResult.scriptSections.durationUnavailable')
   }
 
-  return `${Math.max(0, Math.round(seconds))} sec`
+  return t('adaptationResult.scriptSections.seconds', {
+    count: Math.max(0, Math.round(seconds)),
+  })
 }
 
-function formatTimeRange(startSeconds: number | null, endSeconds: number | null): string {
+function formatTimeRange(
+  startSeconds: number | null,
+  endSeconds: number | null,
+  t: TFunction,
+): string {
   if (startSeconds === null && endSeconds === null) {
-    return 'Timing unavailable'
+    return t('adaptationResult.scriptSections.timingUnavailable')
   }
 
   const start = formatTimestamp(startSeconds ?? 0)
 
-  return endSeconds === null ? `From ${start}` : `${start}–${formatTimestamp(endSeconds)}`
+  return endSeconds === null
+    ? t('adaptationResult.scriptSections.fromTime', { time: start })
+    : `${start}-${formatTimestamp(endSeconds)}`
 }
 
 function formatTimestamp(seconds: number): string {

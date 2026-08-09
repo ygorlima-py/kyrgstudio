@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { ProfileTextField } from './profile-text-field'
 
 /**
@@ -5,6 +7,8 @@ import { ProfileTextField } from './profile-text-field'
  * will replace the original offer during copy adaptation.
  */
 export function ProductOfferFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="product-offer-heading"
@@ -15,20 +19,19 @@ export function ProductOfferFields() {
           className="font-heading text-heading-sm text-text"
           id="product-offer-heading"
         >
-          Product and offer
+          {t('userProfile.productOffer.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Explain clearly what you sell and what result it helps the customer
-          achieve.
+          {t('userProfile.productOffer.description')}
         </p>
       </div>
 
       <ProfileTextField
-        description="Include the type of product, its purpose, and the transformation it provides."
-        label="What product or solution are you offering?"
+        description={t('userProfile.productOffer.product.description')}
+        label={t('userProfile.productOffer.product.label')}
         name="user_profile.product_or_solution"
-        placeholder="Example: An online English conversation course for Brazilian adults."
+        placeholder={t('userProfile.productOffer.product.placeholder')}
       />
     </section>
   )

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { ProfileTextField } from './profile-text-field'
 
 /**
@@ -5,6 +7,8 @@ import { ProfileTextField } from './profile-text-field'
  * sales message.
  */
 export function CallToActionFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="call-to-action-heading"
@@ -15,20 +19,19 @@ export function CallToActionFields() {
           className="font-heading text-heading-sm text-text"
           id="call-to-action-heading"
         >
-          Call to action
+          {t('userProfile.callToAction.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Explain clearly what the audience should do after watching or
-          listening to the adapted message.
+          {t('userProfile.callToAction.description')}
         </p>
       </div>
 
       <ProfileTextField
-        description="Use a specific action that matches the real purchasing or contact process."
-        label="What action should the audience take?"
+        description={t('userProfile.callToAction.field.description')}
+        label={t('userProfile.callToAction.field.label')}
         name="user_profile.call_to_action"
-        placeholder="Example: Click the button to learn more about the course and enroll."
+        placeholder={t('userProfile.callToAction.field.placeholder')}
       />
     </section>
   )

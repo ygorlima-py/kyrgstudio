@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { RepeatableTextList } from './repeatable-text-list'
 
 /**
@@ -5,6 +7,8 @@ import { RepeatableTextList } from './repeatable-text-list'
  * not use.
  */
 export function RestrictionsFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="restrictions-heading"
@@ -15,19 +19,19 @@ export function RestrictionsFields() {
           className="font-heading text-heading-sm text-text"
           id="restrictions-heading"
         >
-          Restrictions
+          {t('userProfile.restrictions.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Define the boundaries the adapted script must respect.
+          {t('userProfile.restrictions.description')}
         </p>
       </div>
 
       <RepeatableTextList
-        addLabel="Add restriction"
-        description="Add prohibited promises, unsupported claims, sensitive topics, words, or approaches that should not appear."
-        itemLabel="Describe a restriction"
-        label="What must the adapted copy avoid?"
+        addLabel={t('userProfile.restrictions.list.add')}
+        description={t('userProfile.restrictions.list.description')}
+        itemLabel={t('userProfile.restrictions.list.itemLabel')}
+        label={t('userProfile.restrictions.list.label')}
         name="user_profile.restrictions"
       />
     </section>

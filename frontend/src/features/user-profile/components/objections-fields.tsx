@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { RepeatableTextList } from './repeatable-text-list'
 
 /**
@@ -5,6 +7,8 @@ import { RepeatableTextList } from './repeatable-text-list'
  * accepting the offer.
  */
 export function ObjectionsFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="objections-heading"
@@ -15,20 +19,19 @@ export function ObjectionsFields() {
           className="font-heading text-heading-sm text-text"
           id="objections-heading"
         >
-          Objections
+          {t('userProfile.objections.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          List the doubts, fears, or reasons that may stop the audience from
-          taking action.
+          {t('userProfile.objections.description')}
         </p>
       </div>
 
       <RepeatableTextList
-        addLabel="Add objection"
-        description="Use one objection per item and write it from the customer’s perspective."
-        itemLabel="Describe an objection"
-        label="What objections does the audience have?"
+        addLabel={t('userProfile.objections.list.add')}
+        description={t('userProfile.objections.list.description')}
+        itemLabel={t('userProfile.objections.list.itemLabel')}
+        label={t('userProfile.objections.list.label')}
         name="user_profile.objections"
       />
     </section>

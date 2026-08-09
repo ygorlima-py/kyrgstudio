@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
-import { userProfileSchema } from '@/features/user-profile/schemas/user-profile-schema'
+import {
+  createUserProfileSchema,
+  userProfileSchema,
+  type UserProfileValidationMessages,
+} from '@/features/user-profile/schemas/user-profile-schema'
 
 export const pipelineTypeSchema = z.enum([
   'copy_analysis',
@@ -9,12 +13,19 @@ export const pipelineTypeSchema = z.enum([
 
 const sourceTypeSchema = z.enum(['video', 'audio'])
 
-const uploadedFileSchema = z.custom<File>(
-  (value) => value instanceof File,
-  {
-    message: 'Select a video or audio file.',
-  },
-)
+export interface JobCreationValidationMessages {
+  readonly fileRequired: string
+  readonly userProfile: UserProfileValidationMessages
+}
+
+function createUploadedFileSchema(message: string) {
+  return z.custom<File>(
+    (value) => value instanceof File,
+    {
+      message,
+    },
+  )
+}
 
 const optionalTextSchema = z
   .string()
@@ -23,7 +34,7 @@ const optionalTextSchema = z
   .optional()
 
 const commonJobFields = {
-  file: uploadedFileSchema,
+  file: createUploadedFileSchema('Select a video or audio file.'),
   source_type: sourceTypeSchema,
   language: optionalTextSchema,
   need_correction: z.boolean().default(false),
@@ -52,6 +63,33 @@ export const jobCreationSchema = z.discriminatedUnion(
     copyAdaptationJobSchema,
   ],
 )
+
+export function createJobCreationSchema(
+  messages: JobCreationValidationMessages,
+) {
+  const translatedCommonJobFields = {
+    file: createUploadedFileSchema(messages.fileRequired),
+    source_type: sourceTypeSchema,
+    language: optionalTextSchema,
+    need_correction: z.boolean().default(false),
+  }
+
+  const translatedCopyAnalysisJobSchema = z.object({
+    ...translatedCommonJobFields,
+    pipeline_type: z.literal('copy_analysis'),
+  })
+
+  const translatedCopyAdaptationJobSchema = z.object({
+    ...translatedCommonJobFields,
+    pipeline_type: z.literal('copy_adaptation'),
+    user_profile: createUserProfileSchema(messages.userProfile),
+  })
+
+  return z.discriminatedUnion('pipeline_type', [
+    translatedCopyAnalysisJobSchema,
+    translatedCopyAdaptationJobSchema,
+  ])
+}
 
 export type PipelineType = z.infer<typeof pipelineTypeSchema>
 export type SourceType = z.infer<typeof sourceTypeSchema>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 
 import {
@@ -20,15 +21,20 @@ const actionLinkClassName =
 
 /** Recover and display a persisted project directly from the job id in the URL. */
 export function JobStatusRoute() {
+  const { t } = useTranslation()
   const { jobId: routeJobId } = useParams()
   const jobId = parseJobId(routeJobId)
 
   if (jobId === null) {
     return (
       <NotFoundState
-        action={<Link className={actionLinkClassName} to="/app">Return to dashboard</Link>}
-        description="The project address is invalid or no longer available."
-        title="Project not found"
+        action={
+          <Link className={actionLinkClassName} to="/app">
+            {t('jobStatus.actions.returnToDashboard')}
+          </Link>
+        }
+        description={t('jobStatus.invalid.description')}
+        title={t('jobStatus.invalid.title')}
       />
     )
   }
@@ -37,6 +43,7 @@ export function JobStatusRoute() {
 }
 
 function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const statusQuery = useJobStatus(jobId)
   const jobStatus = statusQuery.data?.status
@@ -50,7 +57,7 @@ function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
   if (statusQuery.isPending) {
     return (
       <div className="mx-auto w-full max-w-5xl">
-        <LoadingState label="Loading project status" />
+        <LoadingState label={t('jobStatus.loading')} />
       </div>
     )
   }
@@ -59,9 +66,13 @@ function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
     if (statusQuery.error?.status === 404) {
       return (
         <NotFoundState
-          action={<Link className={actionLinkClassName} to="/app">Return to dashboard</Link>}
-          description="This project does not exist or is not available to your account."
-          title="Project not found"
+          action={
+            <Link className={actionLinkClassName} to="/app">
+              {t('jobStatus.actions.returnToDashboard')}
+            </Link>
+          }
+          description={t('jobStatus.notFound.description')}
+          title={t('jobStatus.notFound.title')}
         />
       )
     }
@@ -71,16 +82,16 @@ function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
         action={
           statusQuery.error?.retryable ? (
             <Button onClick={() => void statusQuery.refetch()} type="button">
-              Try again
+              {t('jobStatus.actions.retry')}
             </Button>
           ) : (
             <Link className={actionLinkClassName} to="/app">
-              Return to dashboard
+              {t('jobStatus.actions.returnToDashboard')}
             </Link>
           )
         }
-        description="We could not load the latest project status."
-        title="Status unavailable"
+        description={t('jobStatus.unavailable.description')}
+        title={t('jobStatus.unavailable.title')}
       />
     )
   }
@@ -88,9 +99,13 @@ function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
   if (!isKnownJobStatus(statusQuery.data.status)) {
     return (
       <ErrorState
-        action={<Button onClick={() => void statusQuery.refetch()} type="button">Refresh status</Button>}
-        description="The project returned a status this version of the application does not recognize."
-        title="Status unavailable"
+        action={
+          <Button onClick={() => void statusQuery.refetch()} type="button">
+            {t('jobStatus.actions.refresh')}
+          </Button>
+        }
+        description={t('jobStatus.unknown.description')}
+        title={t('jobStatus.unavailable.title')}
       />
     )
   }
@@ -104,13 +119,13 @@ function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
     <div className="mx-auto w-full max-w-5xl space-y-5">
       <header>
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Project status
+          {t('jobStatus.page.eyebrow')}
         </p>
       </header>
 
       {statusQuery.isError ? (
-        <Alert heading="Reconnecting" variant="warning">
-          The last known status is shown while we reconnect to the server.
+        <Alert heading={t('jobStatus.reconnecting.title')} variant="warning">
+          {t('jobStatus.reconnecting.description')}
         </Alert>
       ) : null}
 
@@ -119,10 +134,10 @@ function PersistedJobStatus({ jobId }: { readonly jobId: number }) {
           job.status === 'failed' ? (
             <>
               <Link className={actionLinkClassName} to="/app/jobs/new">
-                Start another project
+                {t('jobStatus.actions.startAnother')}
               </Link>
               <Link className="inline-flex h-11 items-center px-2 text-label text-text-muted hover:text-text" to="/app">
-                Return to dashboard
+                {t('jobStatus.actions.returnToDashboard')}
               </Link>
             </>
           ) : undefined

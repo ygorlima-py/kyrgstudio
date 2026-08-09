@@ -1,3 +1,6 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 
 import type { NormalizedPersuasionSignal } from '../utils/normalize-analysis-result'
@@ -8,15 +11,17 @@ export interface PersuasionSignalsProps {
 
 /** Explain the persuasive techniques detected and the evidence supporting them. */
 export function PersuasionSignals({ signals }: PersuasionSignalsProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="persuasion-signals-heading">
       <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Detected techniques
+          {t('analysisResult.persuasion.signals.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="persuasion-signals-heading">
-          Persuasion signals
+          {t('analysisResult.persuasion.signals.title')}
         </h2>
       </div>
 
@@ -27,7 +32,7 @@ export function PersuasionSignals({ signals }: PersuasionSignalsProps) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-body-lg font-semibold text-text">{signal.name}</h3>
                 <Badge variant={strengthVariant(signal.strength)}>
-                  {formatLabel(signal.strength)}
+                  {formatStrengthLabel(signal.strength, t)}
                 </Badge>
               </div>
 
@@ -43,7 +48,7 @@ export function PersuasionSignals({ signals }: PersuasionSignalsProps) {
         </ul>
       ) : (
         <p className="border-b border-border py-7 text-body text-text-muted">
-          No distinct persuasion signals were identified.
+          {t('analysisResult.persuasion.signals.empty')}
         </p>
       )}
     </section>
@@ -59,7 +64,13 @@ function strengthVariant(value: string): 'danger' | 'warning' | 'success' | 'neu
   return 'neutral'
 }
 
-function formatLabel(value: string): string {
+function formatStrengthLabel(value: string, t: TFunction): string {
+  const strength = value.trim().toLowerCase()
+
+  if (strength === 'high' || strength === 'medium' || strength === 'low') {
+    return t(`analysisResult.persuasion.strength.${strength}`)
+  }
+
   const normalizedValue = value.trim().replaceAll(/[_-]+/g, ' ')
   return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
 }

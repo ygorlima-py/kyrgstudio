@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { get, useFormContext } from 'react-hook-form'
 
 import type { JobCreationFormInput } from '@/features/jobs/schemas/job-creation-schema'
@@ -13,6 +14,7 @@ import { ProfileTextField } from './profile-text-field'
  * The duration is expressed in minutes, matching the backend contract.
  */
 export function PlatformDurationFields() {
+  const { t } = useTranslation()
   const {
     formState: { errors },
     register,
@@ -34,27 +36,26 @@ export function PlatformDurationFields() {
           className="font-heading text-heading-sm text-text"
           id="platform-duration-heading"
         >
-          Platform and duration
+          {t('userProfile.platformDuration.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Define where the copy will be used and the approximate length of the
-          final script.
+          {t('userProfile.platformDuration.description')}
         </p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ProfileTextField
-          description="Examples include Instagram, YouTube, a sales page, webinar, or paid advertisement."
-          label="Where will this copy be used?"
+          description={t('userProfile.platformDuration.platform.description')}
+          label={t('userProfile.platformDuration.platform.label')}
           multiline={false}
           name="user_profile.platform"
-          placeholder="Example: Instagram"
+          placeholder={t('userProfile.platformDuration.platform.placeholder')}
         />
 
         <div className="space-y-2">
           <Label htmlFor="user-profile-desired-duration">
-            Desired duration in minutes
+            {t('userProfile.platformDuration.duration.label')}
           </Label>
 
           <Input
@@ -71,7 +72,7 @@ export function PlatformDurationFields() {
             }
             id="user-profile-desired-duration"
             min="0.1"
-            placeholder="Example: 2"
+            placeholder={t('userProfile.platformDuration.duration.placeholder')}
             step="0.1"
             type="number"
           />
@@ -85,8 +86,7 @@ export function PlatformDurationFields() {
             </FieldMessage>
           ) : (
             <FieldMessage id="desired-duration-hint">
-              Use decimal values when needed, such as 1.5 for one minute and
-              thirty seconds.
+              {t('userProfile.platformDuration.duration.hint')}
             </FieldMessage>
           )}
         </div>

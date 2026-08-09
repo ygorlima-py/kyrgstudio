@@ -2,6 +2,7 @@ import type { HTMLAttributes, ReactNode } from 'react'
 
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Stack } from '@/shared/ui/stack'
+import { i18n } from '@/shared/i18n/i18n'
 import { cn } from '@/shared/utils/class-names'
 
 export interface LoadingStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
@@ -25,7 +26,7 @@ export interface LoadingStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 
 export function LoadingState({
   children,
   className,
-  label = 'Loading content',
+  label = i18n.t('shared.states.loading.defaultLabel'),
   ...stateProps
 }: LoadingStateProps) {
   return (

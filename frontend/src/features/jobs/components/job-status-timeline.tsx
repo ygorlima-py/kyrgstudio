@@ -1,18 +1,19 @@
 import type { JobStatus } from '../config/job-status'
 import { cn } from '@/shared/utils/class-names'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_STEPS = [
   {
-    title: 'File received',
-    description: 'Your reference is safely attached to this project.',
+    titleKey: 'jobStatus.timeline.steps.fileReceived.title',
+    descriptionKey: 'jobStatus.timeline.steps.fileReceived.description',
   },
   {
-    title: 'Processing',
-    description: 'We transcribe and examine the sales message.',
+    titleKey: 'jobStatus.timeline.steps.processing.title',
+    descriptionKey: 'jobStatus.timeline.steps.processing.description',
   },
   {
-    title: 'Result ready',
-    description: 'Your analysis or adapted script is available.',
+    titleKey: 'jobStatus.timeline.steps.resultReady.title',
+    descriptionKey: 'jobStatus.timeline.steps.resultReady.description',
   },
 ] as const
 
@@ -24,6 +25,8 @@ export interface JobStatusTimelineProps {
 
 /** Display the durable product stages without exposing internal workflow nodes. */
 export function JobStatusTimeline({ status }: JobStatusTimelineProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative">
       <span
@@ -31,7 +34,10 @@ export function JobStatusTimeline({ status }: JobStatusTimelineProps) {
         className="absolute top-4 right-[16.66%] left-[16.66%] hidden h-px bg-border md:block"
       />
 
-      <ol aria-label="Project progress" className="relative grid md:grid-cols-3 md:gap-6">
+      <ol
+        aria-label={t('jobStatus.timeline.ariaLabel')}
+        className="relative grid md:grid-cols-3 md:gap-6"
+      >
         {STATUS_STEPS.map((step, index) => {
           const stepState = resolveStepState(status, index)
 
@@ -39,7 +45,7 @@ export function JobStatusTimeline({ status }: JobStatusTimelineProps) {
             <li
               aria-current={stepState === 'current' ? 'step' : undefined}
               className="relative flex gap-4 pb-7 last:pb-0 md:block md:pb-0 md:text-center"
-              key={step.title}
+              key={step.titleKey}
             >
               {index < STATUS_STEPS.length - 1 ? (
                 <span
@@ -61,13 +67,13 @@ export function JobStatusTimeline({ status }: JobStatusTimelineProps) {
                         : 'text-text',
                   )}
                 >
-                  {step.title}
+                  {t(step.titleKey)}
                 </p>
 
                 <p className="mt-1 max-w-xs text-body-sm text-text-muted md:mx-auto">
                   {stepState === 'failed'
-                    ? 'Processing stopped before this stage could finish.'
-                    : step.description}
+                    ? t('jobStatus.timeline.failedStepDescription')
+                    : t(step.descriptionKey)}
                 </p>
               </div>
             </li>

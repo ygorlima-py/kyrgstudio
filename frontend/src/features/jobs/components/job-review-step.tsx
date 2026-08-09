@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useFormContext } from 'react-hook-form'
 
 import { Button } from '@/shared/ui/button'
@@ -18,6 +19,7 @@ export interface JobReviewStepProps {
 export function JobReviewStep({
   onEditStep,
 }: JobReviewStepProps) {
+  const { t } = useTranslation()
   const { getValues } = useFormContext<JobCreationFormInput>()
   const values = getValues()
   const selectedFile =
@@ -33,54 +35,53 @@ export function JobReviewStep({
           className="font-heading text-heading-md text-text"
           id="job-review-heading"
         >
-          Review your project
+          {t('newJob.review.title')}
         </h2>
 
         <p className="max-w-2xl text-body text-text-muted">
-          Confirm the information below before submitting the file for
-          processing.
+          {t('newJob.review.description')}
         </p>
       </div>
 
       <ReviewSection
         onEdit={() => onEditStep('pipeline')}
-        title="Project type"
+        title={t('newJob.review.sections.projectType')}
       >
         <ReviewItem
-          label="Pipeline"
+          label={t('newJob.review.labels.pipeline')}
           value={
             values.pipeline_type === 'copy_adaptation'
-              ? 'Copy adaptation'
-              : 'Copy analysis'
+              ? t('newJob.review.pipeline.adaptation')
+              : t('newJob.review.pipeline.analysis')
           }
         />
       </ReviewSection>
 
       <ReviewSection
         onEdit={() => onEditStep('file')}
-        title="Reference file"
+        title={t('newJob.review.sections.referenceFile')}
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <ReviewItem
-            label="File"
-            value={selectedFile?.name ?? 'No file selected'}
+            label={t('newJob.review.labels.file')}
+            value={selectedFile?.name ?? t('newJob.review.empty.file')}
           />
 
           <ReviewItem
-            label="Size"
+            label={t('newJob.review.labels.size')}
             value={
               selectedFile
                 ? formatFileSize(selectedFile.size)
-                : 'Not available'
+                : t('newJob.review.empty.notAvailable')
             }
           />
 
           <ReviewItem
-            label="Media type"
+            label={t('newJob.review.labels.mediaType')}
             value={
               values.source_type === 'video'
-                ? 'Video'
-                : 'Audio'
+                ? t('newJob.review.media.video')
+                : t('newJob.review.media.audio')
             }
           />
         </div>
@@ -88,17 +89,21 @@ export function JobReviewStep({
 
       <ReviewSection
         onEdit={() => onEditStep('settings')}
-        title="Transcription settings"
+        title={t('newJob.review.sections.transcriptionSettings')}
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <ReviewItem
-            label="Original language"
-            value={values.language || 'Detect automatically'}
+            label={t('newJob.review.labels.originalLanguage')}
+            value={formatReviewLanguage(values.language, t)}
           />
 
           <ReviewItem
-            label="Transcript correction"
-            value={values.need_correction ? 'Enabled' : 'Disabled'}
+            label={t('newJob.review.labels.transcriptCorrection')}
+            value={
+              values.need_correction
+                ? t('newJob.review.boolean.enabled')
+                : t('newJob.review.boolean.disabled')
+            }
           />
         </div>
       </ReviewSection>
@@ -106,58 +111,63 @@ export function JobReviewStep({
       {values.pipeline_type === 'copy_adaptation' ? (
         <ReviewSection
           onEdit={() => onEditStep('profile')}
-          title="Offer profile"
+          title={t('newJob.review.sections.offerProfile')}
         >
           <div className="grid gap-5 sm:grid-cols-2">
             <ReviewItem
-              label="Product or solution"
+              label={t('newJob.review.labels.productOrSolution')}
               value={values.user_profile.product_or_solution}
             />
 
             <ReviewItem
-              label="Target audience"
+              label={t('newJob.review.labels.targetAudience')}
               value={values.user_profile.target_audience}
             />
 
             <ReviewItem
-              label="Main problem"
+              label={t('newJob.review.labels.mainProblem')}
               value={values.user_profile.core_problem}
             />
 
             <ReviewItem
-              label="Main promise"
+              label={t('newJob.review.labels.mainPromise')}
               value={values.user_profile.main_promise}
             />
 
             <ReviewItem
-              label="Platform"
-              value={values.user_profile.platform || 'Not specified'}
+              label={t('newJob.review.labels.platform')}
+              value={
+                values.user_profile.platform ||
+                t('newJob.review.empty.notSpecified')
+              }
             />
 
             <ReviewItem
-              label="Desired duration"
-              value={`${values.user_profile.desired_duration} minute(s)`}
+              label={t('newJob.review.labels.desiredDuration')}
+              value={t('newJob.review.durationMinutes', {
+                count: values.user_profile.desired_duration,
+              })}
             />
           </div>
 
           <div className="mt-5 grid gap-4 border-t border-border pt-5 sm:grid-cols-4">
             <ReviewItem
-              label="Benefits"
+              label={t('newJob.review.labels.benefits')}
               value={values.user_profile.benefits?.length ?? 0}
             />
 
             <ReviewItem
-              label="Objections"
+              label={t('newJob.review.labels.objections')}
               value={values.user_profile.objections?.length ?? 0}
             />
 
             <ReviewItem
-              label="Proof assets"
+              label={t('newJob.review.labels.proofAssets')}
               value={values.user_profile.proof_assets?.length ?? 0}
             />
 
             <ReviewItem
-              label="Restrictions"
+              label={t('newJob.review.labels.restrictions')}
               value={values.user_profile.restrictions?.length ?? 0}
             />
           </div>
@@ -178,6 +188,8 @@ function ReviewSection({
   onEdit,
   title,
 }: ReviewSectionProps) {
+  const { t } = useTranslation()
+
   return (
     <section className="border-t border-border pt-6">
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -191,7 +203,7 @@ function ReviewSection({
           type="button"
           variant="ghost"
         >
-          Edit
+          {t('newJob.review.edit')}
         </Button>
       </div>
 
@@ -215,4 +227,23 @@ function ReviewItem({ label, value }: ReviewItemProps) {
       <dd className="text-body text-text">{value}</dd>
     </div>
   )
+}
+
+function formatReviewLanguage(
+  language: string | undefined,
+  translate: (key: string) => string,
+): string {
+  switch (language) {
+    case 'pt':
+      return translate('newJob.settings.language.options.pt')
+
+    case 'en':
+      return translate('newJob.settings.language.options.en')
+
+    case 'es':
+      return translate('newJob.settings.language.options.es')
+
+    default:
+      return translate('newJob.settings.language.options.auto')
+  }
 }

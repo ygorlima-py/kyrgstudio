@@ -1,4 +1,5 @@
 import { cn } from '@/shared/utils/class-names'
+import { useTranslation } from 'react-i18next'
 
 import type {
   JobFormStep,
@@ -17,6 +18,7 @@ export function JobFormProgress({
   currentStepId,
   steps,
 }: JobFormProgressProps) {
+  const { t } = useTranslation()
   const currentStepIndex = steps.findIndex(
     (step) => step.id === currentStepId,
   )
@@ -34,7 +36,7 @@ export function JobFormProgress({
           Step {currentStepIndex + 1} of {steps.length}
         </p>
         <p className="mt-1 text-label text-text">
-          {currentStep.label}
+          {t(currentStep.labelKey)}
         </p>
       </div>
 
@@ -76,7 +78,7 @@ export function JobFormProgress({
                   isCurrent ? 'text-text' : 'text-text-muted',
                 )}
               >
-                {step.label}
+                {t(step.labelKey)}
               </span>
             </li>
           )

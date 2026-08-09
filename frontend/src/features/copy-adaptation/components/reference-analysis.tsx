@@ -1,28 +1,11 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 
 import type {
   NormalizedAnalysisResult,
-  NormalizedCopySection,
 } from '@/features/copy-analysis/utils/normalize-analysis-result'
-
-const SECTION_LABELS: Record<NormalizedCopySection['type'], string> = {
-  hook: 'Hook',
-  problem: 'Problem',
-  pain: 'Pain',
-  agitation: 'Agitation',
-  promise: 'Promise',
-  mechanism: 'Mechanism',
-  proof: 'Proof',
-  story: 'Story',
-  objection: 'Objection',
-  offer: 'Offer',
-  cta: 'Call to action',
-  urgency: 'Urgency',
-  scarcity: 'Scarcity',
-  transition: 'Transition',
-  education: 'Education',
-  payoff: 'Payoff',
-}
 
 export interface ReferenceAnalysisProps {
   readonly analysis: NormalizedAnalysisResult
@@ -30,6 +13,8 @@ export interface ReferenceAnalysisProps {
 
 /** Keep the source strategy available without mixing it with the adapted copy. */
 export function ReferenceAnalysis({ analysis }: ReferenceAnalysisProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="reference-analysis-heading">
       <details className="group overflow-hidden rounded-lg border border-border bg-surface">
@@ -37,15 +22,17 @@ export function ReferenceAnalysis({ analysis }: ReferenceAnalysisProps) {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-                Strategic source
+                {t('adaptationResult.referenceAnalysis.eyebrow')}
               </p>
-              <Badge variant="neutral">Reference only</Badge>
+              <Badge variant="neutral">
+                {t('adaptationResult.referenceAnalysis.referenceOnly')}
+              </Badge>
             </div>
             <h2
               className="mt-2 font-heading text-heading-3 text-text"
               id="reference-analysis-heading"
             >
-              Original copy analysis
+              {t('adaptationResult.referenceAnalysis.title')}
             </h2>
             <p className="mt-2 line-clamp-2 max-w-3xl text-body-sm text-text-muted">
               {analysis.structure.summary}
@@ -53,51 +40,68 @@ export function ReferenceAnalysis({ analysis }: ReferenceAnalysisProps) {
           </div>
 
           <span className="flex items-center gap-2 text-label text-text-muted">
-            View reference
+            {t('adaptationResult.referenceAnalysis.viewReference')}
             <ChevronIcon />
           </span>
         </summary>
 
         <div className="border-t border-border">
           <dl className="grid grid-cols-2 gap-px border-b border-border bg-border lg:grid-cols-4">
-            <ReferenceMetric label="Content type" value={analysis.structure.contentType} />
             <ReferenceMetric
-              label="Language"
-              value={analysis.language ?? analysis.structure.language ?? 'Not identified'}
+              label={t('adaptationResult.referenceAnalysis.contentType')}
+              value={analysis.structure.contentType}
             />
             <ReferenceMetric
-              label="Persuasion pattern"
-              value={analysis.persuasion.pattern ?? 'Not identified'}
+              label={t('adaptationResult.referenceAnalysis.language')}
+              value={
+                analysis.language ??
+                analysis.structure.language ??
+                t('analysisResult.common.notIdentified')
+              }
             />
             <ReferenceMetric
-              label="Dominant emotion"
-              value={analysis.persuasion.dominantEmotion ?? 'Not identified'}
+              label={t('adaptationResult.referenceAnalysis.persuasionPattern')}
+              value={analysis.persuasion.pattern ?? t('analysisResult.common.notIdentified')}
+            />
+            <ReferenceMetric
+              label={t('adaptationResult.referenceAnalysis.dominantEmotion')}
+              value={
+                analysis.persuasion.dominantEmotion ?? t('analysisResult.common.notIdentified')
+              }
             />
           </dl>
 
           <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
             <div className="px-5 py-6 sm:px-8 sm:py-8">
               <p className="font-mono text-meta uppercase tracking-[0.1em] text-text-subtle">
-                Reference hook
+                {t('adaptationResult.referenceAnalysis.referenceHook')}
               </p>
               {analysis.structure.mainHook ? (
                 <blockquote className="mt-4 border-l-2 border-action pl-5 font-heading text-heading-3 text-text">
                   {analysis.structure.mainHook}
                 </blockquote>
               ) : (
-                <p className="mt-3 text-body text-text-muted">No dominant hook was identified.</p>
+                <p className="mt-3 text-body text-text-muted">
+                  {t('adaptationResult.referenceAnalysis.noDominantHook')}
+                </p>
               )}
             </div>
 
             <div className="border-t border-border px-5 py-6 sm:px-8 lg:border-t-0 lg:border-l lg:px-6 lg:py-8">
-              <ReferenceSummary label="Offer reading" value={analysis.offer.summary} />
-              <ReferenceSummary label="Persuasion reading" value={analysis.persuasion.summary} />
+              <ReferenceSummary
+                label={t('adaptationResult.referenceAnalysis.offerReading')}
+                value={analysis.offer.summary}
+              />
+              <ReferenceSummary
+                label={t('adaptationResult.referenceAnalysis.persuasionReading')}
+                value={analysis.persuasion.summary}
+              />
             </div>
           </div>
 
           <div className="border-t border-border px-5 py-6 sm:px-8">
             <p className="font-mono text-meta uppercase tracking-[0.1em] text-text-subtle">
-              Reference sequence
+              {t('adaptationResult.referenceAnalysis.referenceSequence')}
             </p>
             {analysis.structure.sections.length > 0 ? (
               <ol className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -110,22 +114,21 @@ export function ReferenceAnalysis({ analysis }: ReferenceAnalysisProps) {
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <span className="text-body-sm font-medium text-text">
-                      {SECTION_LABELS[section.type]}
+                      {t(`analysisResult.sections.${section.type}`)}
                     </span>
                   </li>
                 ))}
               </ol>
             ) : (
               <p className="mt-3 text-body text-text-muted">
-                No structural sequence was identified in the reference.
+                {t('adaptationResult.referenceAnalysis.noSequence')}
               </p>
             )}
           </div>
 
           <footer className="border-t border-border bg-surface-muted/45 px-5 py-4 sm:px-8">
             <p className="text-body-sm text-text-muted">
-              Use this analysis to understand the strategic pattern. The adapted script should
-              preserve the logic, not copy the original wording or unsupported claims.
+              {t('adaptationResult.referenceAnalysis.footer')}
             </p>
           </footer>
         </div>
@@ -140,10 +143,12 @@ interface ReferenceMetricProps {
 }
 
 function ReferenceMetric({ label, value }: ReferenceMetricProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="bg-surface px-5 py-4 sm:px-6">
       <dt className="font-mono text-meta uppercase tracking-[0.08em] text-text-subtle">{label}</dt>
-      <dd className="mt-1 text-body-sm font-medium text-text">{formatLabel(value)}</dd>
+      <dd className="mt-1 text-body-sm font-medium text-text">{formatLabel(value, t)}</dd>
     </div>
   )
 }
@@ -181,7 +186,17 @@ function ChevronIcon() {
   )
 }
 
-function formatLabel(value: string): string {
+function formatLabel(value: string, t: TFunction): string {
   const normalizedValue = value.trim().replaceAll(/[_-]+/g, ' ')
+  const descriptorKey = normalizedValue.toLowerCase()
+
+  if (descriptorKey === 'video') {
+    return t('analysisResult.contentTypes.video')
+  }
+
+  if (descriptorKey === 'audio') {
+    return t('analysisResult.contentTypes.audio')
+  }
+
   return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
 }

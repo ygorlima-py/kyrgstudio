@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useFormContext, useWatch } from 'react-hook-form'
 
 import type { JobCreationFormInput } from '@/features/jobs/schemas/job-creation-schema'
@@ -31,6 +32,7 @@ export function RepeatableTextList({
   label,
   name,
 }: RepeatableTextListProps) {
+  const { t } = useTranslation()
   const { control, setValue } =
     useFormContext<JobCreationFormInput>()
 
@@ -96,19 +98,22 @@ export function RepeatableTextList({
               />
 
               <Button
-                aria-label={`Remove ${itemLabel} ${index + 1}`}
+                aria-label={t('userProfile.repeatable.removeItem', {
+                  itemLabel,
+                  number: index + 1,
+                })}
                 onClick={() => removeItem(index)}
                 size="sm"
                 type="button"
                 variant="ghost"
               >
-                Remove
+                {t('userProfile.repeatable.remove')}
               </Button>
             </div>
           ))}
         </div>
       ) : (
-        <FieldMessage>No items added yet.</FieldMessage>
+        <FieldMessage>{t('userProfile.repeatable.empty')}</FieldMessage>
       )}
 
       <Button

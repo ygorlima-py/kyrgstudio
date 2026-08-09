@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 
 export interface MissingProofsProps {
@@ -6,6 +8,7 @@ export interface MissingProofsProps {
 
 /** Highlight claims that still require real supporting material. */
 export function MissingProofs({ proofs }: MissingProofsProps) {
+  const { t } = useTranslation()
   const hasMissingProofs = proofs.length > 0
 
   return (
@@ -16,18 +19,20 @@ export function MissingProofs({ proofs }: MissingProofsProps) {
       <header className="grid gap-4 border-b border-border px-5 py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:px-8 sm:py-7">
         <div>
           <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-            Evidence check
+            {t('adaptationResult.missingProofs.eyebrow')}
           </p>
           <h2 className="mt-2 font-heading text-heading-3 text-text" id="missing-proofs-heading">
-            Proof requirements
+            {t('adaptationResult.missingProofs.title')}
           </h2>
           <p className="mt-2 max-w-2xl text-body-sm text-text-muted">
-            Claims listed here need real evidence before the script is published or recorded.
+            {t('adaptationResult.missingProofs.description')}
           </p>
         </div>
 
         <Badge variant={hasMissingProofs ? 'warning' : 'success'}>
-          {hasMissingProofs ? `${proofs.length} missing` : 'No gaps found'}
+          {hasMissingProofs
+            ? t('adaptationResult.missingProofs.count', { count: proofs.length })
+            : t('adaptationResult.missingProofs.noGapsFound')}
         </Badge>
       </header>
 
@@ -47,15 +52,14 @@ export function MissingProofs({ proofs }: MissingProofsProps) {
         </ol>
       ) : (
         <p className="px-5 py-7 text-body text-text-muted sm:px-8">
-          The workflow did not identify any claim that requires additional proof.
+          {t('adaptationResult.missingProofs.empty')}
         </p>
       )}
 
       {hasMissingProofs ? (
         <footer className="border-t border-border bg-surface-muted/45 px-5 py-4 sm:px-8">
           <p className="text-body-sm text-text-muted">
-            Do not invent testimonials, numbers or outcomes. Replace the claim or provide verified
-            evidence.
+            {t('adaptationResult.missingProofs.warning')}
           </p>
         </footer>
       ) : null}

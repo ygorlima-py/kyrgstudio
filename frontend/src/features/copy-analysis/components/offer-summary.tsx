@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import type {
   NormalizedOfferAnalysis,
   NormalizedOfferElement,
@@ -9,24 +11,25 @@ export interface OfferSummaryProps {
 
 /** Present the commercial offer and its supporting elements as readable content. */
 export function OfferSummary({ offer }: OfferSummaryProps) {
+  const { t } = useTranslation()
   const coreDetails = [
-    ['Product or solution', offer.productOrSolution],
-    ['Target audience', offer.targetAudience],
-    ['Core problem', offer.coreProblem],
-    ['Core desire', offer.coreDesire],
-    ['Main promise', offer.mainPromise],
-    ['Unique mechanism', offer.uniqueMechanism],
+    [t('analysisResult.offer.details.productOrSolution'), offer.productOrSolution],
+    [t('analysisResult.offer.details.targetAudience'), offer.targetAudience],
+    [t('analysisResult.offer.details.coreProblem'), offer.coreProblem],
+    [t('analysisResult.offer.details.coreDesire'), offer.coreDesire],
+    [t('analysisResult.offer.details.mainPromise'), offer.mainPromise],
+    [t('analysisResult.offer.details.uniqueMechanism'), offer.uniqueMechanism],
   ] as const
 
   return (
     <section aria-labelledby="offer-summary-heading">
       <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Offer decomposition
+          {t('analysisResult.offer.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="offer-summary-heading">
-          What is being sold
+          {t('analysisResult.offer.title')}
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">{offer.summary}</p>
@@ -39,17 +42,38 @@ export function OfferSummary({ offer }: OfferSummaryProps) {
       </dl>
 
       <div className="grid gap-x-10 lg:grid-cols-2">
-        <OfferElementGroup elements={offer.benefits} title="Benefits" />
-        <OfferElementGroup elements={offer.proofElements} title="Proof" />
-        <OfferElementGroup elements={offer.objections} title="Objections addressed" />
-        <OfferElementGroup elements={offer.bonuses} title="Bonuses and extras" />
-        <OfferElementGroup elements={offer.urgencyOrScarcity} title="Urgency and scarcity" />
+        <OfferElementGroup
+          elements={offer.benefits}
+          title={t('analysisResult.offer.groups.benefits')}
+        />
+        <OfferElementGroup
+          elements={offer.proofElements}
+          title={t('analysisResult.offer.groups.proof')}
+        />
+        <OfferElementGroup
+          elements={offer.objections}
+          title={t('analysisResult.offer.groups.objections')}
+        />
+        <OfferElementGroup
+          elements={offer.bonuses}
+          title={t('analysisResult.offer.groups.bonuses')}
+        />
+        <OfferElementGroup
+          elements={offer.urgencyOrScarcity}
+          title={t('analysisResult.offer.groups.urgencyOrScarcity')}
+        />
       </div>
 
       {offer.priceOrTerms || offer.callToAction ? (
         <dl className="grid border-y border-border md:grid-cols-2">
-          <OfferDetail label="Price and terms" value={offer.priceOrTerms} />
-          <OfferDetail label="Call to action" value={offer.callToAction} />
+          <OfferDetail
+            label={t('analysisResult.offer.details.priceOrTerms')}
+            value={offer.priceOrTerms}
+          />
+          <OfferDetail
+            label={t('analysisResult.offer.details.callToAction')}
+            value={offer.callToAction}
+          />
         </dl>
       ) : null}
     </section>
@@ -57,10 +81,14 @@ export function OfferSummary({ offer }: OfferSummaryProps) {
 }
 
 function OfferDetail({ label, value }: { readonly label: string; readonly value: string | null }) {
+  const { t } = useTranslation()
+
   return (
     <div className="border-b border-border px-0 py-5 last:border-b-0 md:px-5 md:odd:border-r md:[&:nth-last-child(-n+2)]:border-b-0">
       <dt className="font-mono text-meta uppercase tracking-[0.1em] text-text-subtle">{label}</dt>
-      <dd className="mt-2 text-body text-text">{value ?? 'Not identified'}</dd>
+      <dd className="mt-2 text-body text-text">
+        {value ?? t('analysisResult.common.notIdentified')}
+      </dd>
     </div>
   )
 }

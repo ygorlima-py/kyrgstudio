@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import { JobsHistoryFilters } from '@/features/jobs/components/jobs-history-filters'
 import { JobsHistoryList } from '@/features/jobs/components/jobs-history-list'
@@ -7,6 +8,7 @@ import { useUserJobs } from '@/features/jobs/hooks/use-user-jobs'
 
 /** Authenticated page for revisiting the user's most recent projects. */
 export function JobsHistoryRoute() {
+  const { t } = useTranslation()
   const filters = useJobsHistoryFilters()
   const jobsQuery = useUserJobs({
     jobId: filters.jobId,
@@ -22,11 +24,13 @@ export function JobsHistoryRoute() {
       <header className="border-b border-border pb-7 sm:flex sm:items-end sm:justify-between sm:gap-8 sm:pb-9">
         <div>
           <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-            Project library
+            {t('jobs.history.page.eyebrow')}
           </p>
-          <h1 className="mt-2 font-heading text-heading-3 text-text">Project history</h1>
+          <h1 className="mt-2 font-heading text-heading-3 text-text">
+            {t('jobs.history.page.title')}
+          </h1>
           <p className="mt-2 max-w-2xl text-body text-text-muted">
-            Reopen finished work and follow projects that are still processing.
+            {t('jobs.history.page.description')}
           </p>
         </div>
 
@@ -34,7 +38,7 @@ export function JobsHistoryRoute() {
           className="mt-5 inline-flex h-10 items-center justify-center rounded-md border border-border-strong bg-surface px-4 text-label text-text shadow-sm transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus focus-visible:ring-offset-2 sm:mt-0 sm:shrink-0"
           to="/app/jobs/new"
         >
-          New project
+          {t('jobs.history.page.newProject')}
         </Link>
       </header>
 

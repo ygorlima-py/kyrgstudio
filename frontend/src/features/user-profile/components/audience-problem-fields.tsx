@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { ProfileTextField } from './profile-text-field'
 
 /**
@@ -5,6 +7,8 @@ import { ProfileTextField } from './profile-text-field'
  * should explore.
  */
 export function AudienceProblemFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="audience-problem-heading"
@@ -15,28 +19,27 @@ export function AudienceProblemFields() {
           className="font-heading text-heading-sm text-text"
           id="audience-problem-heading"
         >
-          Audience and problem
+          {t('userProfile.audienceProblem.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Describe the person this message should reach and the main problem
-          they are trying to solve.
+          {t('userProfile.audienceProblem.description')}
         </p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ProfileTextField
-          description="Include relevant characteristics, context, experience, and current situation."
-          label="Who is the target audience?"
+          description={t('userProfile.audienceProblem.audience.description')}
+          label={t('userProfile.audienceProblem.audience.label')}
           name="user_profile.target_audience"
-          placeholder="Example: Brazilian adults who understand English but freeze when speaking."
+          placeholder={t('userProfile.audienceProblem.audience.placeholder')}
         />
 
         <ProfileTextField
-          description="Focus on the most important difficulty the offer addresses."
-          label="What is their main problem?"
+          description={t('userProfile.audienceProblem.problem.description')}
+          label={t('userProfile.audienceProblem.problem.label')}
           name="user_profile.core_problem"
-          placeholder="Example: They have studied for years but cannot speak naturally in real situations."
+          placeholder={t('userProfile.audienceProblem.problem.placeholder')}
         />
       </div>
     </section>

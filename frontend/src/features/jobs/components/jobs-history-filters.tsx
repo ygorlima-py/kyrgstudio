@@ -1,4 +1,5 @@
 import { useRef, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -8,21 +9,6 @@ import { Select } from '@/shared/ui/select'
 import type { JobListPipelineType, JobListStatus } from '../api/jobs-api'
 
 const ALL_FILTERS_VALUE = 'all'
-
-const STATUS_OPTIONS = [
-  { value: ALL_FILTERS_VALUE, label: 'All statuses' },
-  { value: 'pending', label: 'Preparing' },
-  { value: 'uploaded', label: 'Queued' },
-  { value: 'running', label: 'Processing' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'failed', label: 'Failed' },
-] as const
-
-const PIPELINE_OPTIONS = [
-  { value: ALL_FILTERS_VALUE, label: 'All project types' },
-  { value: 'copy_analysis', label: 'Copy analysis' },
-  { value: 'copy_adaptation', label: 'Copy adaptation' },
-] as const
 
 export interface JobsHistoryFiltersProps {
   readonly hasActiveFilters: boolean
@@ -46,7 +32,21 @@ export function JobsHistoryFilters({
   pipelineType,
   status,
 }: JobsHistoryFiltersProps) {
+  const { t } = useTranslation()
   const jobIdInputRef = useRef<HTMLInputElement>(null)
+  const statusOptions = [
+    { value: ALL_FILTERS_VALUE, label: t('jobs.history.filters.allStatuses') },
+    { value: 'pending', label: t('jobs.history.status.preparing') },
+    { value: 'uploaded', label: t('jobs.history.status.queued') },
+    { value: 'running', label: t('jobs.history.status.processing') },
+    { value: 'completed', label: t('jobs.history.status.completed') },
+    { value: 'failed', label: t('jobs.history.status.failed') },
+  ] as const
+  const pipelineOptions = [
+    { value: ALL_FILTERS_VALUE, label: t('jobs.history.filters.allProjectTypes') },
+    { value: 'copy_analysis', label: t('jobs.pipeline.analysis') },
+    { value: 'copy_adaptation', label: t('jobs.pipeline.adaptation') },
+  ] as const
 
   function handleSearch(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
@@ -68,10 +68,10 @@ export function JobsHistoryFilters({
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-body font-semibold text-text" id="history-filters-heading">
-            Find a project
+            {t('jobs.history.filters.title')}
           </h2>
           <p className="mt-1 text-body-sm text-text-muted">
-            Search by project number or narrow the history by status and type.
+            {t('jobs.history.filters.description')}
           </p>
         </div>
 
@@ -82,14 +82,14 @@ export function JobsHistoryFilters({
           type="button"
           variant="ghost"
         >
-          Clear filters
+          {t('jobs.history.filters.clear')}
         </Button>
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(16rem,1.35fr)_minmax(12rem,0.8fr)_minmax(12rem,0.8fr)] lg:items-end">
         <form className="flex items-end gap-2" onSubmit={handleSearch}>
           <div className="min-w-0 flex-1">
-            <Label htmlFor="history-job-id">Project number</Label>
+            <Label htmlFor="history-job-id">{t('jobs.history.filters.projectNumber')}</Label>
             <Input
               className="mt-2"
               defaultValue={jobId === undefined ? '' : String(jobId)}
@@ -97,35 +97,35 @@ export function JobsHistoryFilters({
               inputMode="numeric"
               key={jobId ?? 'all-projects'}
               min={1}
-              placeholder="e.g. 142"
+              placeholder={t('jobs.history.filters.projectNumberPlaceholder')}
               ref={jobIdInputRef}
               step={1}
               type="number"
             />
           </div>
           <Button className="shrink-0" type="submit" variant="secondary">
-            Search
+            {t('jobs.history.filters.search')}
           </Button>
         </form>
 
         <div>
-          <Label id="history-status-label">Status</Label>
+          <Label id="history-status-label">{t('jobs.history.filters.status')}</Label>
           <Select
             aria-labelledby="history-status-label"
             className="mt-2"
             onValueChange={(value) => onStatusChange(readStatusValue(value))}
-            options={STATUS_OPTIONS}
+            options={statusOptions}
             value={status ?? ALL_FILTERS_VALUE}
           />
         </div>
 
         <div>
-          <Label id="history-pipeline-label">Project type</Label>
+          <Label id="history-pipeline-label">{t('jobs.history.filters.projectType')}</Label>
           <Select
             aria-labelledby="history-pipeline-label"
             className="mt-2"
             onValueChange={(value) => onPipelineTypeChange(readPipelineValue(value))}
-            options={PIPELINE_OPTIONS}
+            options={pipelineOptions}
             value={pipelineType ?? ALL_FILTERS_VALUE}
           />
         </div>

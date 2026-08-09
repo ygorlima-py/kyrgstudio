@@ -1,9 +1,13 @@
+import { useTranslation } from 'react-i18next'
+
 import { RepeatableTextList } from './repeatable-text-list'
 
 /**
  * Collects real evidence that the adaptation may use to support its claims.
  */
 export function ProofAssetsFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="proof-assets-heading"
@@ -14,20 +18,19 @@ export function ProofAssetsFields() {
           className="font-heading text-heading-sm text-text"
           id="proof-assets-heading"
         >
-          Available proof
+          {t('userProfile.proofAssets.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Add only evidence that already exists and can be verified. The
-          adaptation must not invent testimonials, numbers, or results.
+          {t('userProfile.proofAssets.description')}
         </p>
       </div>
 
       <RepeatableTextList
-        addLabel="Add proof"
-        description="Examples include real testimonials, case studies, demonstrations, credentials, or documented results."
-        itemLabel="Describe available proof"
-        label="What evidence supports the offer?"
+        addLabel={t('userProfile.proofAssets.list.add')}
+        description={t('userProfile.proofAssets.list.description')}
+        itemLabel={t('userProfile.proofAssets.list.itemLabel')}
+        label={t('userProfile.proofAssets.list.label')}
         name="user_profile.proof_assets"
       />
     </section>

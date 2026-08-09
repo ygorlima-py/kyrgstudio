@@ -1,14 +1,17 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/utils/class-names'
 
 import type { NormalizedPersuasionStrengths } from '../utils/normalize-analysis-result'
 
 const STRENGTH_ITEMS = [
-  ['Hook effectiveness', 'hook'],
-  ['Promise clarity', 'promiseClarity'],
-  ['Proof', 'proof'],
-  ['Urgency', 'urgency'],
-  ['Call to action', 'callToAction'],
+  ['analysisResult.persuasion.scores.items.hook', 'hook'],
+  ['analysisResult.persuasion.scores.items.promiseClarity', 'promiseClarity'],
+  ['analysisResult.persuasion.scores.items.proof', 'proof'],
+  ['analysisResult.persuasion.scores.items.urgency', 'urgency'],
+  ['analysisResult.persuasion.scores.items.callToAction', 'callToAction'],
 ] as const satisfies readonly (readonly [string, keyof NormalizedPersuasionStrengths])[]
 
 type StrengthLevel = 'low' | 'medium' | 'high' | 'unknown'
@@ -19,25 +22,27 @@ export interface PersuasionScoresProps {
 
 /** Display qualitative persuasion ratings without inventing numerical scores. */
 export function PersuasionScores({ strengths }: PersuasionScoresProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="persuasion-scores-heading">
       <div>
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Persuasion diagnosis
+          {t('analysisResult.persuasion.scores.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="persuasion-scores-heading">
-          Overall effectiveness by element
+          {t('analysisResult.persuasion.scores.title')}
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">
-          Qualitative ratings found by the analysis. These are not numerical conversion scores.
+          {t('analysisResult.persuasion.scores.description')}
         </p>
       </div>
 
       <dl className="mt-6 divide-y divide-border border-y border-border">
-        {STRENGTH_ITEMS.map(([label, key]) => (
-          <StrengthRow key={key} label={label} value={strengths[key]} />
+        {STRENGTH_ITEMS.map(([labelKey, key]) => (
+          <StrengthRow key={key} label={t(labelKey)} value={strengths[key]} />
         ))}
       </dl>
     </section>
@@ -45,6 +50,7 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
 }
 
 function StrengthRow({ label, value }: { readonly label: string; readonly value: string | null }) {
+  const { t } = useTranslation()
   const level = normalizeStrength(value)
 
   return (
@@ -65,7 +71,7 @@ function StrengthRow({ label, value }: { readonly label: string; readonly value:
           ))}
         </span>
 
-        <Badge variant={strengthBadgeVariant(level)}>{formatStrength(value)}</Badge>
+        <Badge variant={strengthBadgeVariant(level)}>{formatStrength(value, t)}</Badge>
       </dd>
     </div>
   )
@@ -92,8 +98,14 @@ function strengthBadgeVariant(level: StrengthLevel): 'danger' | 'warning' | 'suc
   return 'neutral'
 }
 
-function formatStrength(value: string | null): string {
-  if (!value) return 'Not rated'
+function formatStrength(value: string | null, t: TFunction): string {
+  if (!value) return t('analysisResult.persuasion.strength.notRated')
+
+  const level = normalizeStrength(value)
+
+  if (level !== 'unknown') {
+    return t(`analysisResult.persuasion.strength.${level}`)
+  }
 
   const normalizedValue = value.trim().replaceAll(/[_-]+/g, ' ')
   return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)

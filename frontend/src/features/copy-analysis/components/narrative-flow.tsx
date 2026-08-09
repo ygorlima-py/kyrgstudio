@@ -1,22 +1,26 @@
+import { useTranslation } from 'react-i18next'
+
 export interface NarrativeFlowProps {
   readonly steps: readonly string[]
 }
 
 /** Translate the inferred narrative progression into a readable sequence. */
 export function NarrativeFlow({ steps }: NarrativeFlowProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="narrative-flow-heading">
       <div>
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Strategic progression
+          {t('analysisResult.narrative.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="narrative-flow-heading">
-          Narrative flow
+          {t('analysisResult.narrative.title')}
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">
-          How the message moves the audience from attention toward action.
+          {t('analysisResult.narrative.description')}
         </p>
       </div>
 
@@ -40,7 +44,7 @@ export function NarrativeFlow({ steps }: NarrativeFlowProps) {
         </ol>
       ) : (
         <p className="mt-6 border-y border-border py-7 text-body text-text-muted">
-          No narrative progression was identified in this copy.
+          {t('analysisResult.narrative.empty')}
         </p>
       )}
     </section>

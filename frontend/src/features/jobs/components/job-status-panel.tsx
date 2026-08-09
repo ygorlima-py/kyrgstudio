@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 import type { JobStatusResponse } from '@/shared/api'
 import { Badge } from '@/shared/ui/badge'
@@ -10,40 +12,36 @@ import { JobStatusTimeline } from './job-status-timeline'
 type StatusBadgeVariant = 'neutral' | 'processing' | 'success' | 'danger'
 
 interface StatusContent {
-  readonly badge: string
+  readonly badgeKey: string
   readonly badgeVariant: StatusBadgeVariant
-  readonly title: string
-  readonly description: string
+  readonly titleKey: string
+  readonly descriptionKey: string
 }
 
 const STATUS_CONTENT: Record<JobStatus, StatusContent> = {
   uploaded: {
-    badge: 'Waiting to start',
+    badgeKey: 'jobStatus.panel.status.uploaded.badge',
     badgeVariant: 'neutral',
-    title: 'Your project is in line',
-    description:
-      'The file was received successfully. Processing will begin as soon as a worker is available.',
+    titleKey: 'jobStatus.panel.status.uploaded.title',
+    descriptionKey: 'jobStatus.panel.status.uploaded.description',
   },
   running: {
-    badge: 'Processing',
+    badgeKey: 'jobStatus.panel.status.running.badge',
     badgeVariant: 'processing',
-    title: 'We are analyzing your reference',
-    description:
-      'The transcription and copy analysis are running in the background. You can close this page and return later.',
+    titleKey: 'jobStatus.panel.status.running.title',
+    descriptionKey: 'jobStatus.panel.status.running.description',
   },
   completed: {
-    badge: 'Completed',
+    badgeKey: 'jobStatus.panel.status.completed.badge',
     badgeVariant: 'success',
-    title: 'Your result is ready',
-    description:
-      'Processing finished successfully. We are opening the result now.',
+    titleKey: 'jobStatus.panel.status.completed.title',
+    descriptionKey: 'jobStatus.panel.status.completed.description',
   },
   failed: {
-    badge: 'Processing stopped',
+    badgeKey: 'jobStatus.panel.status.failed.badge',
     badgeVariant: 'danger',
-    title: 'We could not complete this project',
-    description:
-      'The project stopped before a result was produced. Your account and other projects were not affected.',
+    titleKey: 'jobStatus.panel.status.failed.title',
+    descriptionKey: 'jobStatus.panel.status.failed.description',
   },
 }
 
@@ -54,30 +52,34 @@ export interface JobStatusPanelProps {
 
 /** Present one persisted job state with a clear, responsive progress line. */
 export function JobStatusPanel({ action, job }: JobStatusPanelProps) {
+  const { i18n, t } = useTranslation()
   const content = STATUS_CONTENT[job.status]
+  const locale = i18n.resolvedLanguage?.startsWith('en') ? 'en-US' : 'pt-BR'
 
   return (
     <Card className="overflow-hidden" padding="none">
       <div className="border-b border-border px-5 py-6 sm:px-8 sm:py-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
-            <Badge variant={content.badgeVariant}>{content.badge}</Badge>
+            <Badge variant={content.badgeVariant}>
+              {t(content.badgeKey)}
+            </Badge>
 
             <div>
               <h1 className="font-heading text-heading-3 text-text">
-                {content.title}
+                {t(content.titleKey)}
               </h1>
 
               <p className="mt-2 max-w-2xl text-body text-text-muted">
                 {job.status === 'failed'
-                  ? getPublicFailureDescription(job.error?.code)
-                  : content.description}
+                  ? getPublicFailureDescription(job.error?.code, t)
+                  : t(content.descriptionKey)}
               </p>
             </div>
           </div>
 
           <p className="shrink-0 font-mono text-meta uppercase tracking-[0.12em] text-text-subtle">
-            Project #{job.job_id}
+            {t('jobStatus.panel.projectNumber', { id: job.job_id })}
           </p>
         </div>
       </div>
@@ -89,13 +91,20 @@ export function JobStatusPanel({ action, job }: JobStatusPanelProps) {
       <div className="border-t border-border px-5 py-5 sm:px-8">
         <dl className="grid gap-4 sm:grid-cols-3">
           <StatusDetail
-            label="Project type"
-            value={job.pipeline_type === 'copy_adaptation' ? 'Copy adaptation' : 'Copy analysis'}
+            label={t('jobStatus.panel.details.projectType')}
+            value={
+              job.pipeline_type === 'copy_adaptation'
+                ? t('jobStatus.panel.pipeline.adaptation')
+                : t('jobStatus.panel.pipeline.analysis')
+            }
           />
-          <StatusDetail label="Created" value={formatDateTime(job.created_at)} />
           <StatusDetail
-            label="Elapsed time"
-            value={formatExecutionTime(job.execution_time_seconds)}
+            label={t('jobStatus.panel.details.created')}
+            value={formatDateTime(job.created_at, locale, t)}
+          />
+          <StatusDetail
+            label={t('jobStatus.panel.details.elapsedTime')}
+            value={formatExecutionTime(job.execution_time_seconds, t)}
           />
         </dl>
 
@@ -116,48 +125,53 @@ function StatusDetail({ label, value }: { readonly label: string; readonly value
   )
 }
 
-function formatDateTime(value: string): string {
+function formatDateTime(value: string, locale: string, translate: TFunction): string {
   const date = new Date(value)
 
   if (Number.isNaN(date.getTime())) {
-    return 'Not available'
+    return translate('jobStatus.panel.empty.notAvailable')
   }
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date)
 }
 
-function formatExecutionTime(value: number | null | undefined): string {
+function formatExecutionTime(value: number | null | undefined, translate: TFunction): string {
   if (value === null || value === undefined) {
-    return 'In progress'
+    return translate('jobStatus.panel.empty.inProgress')
   }
 
   if (value < 60) {
-    return `${Math.max(0, Math.round(value))} seconds`
+    return translate('jobStatus.panel.elapsed.seconds', {
+      count: Math.max(0, Math.round(value)),
+    })
   }
 
   const minutes = Math.floor(value / 60)
   const seconds = Math.round(value % 60)
 
-  return `${minutes}m ${seconds}s`
+  return translate('jobStatus.panel.elapsed.minutesSeconds', {
+    minutes,
+    seconds,
+  })
 }
 
-function getPublicFailureDescription(errorCode: string | undefined): string {
+function getPublicFailureDescription(errorCode: string | undefined, translate: TFunction): string {
   switch (errorCode) {
     case 'media_processing_failed':
-      return 'The uploaded media could not be read or prepared for analysis.'
+      return translate('jobStatus.panel.failures.mediaProcessingFailed')
     case 'transcription_failed':
-      return 'We could not produce a usable transcription from this reference.'
+      return translate('jobStatus.panel.failures.transcriptionFailed')
     case 'llm_execution_failed':
     case 'structured_output_failed':
-      return 'The analysis service could not produce a valid result for this project.'
+      return translate('jobStatus.panel.failures.structuredOutputFailed')
     case 'storage_error':
-      return 'The reference file became unavailable while the project was processing.'
+      return translate('jobStatus.panel.failures.storageError')
     case 'timeout':
-      return 'Processing took longer than the allowed time and was stopped.'
+      return translate('jobStatus.panel.failures.timeout')
     default:
-      return STATUS_CONTENT.failed.description
+      return translate(STATUS_CONTENT.failed.descriptionKey)
   }
 }

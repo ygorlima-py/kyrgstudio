@@ -2,6 +2,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import * as SelectPrimitive from '@radix-ui/react-select'
 
+import { i18n } from '@/shared/i18n/i18n'
 import { cn } from '@/shared/utils/class-names'
 
 export interface SelectOption {
@@ -35,7 +36,7 @@ export function Select({
   className,
   id,
   options,
-  placeholder = 'Select an option',
+  placeholder = i18n.t('shared.ui.select.placeholder'),
   ...selectRootProps
 }: SelectProps) {
   return (

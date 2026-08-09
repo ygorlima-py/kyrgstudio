@@ -1,26 +1,10 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import type {
   NormalizedCopySection,
   NormalizedCopyStructure,
 } from '../utils/normalize-analysis-result'
-
-const SECTION_LABELS: Record<NormalizedCopySection['type'], string> = {
-  hook: 'Hook',
-  problem: 'Problem',
-  pain: 'Pain',
-  agitation: 'Agitation',
-  promise: 'Promise',
-  mechanism: 'Mechanism',
-  proof: 'Proof',
-  story: 'Story',
-  objection: 'Objection',
-  offer: 'Offer',
-  cta: 'Call to action',
-  urgency: 'Urgency',
-  scarcity: 'Scarcity',
-  transition: 'Transition',
-  education: 'Education',
-  payoff: 'Payoff',
-}
 
 export interface StructureTimelineProps {
   readonly structure: NormalizedCopyStructure
@@ -28,19 +12,21 @@ export interface StructureTimelineProps {
 
 /** Show the detected copy sections in their original narrative order. */
 export function StructureTimeline({ structure }: StructureTimelineProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="copy-structure-heading">
       <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-          Message anatomy
+          {t('analysisResult.structure.eyebrow')}
         </p>
 
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="copy-structure-heading">
-          Copy structure
+          {t('analysisResult.structure.title')}
         </h2>
 
         <p className="mt-2 max-w-3xl text-body text-text-muted">
-          The sequence below shows how each part advances the sales argument.
+          {t('analysisResult.structure.description')}
         </p>
       </div>
 
@@ -52,7 +38,7 @@ export function StructureTimeline({ structure }: StructureTimelineProps) {
         </ol>
       ) : (
         <p className="border-b border-border py-8 text-body text-text-muted">
-          No structural sections were identified in this copy.
+          {t('analysisResult.structure.empty')}
         </p>
       )}
     </section>
@@ -65,7 +51,8 @@ interface StructureStepProps {
 }
 
 function StructureStep({ index, section }: StructureStepProps) {
-  const timeRange = formatTimeRange(section.startSeconds, section.endSeconds)
+  const { t } = useTranslation()
+  const timeRange = formatTimeRange(section.startSeconds, section.endSeconds, t)
 
   return (
     <li className="grid gap-4 py-6 sm:grid-cols-[3rem_minmax(9rem,0.35fr)_minmax(0,1fr)] sm:gap-6 sm:py-7">
@@ -74,7 +61,7 @@ function StructureStep({ index, section }: StructureStepProps) {
       </span>
 
       <div>
-        <h3 className="text-label text-text">{SECTION_LABELS[section.type]}</h3>
+        <h3 className="text-label text-text">{formatSectionLabel(section.type, t)}</h3>
         <p className="mt-1 text-body-sm text-text-muted">{section.purpose}</p>
 
         {timeRange ? (
@@ -87,14 +74,24 @@ function StructureStep({ index, section }: StructureStepProps) {
   )
 }
 
-function formatTimeRange(startSeconds: number | null, endSeconds: number | null): string | null {
+function formatSectionLabel(value: NormalizedCopySection['type'], t: TFunction): string {
+  return t(`analysisResult.sections.${value}`)
+}
+
+function formatTimeRange(
+  startSeconds: number | null,
+  endSeconds: number | null,
+  t: TFunction,
+): string | null {
   if (startSeconds === null && endSeconds === null) {
     return null
   }
 
   const start = formatTimestamp(startSeconds ?? 0)
 
-  return endSeconds === null ? `From ${start}` : `${start}–${formatTimestamp(endSeconds)}`
+  return endSeconds === null
+    ? t('analysisResult.structure.fromTime', { time: start })
+    : `${start}-${formatTimestamp(endSeconds)}`
 }
 
 function formatTimestamp(seconds: number): string {

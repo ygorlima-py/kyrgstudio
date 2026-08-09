@@ -1,9 +1,11 @@
 import { useId, useState, type ReactNode } from 'react'
 
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Textarea } from '@/shared/ui/textarea'
-
 import type { NormalizedAdaptedScript } from '../utils/normalize-adaptation-result'
 
 export interface ScriptEditorProps {
@@ -16,6 +18,7 @@ export function ScriptEditor({ script }: ScriptEditorProps) {
 }
 
 function ScriptEditorSession({ script }: ScriptEditorProps) {
+  const { t } = useTranslation()
   const editorDescriptionId = useId()
   const editorId = useId()
   const [draft, setDraft] = useState(script.script)
@@ -33,41 +36,53 @@ function ScriptEditorSession({ script }: ScriptEditorProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
-              Working draft
+              {t('adaptationResult.scriptEditor.eyebrow')}
             </p>
             <h2 className="mt-2 font-heading text-heading-3 text-text" id="script-editor-heading">
-              Adapted script
+              {t('adaptationResult.scriptEditor.title')}
             </h2>
             <p className="mt-2 max-w-2xl text-body-sm text-text-muted">
-              Refine the generated copy here. Changes remain in this browser tab and are not saved
-              to your account yet.
+              {t('adaptationResult.scriptEditor.description')}
             </p>
           </div>
 
           <Badge variant={hasLocalChanges ? 'warning' : 'neutral'}>
-            {hasLocalChanges ? 'Local changes' : 'Generated version'}
+            {hasLocalChanges
+              ? t('adaptationResult.scriptEditor.localChanges')
+              : t('adaptationResult.scriptEditor.generatedVersion')}
           </Badge>
         </div>
       </header>
 
       <dl className="grid grid-cols-2 gap-px border-b border-border bg-border sm:grid-cols-4">
-        <ScriptMetric label="Draft words" value={currentWordCount.toLocaleString()} />
-        <ScriptMetric label="Sections" value={String(script.sections.length)} />
         <ScriptMetric
-          label="Estimated length"
-          value={formatDuration(script.estimatedDurationSeconds)}
+          label={t('adaptationResult.scriptEditor.draftWords')}
+          value={currentWordCount.toLocaleString()}
         />
-        <ScriptMetric label="Hook options" value={String(script.hooks.length)} />
+        <ScriptMetric
+          label={t('adaptationResult.scriptEditor.sections')}
+          value={String(script.sections.length)}
+        />
+        <ScriptMetric
+          label={t('adaptationResult.scriptEditor.estimatedLength')}
+          value={formatDuration(script.estimatedDurationSeconds, t)}
+        />
+        <ScriptMetric
+          label={t('adaptationResult.scriptEditor.hookOptions')}
+          value={String(script.hooks.length)}
+        />
       </dl>
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex items-end justify-between gap-4">
             <label className="text-label text-text" htmlFor={editorId}>
-              Full script
+              {t('adaptationResult.scriptEditor.fullScript')}
             </label>
             <span className="font-mono text-meta text-text-subtle" role="status">
-              {hasLocalChanges ? 'Edited locally' : 'No local edits'}
+              {hasLocalChanges
+                ? t('adaptationResult.scriptEditor.editedLocally')
+                : t('adaptationResult.scriptEditor.noLocalEdits')}
             </span>
           </div>
 
@@ -82,7 +97,7 @@ function ScriptEditorSession({ script }: ScriptEditorProps) {
 
           <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-xl text-body-sm text-text-muted" id={editorDescriptionId}>
-              Editing does not change the structured sections, validation or stored result.
+              {t('adaptationResult.scriptEditor.editingNote')}
             </p>
             <Button
               disabled={!hasLocalChanges}
@@ -90,16 +105,16 @@ function ScriptEditorSession({ script }: ScriptEditorProps) {
               size="sm"
               variant="secondary"
             >
-              Reset draft
+              {t('adaptationResult.scriptEditor.resetDraft')}
             </Button>
           </div>
         </div>
 
         <aside
-          aria-label="Script context"
+          aria-label={t('adaptationResult.scriptEditor.contextAriaLabel')}
           className="border-t border-border bg-surface-muted/45 px-5 py-6 sm:px-8 lg:border-t-0 lg:border-l lg:px-6 lg:py-8"
         >
-          <ScriptContext title="Hook options">
+          <ScriptContext title={t('adaptationResult.scriptEditor.hookOptions')}>
             {script.hooks.length > 0 ? (
               <ol className="space-y-3">
                 {script.hooks.map((hook, index) => (
@@ -116,20 +131,20 @@ function ScriptEditorSession({ script }: ScriptEditorProps) {
               </ol>
             ) : (
               <p className="text-body-sm text-text-muted">
-                No separate hook options were generated.
+                {t('adaptationResult.scriptEditor.noHookOptions')}
               </p>
             )}
           </ScriptContext>
 
-          <ScriptContext title="Primary call to action">
+          <ScriptContext title={t('adaptationResult.scriptEditor.primaryCallToAction')}>
             <p className="text-body-sm text-text-muted">
-              {script.callToAction ?? 'No primary call to action was identified.'}
+              {script.callToAction ?? t('adaptationResult.scriptEditor.noPrimaryCallToAction')}
             </p>
           </ScriptContext>
 
-          <ScriptContext title="Adaptation notes">
+          <ScriptContext title={t('adaptationResult.scriptEditor.adaptationNotes')}>
             <p className="text-body-sm text-text-muted">
-              {script.adaptationNotes ?? 'No additional adaptation notes were provided.'}
+              {script.adaptationNotes ?? t('adaptationResult.scriptEditor.noAdaptationNotes')}
             </p>
           </ScriptContext>
         </aside>
@@ -172,9 +187,9 @@ function countWords(value: string): number {
   return normalizedValue ? normalizedValue.split(/\s+/u).length : 0
 }
 
-function formatDuration(seconds: number | null): string {
+function formatDuration(seconds: number | null, t: TFunction): string {
   if (seconds === null) {
-    return 'Not estimated'
+    return t('adaptationResult.scriptEditor.notEstimated')
   }
 
   const roundedSeconds = Math.max(0, Math.round(seconds))

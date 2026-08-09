@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import type { TFunction } from 'i18next'
 import { Link, useParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import {
   AdaptationResult,
@@ -31,15 +33,16 @@ type PipelineType = 'copy_analysis' | 'copy_adaptation'
 
 /** Load the completed result identified by the protected route parameter. */
 export function JobResultRoute() {
+  const { t } = useTranslation()
   const { jobId: routeJobId } = useParams()
   const jobId = parseJobId(routeJobId)
 
   if (jobId === null) {
     return (
       <NotFoundState
-        action={dashboardLink()}
-        description="The project address is invalid or no longer available."
-        title="Project not found"
+        action={dashboardLink(t)}
+        description={t('jobResult.errors.invalidAddress.description')}
+        title={t('jobResult.errors.projectNotFound.title')}
       />
     )
   }
@@ -49,14 +52,15 @@ export function JobResultRoute() {
 
 /** Resolve the pipeline type before mounting its specialized result hook. */
 function PersistedJobResult({ jobId }: { readonly jobId: number }) {
+  const { t } = useTranslation()
   const statusQuery = useJobStatus(jobId)
 
   if (statusQuery.isPending) {
-    return <ResultLoadingState label="Loading project" />
+    return <ResultLoadingState label={t('jobResult.loading.project')} />
   }
 
   if (statusQuery.data === undefined) {
-    return renderLookupError(statusQuery.error, () => {
+    return renderLookupError(t, statusQuery.error, () => {
       void statusQuery.refetch()
     })
   }
@@ -64,7 +68,7 @@ function PersistedJobResult({ jobId }: { readonly jobId: number }) {
   const job = statusQuery.data
 
   if (job.status !== 'completed') {
-    return renderIncompleteJob(jobId, job.status)
+    return renderIncompleteJob(t, jobId, job.status)
   }
 
   return job.pipeline_type === 'copy_adaptation' ? (
@@ -75,26 +79,27 @@ function PersistedJobResult({ jobId }: { readonly jobId: number }) {
 }
 
 function PersistedAnalysisResult({ jobId }: { readonly jobId: number }) {
+  const { t } = useTranslation()
   const resultQuery = useJobResult(jobId)
 
   if (resultQuery.isPending) {
-    return <ResultLoadingState label="Loading copy analysis" />
+    return <ResultLoadingState label={t('jobResult.loading.analysis')} />
   }
 
   if (resultQuery.data === undefined) {
-    return renderResultError('copy_analysis', jobId, resultQuery.error, () => {
+    return renderResultError(t, 'copy_analysis', jobId, resultQuery.error, () => {
       void resultQuery.refetch()
     })
   }
 
   return (
     <ResultPage
-      description="A structured reading of the message, offer, persuasion strategy, and improvement opportunities."
-      eyebrow="Copy analysis"
+      description={t('analysisResult.page.description')}
+      eyebrow={t('analysisResult.page.eyebrow')}
       jobId={jobId}
-      newJobLabel="Analyze another copy"
+      newJobLabel={t('analysisResult.page.newJob')}
       newJobUrl="/app/jobs/new?pipeline=copy_analysis"
-      title="Analysis result"
+      title={t('analysisResult.page.title')}
     >
       <AnalysisResult result={resultQuery.data} />
     </ResultPage>
@@ -102,26 +107,27 @@ function PersistedAnalysisResult({ jobId }: { readonly jobId: number }) {
 }
 
 function PersistedAdaptationResult({ jobId }: { readonly jobId: number }) {
+  const { t } = useTranslation()
   const resultQuery = useAdaptationResult(jobId)
 
   if (resultQuery.isPending) {
-    return <ResultLoadingState label="Loading adapted script" />
+    return <ResultLoadingState label={t('jobResult.loading.adaptation')} />
   }
 
   if (resultQuery.data === undefined) {
-    return renderResultError('copy_adaptation', jobId, resultQuery.error, () => {
+    return renderResultError(t, 'copy_adaptation', jobId, resultQuery.error, () => {
       void resultQuery.refetch()
     })
   }
 
   return (
     <ResultPage
-      description="Review the adapted script, refine its wording, and verify its evidence and production-readiness checks."
-      eyebrow="Copy adaptation"
+      description={t('jobResult.adaptation.description')}
+      eyebrow={t('jobResult.adaptation.eyebrow')}
       jobId={jobId}
-      newJobLabel="Adapt another copy"
+      newJobLabel={t('jobResult.adaptation.newJob')}
       newJobUrl="/app/jobs/new?pipeline=copy_adaptation"
-      title="Adapted script"
+      title={t('jobResult.adaptation.title')}
     >
       <AdaptationResult result={resultQuery.data} />
     </ResultPage>
@@ -147,6 +153,8 @@ function ResultPage({
   newJobUrl,
   title,
 }: ResultPageProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="mx-auto w-full max-w-6xl">
       <header className="mb-10 border-b border-border pb-7 sm:mb-12 sm:flex sm:items-end sm:justify-between sm:gap-8 sm:pb-9">
@@ -157,7 +165,7 @@ function ResultPage({
         </div>
 
         <p className="mt-5 shrink-0 font-mono text-meta uppercase tracking-[0.1em] text-text-subtle sm:mt-0 sm:pb-1">
-          Project #{jobId}
+          {t('jobs.projectNumber', { id: jobId })}
         </p>
       </header>
 
@@ -168,7 +176,7 @@ function ResultPage({
           {newJobLabel}
         </Link>
         <Link className={secondaryLinkClassName} to="/app">
-          Return to dashboard
+          {t('jobResult.actions.returnToDashboard')}
         </Link>
       </footer>
     </div>
@@ -183,15 +191,15 @@ function ResultLoadingState({ label }: { readonly label: string }) {
   )
 }
 
-function renderIncompleteJob(jobId: number, status: string) {
+function renderIncompleteJob(t: TFunction, jobId: number, status: string) {
   if (isActiveJobStatus(status)) {
     return (
       <ProcessingState
-        action={statusLink(jobId)}
-        description="This project has not produced a completed result yet. Return to its status page while processing continues."
-        progressLabel="Project is still processing"
-        statusLabel="Not ready yet"
-        title="Your result is still being prepared"
+        action={statusLink(t, jobId)}
+        description={t('jobResult.errors.notReady.description')}
+        progressLabel={t('jobResult.errors.notReady.progressLabel')}
+        statusLabel={t('jobResult.errors.notReady.statusLabel')}
+        title={t('jobResult.errors.notReady.title')}
       />
     )
   }
@@ -199,37 +207,38 @@ function renderIncompleteJob(jobId: number, status: string) {
   if (status === 'failed') {
     return (
       <ErrorState
-        action={statusLink(jobId)}
-        description="This project stopped before producing a result. Open its status page for the public failure information."
-        title="Project did not complete"
+        action={statusLink(t, jobId)}
+        description={t('jobResult.errors.failed.description')}
+        title={t('jobResult.errors.failed.title')}
       />
     )
   }
 
   return (
     <ErrorState
-      action={statusLink(jobId)}
-      description="This project does not currently have a result that can be displayed."
-      title="Result unavailable"
+      action={statusLink(t, jobId)}
+      description={t('jobResult.errors.unavailable.description')}
+      title={t('jobResult.errors.unavailable.title')}
     />
   )
 }
 
-function renderLookupError(error: Error, retry: () => void) {
+function renderLookupError(t: TFunction, error: Error, retry: () => void) {
   if (error instanceof ApiError && error.status === 404) {
     return (
       <NotFoundState
-        action={dashboardLink()}
-        description="This project does not exist or is not available to your account."
-        title="Project not found"
+        action={dashboardLink(t)}
+        description={t('jobResult.errors.projectNotFound.description')}
+        title={t('jobResult.errors.projectNotFound.title')}
       />
     )
   }
 
-  return renderGenericLoadError(error, retry)
+  return renderGenericLoadError(t, error, retry)
 }
 
 function renderResultError(
+  t: TFunction,
   pipelineType: PipelineType,
   jobId: number,
   error: Error,
@@ -238,9 +247,9 @@ function renderResultError(
   if (error instanceof ApiError && error.status === 404) {
     return (
       <NotFoundState
-        action={dashboardLink()}
-        description="This project does not exist or is not available to your account."
-        title="Project not found"
+        action={dashboardLink(t)}
+        description={t('jobResult.errors.projectNotFound.description')}
+        title={t('jobResult.errors.projectNotFound.title')}
       />
     )
   }
@@ -248,11 +257,11 @@ function renderResultError(
   if (error instanceof ApiError && error.status === 409) {
     return (
       <ProcessingState
-        action={statusLink(jobId)}
-        description="This project has not produced a completed result yet. Return to its status page while processing continues."
-        progressLabel="Project is still processing"
-        statusLabel="Not ready yet"
-        title="Your result is still being prepared"
+        action={statusLink(t, jobId)}
+        description={t('jobResult.errors.notReady.description')}
+        progressLabel={t('jobResult.errors.notReady.progressLabel')}
+        statusLabel={t('jobResult.errors.notReady.statusLabel')}
+        title={t('jobResult.errors.notReady.title')}
       />
     )
   }
@@ -261,21 +270,24 @@ function renderResultError(
     error instanceof AnalysisResultValidationError ||
     error instanceof AdaptationResultValidationError
   ) {
-    const resultLabel = pipelineType === 'copy_adaptation' ? 'adaptation' : 'analysis'
+    const resultLabel =
+      pipelineType === 'copy_adaptation'
+        ? t('jobResult.resultTypes.adaptation')
+        : t('jobResult.resultTypes.analysis')
 
     return (
       <ErrorState
-        action={dashboardLink()}
-        description={`The completed project returned an ${resultLabel} format this version of the application cannot display safely.`}
-        title="Result format is unavailable"
+        action={dashboardLink(t)}
+        description={t('jobResult.errors.invalidFormat.description', { resultType: resultLabel })}
+        title={t('jobResult.errors.invalidFormat.title')}
       />
     )
   }
 
-  return renderGenericLoadError(error, retry)
+  return renderGenericLoadError(t, error, retry)
 }
 
-function renderGenericLoadError(error: Error, retry: () => void) {
+function renderGenericLoadError(t: TFunction, error: Error, retry: () => void) {
   const canRetry = error instanceof ApiError && error.retryable
 
   return (
@@ -283,30 +295,30 @@ function renderGenericLoadError(error: Error, retry: () => void) {
       action={
         canRetry ? (
           <Button onClick={retry} type="button">
-            Try again
+            {t('jobResult.actions.tryAgain')}
           </Button>
         ) : (
-          dashboardLink()
+          dashboardLink(t)
         )
       }
-      description="We could not load this result. No internal error details were exposed."
-      title="Result unavailable"
+      description={t('jobResult.errors.load.description')}
+      title={t('jobResult.errors.unavailable.title')}
     />
   )
 }
 
-function dashboardLink() {
+function dashboardLink(t: TFunction) {
   return (
     <Link className={primaryLinkClassName} to="/app">
-      Return to dashboard
+      {t('jobResult.actions.returnToDashboard')}
     </Link>
   )
 }
 
-function statusLink(jobId: number) {
+function statusLink(t: TFunction, jobId: number) {
   return (
     <Link className={primaryLinkClassName} to={`/app/jobs/${jobId}`}>
-      View processing status
+      {t('jobResult.actions.viewStatus')}
     </Link>
   )
 }

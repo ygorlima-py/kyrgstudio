@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Controller, useFormContext } from 'react-hook-form'
 
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -10,19 +11,19 @@ import type { JobCreationFormInput } from '../schemas/job-creation-schema'
 const LANGUAGE_OPTIONS = [
   {
     value: 'auto',
-    label: 'Detect automatically',
+    labelKey: 'newJob.settings.language.options.auto',
   },
   {
     value: 'pt',
-    label: 'Portuguese',
+    labelKey: 'newJob.settings.language.options.pt',
   },
   {
     value: 'en',
-    label: 'English',
+    labelKey: 'newJob.settings.language.options.en',
   },
   {
     value: 'es',
-    label: 'Spanish',
+    labelKey: 'newJob.settings.language.options.es',
   },
 ] as const
 
@@ -33,6 +34,7 @@ const LANGUAGE_OPTIONS = [
  * operational details that users do not need to configure in the MVP.
  */
 export function JobSettingsStep() {
+  const { t } = useTranslation()
   const {
     control,
     formState: { errors },
@@ -53,17 +55,18 @@ export function JobSettingsStep() {
           className="font-heading text-heading-md text-text"
           id="job-settings-heading"
         >
-          Configure the transcription
+          {t('newJob.settings.title')}
         </h2>
 
         <p className="max-w-2xl text-body text-text-muted">
-          Tell us the original language and whether the transcript should
-          receive an additional correction pass.
+          {t('newJob.settings.description')}
         </p>
       </div>
 
       <div className="max-w-xl space-y-2">
-        <Label htmlFor="job-language">Original language</Label>
+        <Label htmlFor="job-language">
+          {t('newJob.settings.language.label')}
+        </Label>
 
         <Controller
           control={control}
@@ -76,7 +79,10 @@ export function JobSettingsStep() {
               onValueChange={(value) => {
                 field.onChange(value === 'auto' ? '' : value)
               }}
-              options={LANGUAGE_OPTIONS}
+              options={LANGUAGE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: t(option.labelKey),
+              }))}
               value={field.value || 'auto'}
             />
           )}
@@ -88,8 +94,7 @@ export function JobSettingsStep() {
           </FieldMessage>
         ) : (
           <FieldMessage id="job-language-hint">
-            Automatic detection works well when the recording uses one main
-            language.
+            {t('newJob.settings.language.hint')}
           </FieldMessage>
         )}
       </div>
@@ -111,12 +116,11 @@ export function JobSettingsStep() {
 
             <div className="space-y-1">
               <Label htmlFor="transcription-correction">
-                Correct the transcript
+                {t('newJob.settings.correction.label')}
               </Label>
 
               <FieldMessage id="transcription-correction-hint">
-                Adds a correction step for recordings with transcription
-                mistakes. Processing may take longer.
+                {t('newJob.settings.correction.hint')}
               </FieldMessage>
             </div>
           </div>

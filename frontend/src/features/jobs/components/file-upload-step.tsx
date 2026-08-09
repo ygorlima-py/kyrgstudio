@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import {
   useRef,
   useState,
   type ChangeEvent,
   type DragEvent,
 } from 'react'
+import type { TFunction } from 'i18next'
 import { useFormContext, useWatch } from 'react-hook-form'
 
 import { environment } from '@/shared/config/environment'
@@ -15,6 +17,7 @@ import type { JobCreationFormInput } from '../schemas/job-creation-schema'
 import {
   formatFileSize,
   validateJobFile,
+  type JobFileValidationResult,
 } from '../utils/validate-job-file'
 
 /**
@@ -24,6 +27,7 @@ import {
  * loaded into browser memory.
  */
 export function FileUploadStep() {
+  const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
 
@@ -52,7 +56,7 @@ export function FileUploadStep() {
     if (!validation.valid) {
       setError('file', {
         type: validation.code,
-        message: validation.message,
+        message: getFileValidationMessage(validation, t),
       })
       return
     }
@@ -112,11 +116,11 @@ export function FileUploadStep() {
           className="font-heading text-heading-md text-text"
           id="file-upload-heading"
         >
-          Select your reference file
+          {t('newJob.file.title')}
         </h2>
 
         <p className="max-w-2xl text-body text-text-muted">
-          Upload the video or audio containing the copy you want to analyze.
+          {t('newJob.file.description')}
         </p>
       </div>
 
@@ -147,12 +151,13 @@ export function FileUploadStep() {
           <div className="max-w-md space-y-4">
             <div className="space-y-1">
               <p className="font-medium text-text">
-                Drag your video or audio here
+                {t('newJob.file.dropzone.title')}
               </p>
 
               <p className="text-body-sm text-text-muted">
-                Or select a file from your device. Maximum size:{' '}
-                {formatFileSize(environment.maxUploadBytes)}.
+                {t('newJob.file.dropzone.description', {
+                  maxSize: formatFileSize(environment.maxUploadBytes),
+                })}
               </p>
             </div>
 
@@ -160,7 +165,7 @@ export function FileUploadStep() {
               onClick={() => fileInputRef.current?.click()}
               variant="secondary"
             >
-              Select file
+              {t('newJob.file.actions.select')}
             </Button>
           </div>
         </div>
@@ -182,7 +187,7 @@ export function FileUploadStep() {
               size="sm"
               variant="secondary"
             >
-              Replace
+              {t('newJob.file.actions.replace')}
             </Button>
 
             <Button
@@ -190,7 +195,7 @@ export function FileUploadStep() {
               size="sm"
               variant="ghost"
             >
-              Remove
+              {t('newJob.file.actions.remove')}
             </Button>
           </div>
         </div>
@@ -201,4 +206,27 @@ export function FileUploadStep() {
       ) : null}
     </section>
   )
+}
+
+function getFileValidationMessage(
+  validation: Extract<JobFileValidationResult, { readonly valid: false }>,
+  translate: TFunction,
+): string {
+  switch (validation.code) {
+    case 'missing_filename':
+      return translate('newJob.file.validation.missingFilename')
+
+    case 'empty_file':
+      return translate('newJob.file.validation.emptyFile')
+
+    case 'unsupported_media_type':
+      return translate('newJob.file.validation.unsupportedMediaType')
+
+    case 'file_too_large':
+      return translate('newJob.file.validation.fileTooLarge', {
+        maxSize: formatFileSize(
+          validation.maxUploadBytes ?? environment.maxUploadBytes,
+        ),
+      })
+  }
 }

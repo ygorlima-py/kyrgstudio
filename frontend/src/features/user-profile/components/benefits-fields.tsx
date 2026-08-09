@@ -1,9 +1,13 @@
+import { useTranslation } from 'react-i18next'
+
 import { RepeatableTextList } from './repeatable-text-list'
 
 /**
  * Collects the concrete benefits that the adapted copy may communicate.
  */
 export function BenefitsFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="benefits-heading"
@@ -14,20 +18,19 @@ export function BenefitsFields() {
           className="font-heading text-heading-sm text-text"
           id="benefits-heading"
         >
-          Benefits
+          {t('userProfile.benefits.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Add the most important practical or emotional benefits provided by
-          the offer.
+          {t('userProfile.benefits.description')}
         </p>
       </div>
 
       <RepeatableTextList
-        addLabel="Add benefit"
-        description="Use one clear benefit per item. Avoid promises that the product cannot support."
-        itemLabel="Describe a benefit"
-        label="What benefits can the customer expect?"
+        addLabel={t('userProfile.benefits.list.add')}
+        description={t('userProfile.benefits.list.description')}
+        itemLabel={t('userProfile.benefits.list.itemLabel')}
+        label={t('userProfile.benefits.list.label')}
         name="user_profile.benefits"
       />
     </section>

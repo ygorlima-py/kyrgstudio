@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import type { JobStatusResponse } from '@/shared/api'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/states'
@@ -33,6 +34,8 @@ export function JobsHistoryList({
   onPreviousPage,
   onRetry,
 }: JobsHistoryListProps) {
+  const { t } = useTranslation()
+
   if (isLoading) {
     return <JobsHistoryLoading />
   }
@@ -42,11 +45,11 @@ export function JobsHistoryList({
       <ErrorState
         action={
           <Button onClick={onRetry} size="sm" variant="secondary">
-            Try again
+            {t('jobs.history.error.retry')}
           </Button>
         }
-        description="We could not load your project history. Your saved work was not affected."
-        title="Project history is temporarily unavailable"
+        description={t('jobs.history.error.description')}
+        title={t('jobs.history.error.title')}
       />
     )
   }
@@ -62,17 +65,17 @@ export function JobsHistoryList({
   return (
     <section aria-labelledby="jobs-history-list-heading">
       <h2 className="sr-only" id="jobs-history-list-heading">
-        Your projects
+        {t('jobs.history.list.title')}
       </h2>
 
       <div
         aria-hidden="true"
         className="hidden grid-cols-[minmax(0,1.35fr)_minmax(8rem,0.55fr)_minmax(12rem,0.8fr)_auto] gap-6 rounded-t-lg border-x border-t border-border bg-surface-muted px-6 py-3 text-meta uppercase tracking-[0.08em] text-text-subtle lg:grid"
       >
-        <span>Project</span>
-        <span>Status</span>
-        <span>Created</span>
-        <span className="text-right">Open</span>
+        <span>{t('jobs.history.list.columns.project')}</span>
+        <span>{t('jobs.history.list.columns.status')}</span>
+        <span>{t('jobs.history.list.columns.created')}</span>
+        <span className="text-right">{t('jobs.history.list.columns.open')}</span>
       </div>
 
       <ul className="overflow-hidden rounded-lg border border-border bg-surface lg:rounded-t-none">
@@ -83,7 +86,7 @@ export function JobsHistoryList({
 
       {currentPage > 1 || hasMore ? (
         <nav
-          aria-label="Project history pages"
+          aria-label={t('jobs.history.pagination.ariaLabel')}
           className="mt-5 flex items-center justify-between gap-4"
         >
           <Button
@@ -93,11 +96,11 @@ export function JobsHistoryList({
             type="button"
             variant="secondary"
           >
-            Previous
+            {t('jobs.history.pagination.previous')}
           </Button>
 
           <span aria-live="polite" className="font-mono text-meta text-text-muted">
-            Page {currentPage}
+            {t('jobs.history.pagination.page', { page: currentPage })}
           </span>
 
           <Button
@@ -107,7 +110,7 @@ export function JobsHistoryList({
             type="button"
             variant="secondary"
           >
-            Next
+            {t('jobs.history.pagination.next')}
           </Button>
         </nav>
       ) : null}
@@ -116,8 +119,10 @@ export function JobsHistoryList({
 }
 
 function JobsHistoryLoading() {
+  const { t } = useTranslation()
+
   return (
-    <LoadingState label="Loading project history">
+    <LoadingState label={t('jobs.history.loading.label')}>
       <div
         aria-hidden="true"
         className="overflow-hidden rounded-lg border border-border bg-surface"
@@ -142,6 +147,8 @@ function JobsHistoryLoading() {
 }
 
 function EmptyHistory() {
+  const { t } = useTranslation()
+
   return (
     <EmptyState
       action={
@@ -149,25 +156,27 @@ function EmptyHistory() {
           className="inline-flex h-10 items-center justify-center rounded-md bg-action px-4 text-label text-text-inverse transition-colors hover:bg-action-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus focus-visible:ring-offset-2"
           to="/app/jobs/new"
         >
-          Start a project
+          {t('jobs.history.empty.action')}
         </Link>
       }
-      description="Your analyses and adaptations will be kept here so you can return to them later."
-      title="No projects yet"
+      description={t('jobs.history.empty.description')}
+      title={t('jobs.history.empty.title')}
     />
   )
 }
 
 function NoSearchResults({ onClear }: { readonly onClear: () => void }) {
+  const { t } = useTranslation()
+
   return (
     <EmptyState
       action={
         <Button onClick={onClear} size="sm" variant="secondary">
-          Clear filters
+          {t('jobs.history.filters.clear')}
         </Button>
       }
-      description="Try changing or clearing the current search and filters."
-      title="No matching projects"
+      description={t('jobs.history.noResults.description')}
+      title={t('jobs.history.noResults.title')}
     />
   )
 }

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { ProfileTextField } from './profile-text-field'
 
 /**
@@ -5,6 +7,8 @@ import { ProfileTextField } from './profile-text-field'
  * in the final script.
  */
 export function ToneLanguageFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="tone-language-heading"
@@ -15,29 +19,28 @@ export function ToneLanguageFields() {
           className="font-heading text-heading-sm text-text"
           id="tone-language-heading"
         >
-          Tone and output language
+          {t('userProfile.toneLanguage.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Define the intended voice of the adapted copy and the language of the
-          final script.
+          {t('userProfile.toneLanguage.description')}
         </p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ProfileTextField
-          description="Describe the desired communication style using a few clear characteristics."
-          label="What tone should the copy use?"
+          description={t('userProfile.toneLanguage.tone.description')}
+          label={t('userProfile.toneLanguage.tone.label')}
           name="user_profile.tone"
-          placeholder="Example: Direct, welcoming, confident, and conversational."
+          placeholder={t('userProfile.toneLanguage.tone.placeholder')}
         />
 
         <ProfileTextField
-          description="Use a language or locale such as English, Portuguese, pt-BR, or es-MX."
-          label="What language should the final script use?"
+          description={t('userProfile.toneLanguage.language.description')}
+          label={t('userProfile.toneLanguage.language.label')}
           multiline={false}
           name="user_profile.target_language"
-          placeholder="Example: pt-BR"
+          placeholder={t('userProfile.toneLanguage.language.placeholder')}
         />
       </div>
     </section>

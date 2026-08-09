@@ -2,6 +2,27 @@
   "language": {
     "selector": "Selecionar idioma"
   },
+  "notFound": {
+    "title": "Página não encontrada"
+  },
+  "shared": {
+    "api": {
+      "genericRequestError": "Não foi possível concluir a solicitação."
+    },
+    "ui": {
+      "select": {
+        "placeholder": "Selecione uma opção"
+      },
+      "dialog": {
+        "close": "Fechar janela"
+      }
+    },
+    "states": {
+      "loading": {
+        "defaultLabel": "Carregando conteúdo"
+      }
+    }
+  },
   "marketing": {
     "header": {
       "mainNavigation": "Navegação principal",
@@ -112,112 +133,144 @@
         }
       }
     },
-     "whoItIsFor": {
-    "badge": "PARA QUEM É",
-    "title": "Um ambiente mais claro para quem é responsável pela mensagem.",
-    "description": "O Kyrg Studio ajuda profissionais criativos a entender, revisar e adaptar conteúdos de resposta direta sem reduzir o trabalho a uma conversa genérica com IA.",
-    "audiences": {
-      "copywriters": {
-        "role": "Copywriters",
-        "title": "Estude a estratégia, não apenas as palavras.",
-        "description": "Transforme vídeos de referência em material estruturado para analisar e consultar durante o desenvolvimento de novos roteiros.",
-        "benefits": {
-          "strategy": "Mapeie ganchos, mecanismos, provas e chamadas para ação",
-          "gaps": "Identifique padrões de persuasão e lacunas estratégicas",
-          "adaptation": "Adapte a estrutura para uma oferta diferente"
-        }
-      },
-      "marketers": {
-        "role": "Marketing",
-        "title": "Revise a mensagem antes de investir na distribuição.",
-        "description": "Entenda como uma oferta é apresentada e onde a copy precisa de mais clareza, provas ou um posicionamento melhor.",
-        "benefits": {
-          "promises": "Revise promessas e a consistência da oferta",
-          "proof": "Encontre afirmações sem sustentação e provas ausentes",
-          "briefs": "Crie briefings mais claros para as equipes criativas"
-        }
-      },
-      "producers": {
-        "role": "Produtores",
-        "title": "Transforme conteúdo falado em um material criativo organizado.",
-        "description": "Passe de um vídeo ou áudio bruto para uma análise estruturada e um roteiro editável sem precisar interpretar JSON.",
-        "benefits": {
-          "transcription": "Trabalhe a partir de uma transcrição completa",
-          "navigation": "Navegue pelo conteúdo através das seções estratégicas",
-          "editing": "Revise o roteiro adaptado em um formato editável"
+    "whoItIsFor": {
+      "badge": "PARA QUEM É",
+      "title": "Um ambiente mais claro para quem é responsável pela mensagem.",
+      "description": "O Kyrg Studio ajuda profissionais criativos a entender, revisar e adaptar conteúdos de resposta direta sem reduzir o trabalho a uma conversa genérica com IA.",
+      "audiences": {
+        "copywriters": {
+          "role": "Copywriters",
+          "title": "Estude a estratégia, não apenas as palavras.",
+          "description": "Transforme vídeos de referência em material estruturado para analisar e consultar durante o desenvolvimento de novos roteiros.",
+          "benefits": {
+            "strategy": "Mapeie ganchos, mecanismos, provas e chamadas para ação",
+            "gaps": "Identifique padrões de persuasão e lacunas estratégicas",
+            "adaptation": "Adapte a estrutura para uma oferta diferente"
+          }
+        },
+        "marketers": {
+          "role": "Marketing",
+          "title": "Revise a mensagem antes de investir na distribuição.",
+          "description": "Entenda como uma oferta é apresentada e onde a copy precisa de mais clareza, provas ou um posicionamento melhor.",
+          "benefits": {
+            "promises": "Revise promessas e a consistência da oferta",
+            "proof": "Encontre afirmações sem sustentação e provas ausentes",
+            "briefs": "Crie briefings mais claros para as equipes criativas"
+          }
+        },
+        "producers": {
+          "role": "Produtores",
+          "title": "Transforme conteúdo falado em um material criativo organizado.",
+          "description": "Passe de um vídeo ou áudio bruto para uma análise estruturada e um roteiro editável sem precisar interpretar JSON.",
+          "benefits": {
+            "transcription": "Trabalhe a partir de uma transcrição completa",
+            "navigation": "Navegue pelo conteúdo através das seções estratégicas",
+            "editing": "Revise o roteiro adaptado em um formato editável"
+          }
         }
       }
-    }
-  },
-  "faq": {
-    "badge": "DÚVIDAS FREQUENTES",
-    "title": "Antes de transformar uma referência no seu próximo roteiro.",
-    "description": "O que copywriters e profissionais de marketing normalmente querem saber antes de analisar ou adaptar uma mensagem de vendas.",
-    "items": {
-      "analysisAndAdaptation": {
-        "question": "O que eu recebo do Kyrg Studio?",
-        "answer": "Na análise, você enxerga o gancho, a estrutura, a oferta, os elementos de persuasão, as provas, as objeções e os pontos fracos da mensagem. Na adaptação, esses insights se tornam a base estratégica de um novo roteiro construído para a sua oferta."
-      },
-      "supportedFiles": {
-        "question": "Adaptar significa copiar a VSL de outra pessoa?",
-        "answer": "Não. O Kyrg Studio estuda como a referência constrói o argumento e a persuasão, depois aplica essa lógica estratégica ao público, à promessa, às provas e às limitações da sua oferta. O objetivo é criar um novo roteiro, não reproduzir as palavras ou alegações da referência."
-      },
-      "processing": {
-        "question": "Preciso ser um copywriter experiente para usar?",
-        "answer": "Não. O resultado é organizado para que profissionais de marketing, produtores e fundadores entendam o raciocínio por trás da mensagem. Copywriters experientes podem usar a ferramenta para acelerar a pesquisa e o diagnóstico, mantendo o próprio julgamento sobre a copy final."
-      },
-      "closeBrowser": {
-        "question": "Quanto tempo leva e preciso deixar a página aberta?",
-        "answer": "O tempo varia conforme a duração da referência e o resultado solicitado. Você não precisa acompanhar a tela: depois de enviar o arquivo, pode fechar a página e voltar mais tarde para consultar o resultado na sua conta."
-      },
-      "uploadedFile": {
-        "question": "O que acontece com o vídeo ou áudio que eu envio?",
-        "answer": "A mídia original é usada somente durante o processamento da sua análise ou adaptação. Quando o processamento termina ou não pode ser concluído, o arquivo enviado é removido. O resultado estruturado continua disponível na sua conta."
-      },
-      "offerProfile": {
-        "question": "O que devo informar para receber uma boa adaptação?",
-        "answer": "Descreva seu público, o problema enfrentado, o resultado desejado, sua promessa, mecanismo, benefícios, objeções, provas disponíveis, condições da oferta, tom e restrições. Quanto mais específico e verdadeiro for o perfil, mais útil e consistente poderá ser o roteiro adaptado."
-      },
-      "inventedInformation": {
-        "question": "A ferramenta pode inventar depoimentos, garantias ou resultados?",
-        "answer": "O Kyrg Studio é projetado para trabalhar somente com as provas e informações da oferta fornecidas por você e sinalizar dados importantes que ainda estejam faltando. Como todo rascunho assistido por IA pode exigir contexto e julgamento, revise alegações, números e condições comerciais antes de publicar o roteiro final."
+    },
+    "faq": {
+      "badge": "DÚVIDAS FREQUENTES",
+      "title": "Antes de transformar uma referência no seu próximo roteiro.",
+      "description": "O que copywriters e profissionais de marketing normalmente querem saber antes de analisar ou adaptar uma mensagem de vendas.",
+      "items": {
+        "analysisAndAdaptation": {
+          "question": "O que eu recebo do Kyrg Studio?",
+          "answer": "Na análise, você enxerga o gancho, a estrutura, a oferta, os elementos de persuasão, as provas, as objeções e os pontos fracos da mensagem. Na adaptação, esses insights se tornam a base estratégica de um novo roteiro construído para a sua oferta."
+        },
+        "supportedFiles": {
+          "question": "Adaptar significa copiar a VSL de outra pessoa?",
+          "answer": "Não. O Kyrg Studio estuda como a referência constrói o argumento e a persuasão, depois aplica essa lógica estratégica ao público, à promessa, às provas e às limitações da sua oferta. O objetivo é criar um novo roteiro, não reproduzir as palavras ou alegações da referência."
+        },
+        "processing": {
+          "question": "Preciso ser um copywriter experiente para usar?",
+          "answer": "Não. O resultado é organizado para que profissionais de marketing, produtores e fundadores entendam o raciocínio por trás da mensagem. Copywriters experientes podem usar a ferramenta para acelerar a pesquisa e o diagnóstico, mantendo o próprio julgamento sobre a copy final."
+        },
+        "closeBrowser": {
+          "question": "Quanto tempo leva e preciso deixar a página aberta?",
+          "answer": "O tempo varia conforme a duração da referência e o resultado solicitado. Você não precisa acompanhar a tela: depois de enviar o arquivo, pode fechar a página e voltar mais tarde para consultar o resultado na sua conta."
+        },
+        "uploadedFile": {
+          "question": "O que acontece com o vídeo ou áudio que eu envio?",
+          "answer": "A mídia original é usada somente durante o processamento da sua análise ou adaptação. Quando o processamento termina ou não pode ser concluído, o arquivo enviado é removido. O resultado estruturado continua disponível na sua conta."
+        },
+        "offerProfile": {
+          "question": "O que devo informar para receber uma boa adaptação?",
+          "answer": "Descreva seu público, o problema enfrentado, o resultado desejado, sua promessa, mecanismo, benefícios, objeções, provas disponíveis, condições da oferta, tom e restrições. Quanto mais específico e verdadeiro for o perfil, mais útil e consistente poderá ser o roteiro adaptado."
+        },
+        "inventedInformation": {
+          "question": "A ferramenta pode inventar depoimentos, garantias ou resultados?",
+          "answer": "O Kyrg Studio é projetado para trabalhar somente com as provas e informações da oferta fornecidas por você e sinalizar dados importantes que ainda estejam faltando. Como todo rascunho assistido por IA pode exigir contexto e julgamento, revise alegações, números e condições comerciais antes de publicar o roteiro final."
+        }
       }
+    },
+    "callToAction": {
+      "eyebrow": "SUA PRÓXIMA REFERÊNCIA PODE SE TORNAR UMA ESTRATÉGIA APLICÁVEL",
+      "title": "Pare de tentar adivinhar por que uma mensagem de vendas funciona.",
+      "description": "Transforme um vídeo ou áudio de referência em uma análise estruturada e use a estratégia identificada para desenvolver uma nova copy para sua oferta.",
+      "createAccount": "Comece Agora",
+      "login": "Entrar"
+    },
+    "footer": {
+      "description": "Inteligência criativa para entender e adaptar copies de resposta direta a partir de vídeos e áudios.",
+      "navigationLabel": "Navegação do rodapé",
+      "meta": {
+        "analysis": "ANÁLISE",
+        "adaptation": "ADAPTAÇÃO",
+        "structuredOutput": "RESULTADO ESTRUTURADO"
+      },
+      "product": {
+        "title": "PRODUTO",
+        "preview": "Visão do produto",
+        "howItWorks": "Como funciona",
+        "features": "Recursos",
+        "faq": "Perguntas frequentes"
+      },
+      "account": {
+        "title": "CONTA",
+        "login": "Entrar",
+        "createAccount": "Criar conta"
+      },
+      "copyright": "© {{year}} Kyrg Studio.",
+      "closingMessage": "Feito para um trabalho criativo mais consciente."
     }
-  },
-  "callToAction": {
-    "eyebrow": "SUA PRÓXIMA REFERÊNCIA PODE SE TORNAR UMA ESTRATÉGIA APLICÁVEL",
-    "title": "Pare de tentar adivinhar por que uma mensagem de vendas funciona.",
-    "description": "Transforme um vídeo ou áudio de referência em uma análise estruturada e use a estratégia identificada para desenvolver uma nova copy para sua oferta.",
-    "createAccount": "Comece Agora",
-    "login": "Entrar"
-  },
-   "footer": {
-    "description": "Inteligência criativa para entender e adaptar copies de resposta direta a partir de vídeos e áudios.",
-    "navigationLabel": "Navegação do rodapé",
-    "meta": {
-      "analysis": "ANÁLISE",
-      "adaptation": "ADAPTAÇÃO",
-      "structuredOutput": "RESULTADO ESTRUTURADO"
-    },
-    "product": {
-      "title": "PRODUTO",
-      "preview": "Visão do produto",
-      "howItWorks": "Como funciona",
-      "features": "Recursos",
-      "faq": "Perguntas frequentes"
-    },
-    "account": {
-      "title": "CONTA",
-      "login": "Entrar",
-      "createAccount": "Criar conta"
-    },
-    "copyright": "© {{year}} Kyrg Studio.",
-    "closingMessage": "Feito para um trabalho criativo mais consciente."
-  }
   },
   "auth": {
     "layout": {
       "backHome": "Voltar ao início"
+    },
+    "login": {
+      "fields": {
+        "email": "Email",
+        "emailPlaceholder": "voce@exemplo.com",
+        "password": "Senha",
+        "forgotPassword": "Esqueceu a senha?"
+      },
+      "actions": {
+        "submit": "Entrar",
+        "loggingIn": "Entrando..."
+      },
+      "validation": {
+        "emailRequired": "Informe seu email.",
+        "emailTooLong": "O email é muito longo.",
+        "emailInvalid": "Informe um endereço de email válido.",
+        "passwordMinimum": "A senha deve possuir pelo menos 8 caracteres.",
+        "passwordMaximum": "A senha deve possuir no máximo 128 caracteres."
+      },
+      "errors": {
+        "heading": "Não foi possível entrar",
+        "invalidCredentials": "Email ou senha incorretos.",
+        "accountDisabled": "Esta conta está desativada.",
+        "emailVerificationRequired": "Verifique seu email antes de entrar.",
+        "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente novamente.",
+        "generic": "Não foi possível concluir o login. Tente novamente."
+      }
+    },
+    "session": {
+      "restoring": "Restaurando sua sessão",
+      "expiredTitle": "Sua sessão expirou",
+      "expiredDescription": "Entre novamente para continuar de onde parou."
     },
     "register": {
       "title": "Crie sua conta",
@@ -295,6 +348,71 @@
       "adaptation": "Adaptação de copy"
     },
     "dateUnavailable": "Data indisponível",
+    "history": {
+      "page": {
+        "eyebrow": "Biblioteca de projetos",
+        "title": "Histórico de projetos",
+        "description": "Acesse resultados concluídos e acompanhe projetos que ainda estão em processamento.",
+        "newProject": "Novo projeto"
+      },
+      "filters": {
+        "title": "Encontrar projeto",
+        "description": "Busque pelo número do projeto ou filtre por status e tipo.",
+        "clear": "Limpar filtros",
+        "projectNumber": "Número do projeto",
+        "projectNumberPlaceholder": "ex.: 142",
+        "search": "Buscar",
+        "status": "Status",
+        "projectType": "Tipo de projeto",
+        "allStatuses": "Todos os status",
+        "allProjectTypes": "Todos os tipos"
+      },
+      "status": {
+        "preparing": "Preparando",
+        "queued": "Na fila",
+        "processing": "Processando",
+        "completed": "Concluído",
+        "failed": "Falhou",
+        "unknown": "Desconhecido"
+      },
+      "list": {
+        "title": "Seus projetos",
+        "columns": {
+          "project": "Projeto",
+          "status": "Status",
+          "created": "Criado em",
+          "open": "Abrir"
+        }
+      },
+      "item": {
+        "ariaLabel": "{{pipeline}}, projeto {{id}}, {{status}}",
+        "viewResult": "Ver resultado",
+        "viewStatus": "Ver status"
+      },
+      "loading": {
+        "label": "Carregando histórico de projetos"
+      },
+      "error": {
+        "title": "Histórico temporariamente indisponível",
+        "description": "Não foi possível carregar seu histórico. Seus projetos salvos não foram afetados.",
+        "retry": "Tentar novamente"
+      },
+      "empty": {
+        "title": "Nenhum projeto ainda",
+        "description": "Suas análises e adaptações ficarão aqui para você acessar depois.",
+        "action": "Começar projeto"
+      },
+      "noResults": {
+        "title": "Nenhum projeto encontrado",
+        "description": "Tente alterar ou limpar a busca e os filtros atuais."
+      },
+      "pagination": {
+        "ariaLabel": "Páginas do histórico de projetos",
+        "previous": "Anterior",
+        "next": "Próxima",
+        "page": "Página {{page}}"
+      }
+    },
     "active": {
       "title": "Em processamento",
       "description": "Estes projetos continuam sendo processados mesmo quando você sai desta página.",
@@ -321,6 +439,306 @@
       "viewDetails": "Ver detalhes"
     }
   },
+  "jobResult": {
+    "loading": {
+      "project": "Carregando projeto",
+      "analysis": "Carregando análise de copy",
+      "adaptation": "Carregando roteiro adaptado"
+    },
+    "adaptation": {
+      "eyebrow": "Adaptação de copy",
+      "title": "Roteiro adaptado",
+      "description": "Revise o roteiro adaptado, ajuste a escrita e confira as validações de prova e prontidão para uso.",
+      "newJob": "Adaptar outra copy"
+    },
+    "actions": {
+      "returnToDashboard": "Voltar ao painel",
+      "tryAgain": "Tentar novamente",
+      "viewStatus": "Ver status do processamento"
+    },
+    "resultTypes": {
+      "analysis": "análise",
+      "adaptation": "adaptação"
+    },
+    "errors": {
+      "invalidAddress": {
+        "description": "O endereço do projeto é inválido ou não está mais disponível."
+      },
+      "projectNotFound": {
+        "title": "Projeto não encontrado",
+        "description": "Este projeto não existe ou não está disponível para a sua conta."
+      },
+      "notReady": {
+        "title": "Seu resultado ainda está sendo preparado",
+        "description": "Este projeto ainda não gerou um resultado concluído. Volte para a página de status enquanto o processamento continua.",
+        "progressLabel": "O projeto ainda está em processamento",
+        "statusLabel": "Ainda não está pronto"
+      },
+      "failed": {
+        "title": "O projeto não foi concluído",
+        "description": "Este projeto parou antes de gerar um resultado. Abra a página de status para ver a informação pública da falha."
+      },
+      "unavailable": {
+        "title": "Resultado indisponível",
+        "description": "Este projeto ainda não possui um resultado que possa ser exibido."
+      },
+      "invalidFormat": {
+        "title": "Formato do resultado indisponível",
+        "description": "O projeto concluído retornou um formato de {{resultType}} que esta versão do aplicativo não consegue exibir com segurança."
+      },
+      "load": {
+        "description": "Não foi possível carregar este resultado. Nenhum detalhe interno do erro foi exposto."
+      }
+    }
+  },
+  "analysisResult": {
+    "page": {
+      "eyebrow": "Análise de copy",
+      "title": "Resultado da análise",
+      "description": "Uma leitura estruturada da mensagem, da oferta, da estratégia de persuasão e das oportunidades de melhoria.",
+      "newJob": "Analisar outra copy"
+    },
+    "common": {
+      "notIdentified": "Não identificado"
+    },
+    "contentTypes": {
+      "video": "Vídeo",
+      "audio": "Áudio"
+    },
+    "overview": {
+      "eyebrow": "Visão geral da análise",
+      "title": "Estratégia em resumo",
+      "mainHook": "Gancho principal",
+      "noMainHook": "Nenhum gancho dominante foi identificado.",
+      "details": {
+        "contentType": "Tipo de conteúdo",
+        "language": "Idioma",
+        "dominantEmotion": "Emoção dominante",
+        "persuasionPattern": "Padrão de persuasão"
+      }
+    },
+    "structure": {
+      "eyebrow": "Anatomia da mensagem",
+      "title": "Estrutura da copy",
+      "description": "A sequência abaixo mostra como cada parte avança o argumento de vendas.",
+      "empty": "Nenhuma seção estrutural foi identificada nesta copy.",
+      "fromTime": "A partir de {{time}}"
+    },
+    "sections": {
+      "hook": "Gancho",
+      "problem": "Problema",
+      "pain": "Dor",
+      "agitation": "Agitação",
+      "promise": "Promessa",
+      "mechanism": "Mecanismo",
+      "proof": "Prova",
+      "story": "História",
+      "objection": "Objeção",
+      "offer": "Oferta",
+      "cta": "Chamada para ação",
+      "urgency": "Urgência",
+      "scarcity": "Escassez",
+      "transition": "Transição",
+      "education": "Educação",
+      "payoff": "Resultado desejado"
+    },
+    "narrative": {
+      "eyebrow": "Progressão estratégica",
+      "title": "Fluxo narrativo",
+      "description": "Como a mensagem conduz o público da atenção até a ação.",
+      "empty": "Nenhuma progressão narrativa foi identificada nesta copy."
+    },
+    "offer": {
+      "eyebrow": "Decomposição da oferta",
+      "title": "O que está sendo vendido",
+      "details": {
+        "productOrSolution": "Produto ou solução",
+        "targetAudience": "Público-alvo",
+        "coreProblem": "Problema central",
+        "coreDesire": "Desejo central",
+        "mainPromise": "Promessa principal",
+        "uniqueMechanism": "Mecanismo único",
+        "priceOrTerms": "Preço e condições",
+        "callToAction": "Chamada para ação"
+      },
+      "groups": {
+        "benefits": "Benefícios",
+        "proof": "Provas",
+        "objections": "Objeções respondidas",
+        "bonuses": "Bônus e extras",
+        "urgencyOrScarcity": "Urgência e escassez"
+      }
+    },
+    "persuasion": {
+      "strength": {
+        "low": "Baixo",
+        "medium": "Médio",
+        "high": "Alto",
+        "notRated": "Não avaliado"
+      },
+      "scores": {
+        "eyebrow": "Diagnóstico de persuasão",
+        "title": "Efetividade geral por elemento",
+        "description": "Avaliações qualitativas encontradas pela análise. Elas não são notas numéricas de conversão.",
+        "items": {
+          "hook": "Força do gancho",
+          "promiseClarity": "Clareza da promessa",
+          "proof": "Prova",
+          "urgency": "Urgência",
+          "callToAction": "Chamada para ação"
+        }
+      },
+      "signals": {
+        "eyebrow": "Técnicas detectadas",
+        "title": "Sinais de persuasão",
+        "empty": "Nenhum sinal de persuasão distinto foi identificado."
+      }
+    },
+    "weaknesses": {
+      "eyebrow": "Oportunidades de melhoria",
+      "title": "Lacunas e pontos fracos",
+      "description": "Elementos que podem reduzir clareza, credibilidade, desejo ou conversão.",
+      "sectionLabel": "Seção {{section}}",
+      "structuralGap": "Lacuna estrutural",
+      "persuasionIssue": "Problema de persuasão",
+      "empty": "Nenhuma lacuna estrutural ou fraqueza persuasiva relevante foi identificada.",
+      "gapTypes": {
+        "missing": "Ausente",
+        "incomplete": "Incompleto",
+        "weak": "Fraco"
+      }
+    },
+    "transcription": {
+      "eyebrow": "Material de origem",
+      "title": "Transcrição",
+      "description": "Leia o texto de origem usado para produzir esta análise.",
+      "viewFull": "Ver transcrição completa",
+      "empty": "Uma transcrição pública não está disponível para esta análise."
+    }
+  },
+  "adaptationResult": {
+    "scriptEditor": {
+      "eyebrow": "Rascunho de trabalho",
+      "title": "Roteiro adaptado",
+      "description": "Ajuste a copy gerada aqui. As mudanças ficam nesta aba do navegador e ainda não são salvas na sua conta.",
+      "localChanges": "Alterações locais",
+      "generatedVersion": "Versão gerada",
+      "draftWords": "Palavras do rascunho",
+      "sections": "Seções",
+      "estimatedLength": "Duração estimada",
+      "hookOptions": "Opções de gancho",
+      "fullScript": "Roteiro completo",
+      "editedLocally": "Editado localmente",
+      "noLocalEdits": "Sem edições locais",
+      "editingNote": "A edição não altera as seções estruturadas, a validação ou o resultado salvo.",
+      "resetDraft": "Restaurar rascunho",
+      "contextAriaLabel": "Contexto do roteiro",
+      "noHookOptions": "Nenhuma opção separada de gancho foi gerada.",
+      "primaryCallToAction": "Chamada principal para ação",
+      "noPrimaryCallToAction": "Nenhuma chamada principal para ação foi identificada.",
+      "adaptationNotes": "Notas da adaptação",
+      "noAdaptationNotes": "Nenhuma nota adicional de adaptação foi fornecida.",
+      "notEstimated": "Não estimado"
+    },
+    "scriptSections": {
+      "eyebrow": "Arquitetura do roteiro",
+      "title": "Seção por seção",
+      "description": "Abra uma seção para inspecionar a copy, o papel estratégico, a origem e o tempo de produção.",
+      "empty": "Nenhuma seção estruturada do roteiro foi gerada.",
+      "adapted": "Adaptado",
+      "original": "Original",
+      "sectionCopy": "Copy da seção",
+      "purpose": "Objetivo",
+      "reference": "Referência",
+      "noReference": "Criado sem uma seção correspondente na referência",
+      "proof": "Prova",
+      "requiresProof": "Exige prova antes da produção",
+      "noProof": "Nenhuma prova vinculada a esta seção",
+      "transition": "Transição",
+      "noTransition": "Nenhuma nota de transição fornecida",
+      "timing": "Tempo",
+      "wordCount_one": "{{count}} palavra",
+      "wordCount_other": "{{count}} palavras",
+      "durationUnavailable": "Duração indisponível",
+      "seconds_one": "{{count}} seg",
+      "seconds_other": "{{count}} seg",
+      "timingUnavailable": "Tempo indisponível",
+      "fromTime": "A partir de {{time}}"
+    },
+    "missingProofs": {
+      "eyebrow": "Checagem de evidências",
+      "title": "Provas necessárias",
+      "description": "As afirmações listadas aqui precisam de evidência real antes de o roteiro ser publicado ou gravado.",
+      "count_one": "{{count}} pendente",
+      "count_other": "{{count}} pendentes",
+      "noGapsFound": "Nenhuma lacuna encontrada",
+      "empty": "O workflow não identificou nenhuma afirmação que exija prova adicional.",
+      "warning": "Não invente depoimentos, números ou resultados. Substitua a afirmação ou forneça evidência verificada."
+    },
+    "validation": {
+      "eyebrow": "Controle de qualidade",
+      "title": "Prontidão para produção",
+      "blockingIssues": "Problemas bloqueantes",
+      "warnings": "Avisos",
+      "resolveBeforeProduction": "Resolver antes da produção",
+      "reviewBeforePublishing": "Revisar antes de publicar",
+      "noIssues": "Nenhum erro bloqueante ou aviso de revisão foi retornado para este roteiro.",
+      "notAvailable": "Indisponível",
+      "unavailableDescription": "Este resultado não inclui um relatório de validação estruturado. Revise o roteiro manualmente antes de publicar.",
+      "location": "Localização",
+      "recommendedAction": "Ação recomendada",
+      "sectionNumber": "Seção {{order}}",
+      "entireScript": "Roteiro inteiro",
+      "status": {
+        "needsRevision": "Precisa de revisão",
+        "needsRevisionDescription": "Problemas bloqueantes foram encontrados. Revise estes pontos antes de usar o roteiro.",
+        "manualReview": "Revisão manual",
+        "manualReviewDescription": "A validação não passou. Revise as notas retornadas e o roteiro completo.",
+        "readyWithNotes": "Pronto com observações",
+        "readyWithNotesDescription": "O roteiro não tem erros bloqueantes, mas os pontos abaixo merecem revisão.",
+        "validationPassed": "Validação aprovada",
+        "validationPassedDescription": "O roteiro passou em todas as checagens estruturadas de prontidão para produção."
+      },
+      "correctionActions": {
+        "remove": "Remover o conteúdo sem suporte",
+        "soften": "Suavizar a afirmação ou a linguagem",
+        "rewrite": "Reescrever o trecho afetado",
+        "shorten": "Encurtar o conteúdo afetado",
+        "expand": "Adicionar o contexto ausente",
+        "align_with_profile": "Alinhar o conteúdo ao perfil da oferta",
+        "custom": "Aplicar uma correção manual"
+      },
+      "categories": {
+        "claim": "Afirmação",
+        "proof": "Prova",
+        "offer": "Oferta",
+        "cta": "Chamada para ação",
+        "scarcity": "Escassez",
+        "duration": "Duração",
+        "language": "Linguagem",
+        "structure": "Estrutura",
+        "copy_similarity": "Semelhança com a copy",
+        "other": "Outro"
+      }
+    },
+    "referenceAnalysis": {
+      "eyebrow": "Fonte estratégica",
+      "referenceOnly": "Apenas referência",
+      "title": "Análise da copy original",
+      "viewReference": "Ver referência",
+      "contentType": "Tipo de conteúdo",
+      "language": "Idioma",
+      "persuasionPattern": "Padrão de persuasão",
+      "dominantEmotion": "Emoção dominante",
+      "referenceHook": "Gancho da referência",
+      "noDominantHook": "Nenhum gancho dominante foi identificado.",
+      "offerReading": "Leitura da oferta",
+      "persuasionReading": "Leitura da persuasão",
+      "referenceSequence": "Sequência da referência",
+      "noSequence": "Nenhuma sequência estrutural foi identificada na referência.",
+      "footer": "Use esta análise para entender o padrão estratégico. O roteiro adaptado deve preservar a lógica, não copiar a escrita original nem afirmações sem suporte."
+    }
+  },
   "appNavigation": {
     "ariaLabel": "Navegação da aplicação",
     "dashboard": "Painel",
@@ -342,6 +760,20 @@
       "title": "Criar nova análise",
       "description": "Envie um vídeo ou áudio de vendas e escolha se deseja analisar a referência ou adaptar a estratégia para sua oferta."
     },
+    "pipeline": {
+      "title": "O que você quer criar?",
+      "description": "Escolha se deseja apenas estudar a referência ou também transformar a estratégia dela em um novo roteiro.",
+      "options": {
+        "analysis": {
+          "label": "Analisar uma copy",
+          "description": "Entenda a estrutura, a oferta, a persuasão e a estratégia usadas em uma mensagem de vendas existente."
+        },
+        "adaptation": {
+          "label": "Adaptar uma copy",
+          "description": "Analise uma referência e crie um novo roteiro baseado no seu produto, público e oferta."
+        }
+      }
+    },
     "form": {
       "draft": {
         "defaultMessage": "Salve um rascunho manualmente para continuar depois neste dispositivo.",
@@ -359,6 +791,402 @@
         "submit": "Enviar projeto",
         "submitting": "Enviando..."
       }
+    },
+    "file": {
+      "title": "Selecione o arquivo de referência",
+      "description": "Envie o vídeo ou áudio com a copy que você deseja analisar.",
+      "dropzone": {
+        "title": "Arraste seu vídeo ou áudio aqui",
+        "description": "Ou selecione um arquivo do seu dispositivo. Tamanho máximo: {{maxSize}}."
+      },
+      "actions": {
+        "select": "Selecionar arquivo",
+        "replace": "Trocar",
+        "remove": "Remover"
+      },
+      "validation": {
+        "missingFilename": "O arquivo selecionado precisa ter um nome.",
+        "emptyFile": "O arquivo selecionado está vazio.",
+        "unsupportedMediaType": "Selecione um arquivo de vídeo ou áudio suportado.",
+        "fileTooLarge": "O arquivo precisa ser menor que {{maxSize}}."
+      }
+    },
+    "uploadProgress": {
+      "title": "Enviando arquivo de referência",
+      "label": "Progresso do envio do arquivo"
+    },
+    "steps": {
+      "pipeline": "Tipo de projeto",
+      "file": "Referência",
+      "settings": "Configurações",
+      "profile": "Perfil da oferta",
+      "review": "Revisão"
+    },
+    "settings": {
+      "title": "Configure a transcrição",
+      "description": "Informe o idioma original e se a transcrição deve passar por uma correção adicional.",
+      "language": {
+        "label": "Idioma original",
+        "hint": "A detecção automática funciona bem quando a gravação usa um idioma principal.",
+        "options": {
+          "auto": "Detectar automaticamente",
+          "pt": "Português",
+          "en": "Inglês",
+          "es": "Espanhol"
+        }
+      },
+      "correction": {
+        "label": "Corrigir a transcrição",
+        "hint": "Adiciona uma etapa de correção para gravações com erros de transcrição. O processamento pode demorar mais."
+      }
+    },
+    "profile": {
+      "title": "Descreva sua oferta",
+      "description": "Informe dados reais para que o roteiro adaptado permaneça fiel ao seu produto, público e provas disponíveis."
+    },
+    "submission": {
+      "cancelUpload": "Cancelar envio",
+      "actions": {
+        "retry": "Tentar novamente",
+        "review": "Revisar projeto"
+      },
+      "errors": {
+        "uploadTooLarge": {
+          "title": "O arquivo é muito grande",
+          "description": "Selecione um arquivo menor antes de tentar novamente."
+        },
+        "unsupportedMediaType": {
+          "title": "Tipo de arquivo não suportado",
+          "description": "Selecione um dos formatos de vídeo ou áudio aceitos."
+        },
+        "invalidInput": {
+          "title": "Revise as informações do projeto",
+          "description": "Alguma informação enviada está ausente ou inválida."
+        },
+        "network": {
+          "title": "Conexão interrompida",
+          "description": "Verifique sua conexão e tente enviar o projeto novamente."
+        },
+        "sessionExpired": {
+          "title": "Sua sessão expirou",
+          "description": "Entre novamente antes de enviar este projeto."
+        },
+        "serviceUnavailable": {
+          "title": "Serviço temporariamente indisponível",
+          "description": "O projeto não pôde ser salvo agora. Tente novamente em instantes."
+        },
+        "default": {
+          "title": "Não foi possível enviar o projeto",
+          "description": "Revise as informações ou tente novamente em alguns instantes."
+        }
+      }
+    },
+    "review": {
+      "title": "Revise seu projeto",
+      "description": "Confirme as informações abaixo antes de enviar o arquivo para processamento.",
+      "edit": "Editar",
+      "sections": {
+        "projectType": "Tipo de projeto",
+        "referenceFile": "Arquivo de referência",
+        "transcriptionSettings": "Configurações da transcrição",
+        "offerProfile": "Perfil da oferta"
+      },
+      "labels": {
+        "pipeline": "Pipeline",
+        "file": "Arquivo",
+        "size": "Tamanho",
+        "mediaType": "Tipo de mídia",
+        "originalLanguage": "Idioma original",
+        "transcriptCorrection": "Correção da transcrição",
+        "productOrSolution": "Produto ou solução",
+        "targetAudience": "Público-alvo",
+        "mainProblem": "Problema principal",
+        "mainPromise": "Promessa principal",
+        "platform": "Plataforma",
+        "desiredDuration": "Duração desejada",
+        "benefits": "Benefícios",
+        "objections": "Objeções",
+        "proofAssets": "Provas",
+        "restrictions": "Restrições"
+      },
+      "pipeline": {
+        "analysis": "Análise de copy",
+        "adaptation": "Adaptação de copy"
+      },
+      "media": {
+        "video": "Vídeo",
+        "audio": "Áudio"
+      },
+      "boolean": {
+        "enabled": "Ativada",
+        "disabled": "Desativada"
+      },
+      "empty": {
+        "file": "Nenhum arquivo selecionado",
+        "notAvailable": "Não disponível",
+        "notSpecified": "Não informado"
+      },
+      "durationMinutes_one": "{{count}} minuto",
+      "durationMinutes_other": "{{count}} minutos"
+    },
+    "validation": {
+      "fileRequired": "Selecione um arquivo de vídeo ou áudio."
     }
+  },
+  "userProfile": {
+    "productOffer": {
+      "title": "Produto e oferta",
+      "description": "Explique claramente o que você vende e que resultado isso ajuda o cliente a alcançar.",
+      "product": {
+        "label": "Qual produto ou solução você está oferecendo?",
+        "description": "Inclua o tipo de produto, o objetivo e a transformação que ele proporciona.",
+        "placeholder": "Exemplo: Um curso online de conversação em inglês para adultos brasileiros."
+      }
+    },
+    "audienceProblem": {
+      "title": "Público e problema",
+      "description": "Descreva a pessoa que essa mensagem deve alcançar e o principal problema que ela tenta resolver.",
+      "audience": {
+        "label": "Quem é o público-alvo?",
+        "description": "Inclua características relevantes, contexto, experiência e situação atual.",
+        "placeholder": "Exemplo: Adultos brasileiros que entendem inglês, mas travam na hora de falar."
+      },
+      "problem": {
+        "label": "Qual é o principal problema desse público?",
+        "description": "Foque na dificuldade mais importante que a oferta resolve.",
+        "placeholder": "Exemplo: Estudaram por anos, mas não conseguem falar com naturalidade em situações reais."
+      }
+    },
+    "desirePromise": {
+      "title": "Desejo e promessa",
+      "description": "Defina o que o público deseja e o que sua oferta pode prometer de forma responsável.",
+      "desire": {
+        "label": "O que o público mais deseja?",
+        "description": "Descreva o resultado, sentimento ou situação que o público quer alcançar.",
+        "placeholder": "Exemplo: Falar inglês com confiança em situações cotidianas e profissionais."
+      },
+      "promise": {
+        "label": "Qual é a promessa principal?",
+        "description": "Use uma promessa realista, sustentada pelo seu produto, sem exagero.",
+        "placeholder": "Exemplo: Desenvolver a confiança e a habilidade prática necessárias para conversas reais."
+      }
+    },
+    "mechanism": {
+      "title": "Mecanismo único",
+      "description": "Explique o que torna a abordagem diferente e por que ela pode funcionar melhor para esse público.",
+      "field": {
+        "label": "Como sua solução funciona?",
+        "description": "Este campo é opcional. Descreva um método, processo, estrutura ou diferencial real, sem inventar alegações.",
+        "placeholder": "Exemplo: Prática de conversação baseada em situações que o aluno encontra no dia a dia."
+      }
+    },
+    "benefits": {
+      "title": "Benefícios",
+      "description": "Adicione os benefícios práticos ou emocionais mais importantes entregues pela oferta.",
+      "list": {
+        "label": "Quais benefícios o cliente pode esperar?",
+        "description": "Use um benefício claro por item. Evite promessas que o produto não consegue sustentar.",
+        "itemLabel": "Descreva um benefício",
+        "add": "Adicionar benefício"
+      }
+    },
+    "objections": {
+      "title": "Objeções",
+      "description": "Liste dúvidas, medos ou motivos que podem impedir o público de agir.",
+      "list": {
+        "label": "Quais objeções esse público tem?",
+        "description": "Use uma objeção por item e escreva pela perspectiva do cliente.",
+        "itemLabel": "Descreva uma objeção",
+        "add": "Adicionar objeção"
+      }
+    },
+    "proofAssets": {
+      "title": "Provas disponíveis",
+      "description": "Adicione apenas evidências que já existem e podem ser verificadas. A adaptação não deve inventar depoimentos, números ou resultados.",
+      "list": {
+        "label": "Quais provas sustentam a oferta?",
+        "description": "Exemplos: depoimentos reais, estudos de caso, demonstrações, credenciais ou resultados documentados.",
+        "itemLabel": "Descreva uma prova disponível",
+        "add": "Adicionar prova"
+      }
+    },
+    "offerTerms": {
+      "title": "Preço e condições",
+      "description": "Descreva os detalhes comerciais reais que a mensagem adaptada pode apresentar.",
+      "field": {
+        "label": "Quais são os detalhes da oferta?",
+        "description": "Este campo é opcional. Inclua preço, condições de pagamento, período de acesso, bônus, garantias ou condições relevantes.",
+        "placeholder": "Exemplo: Doze meses de acesso, pagamento em até 12 parcelas e garantia de sete dias."
+      }
+    },
+    "callToAction": {
+      "title": "Chamada para ação",
+      "description": "Explique claramente o que o público deve fazer depois de assistir ou ouvir a mensagem adaptada.",
+      "field": {
+        "label": "Qual ação o público deve tomar?",
+        "description": "Use uma ação específica que corresponda ao processo real de compra ou contato.",
+        "placeholder": "Exemplo: Clique no botão para conhecer o curso e fazer sua inscrição."
+      }
+    },
+    "toneLanguage": {
+      "title": "Tom e idioma final",
+      "description": "Defina a voz desejada da copy adaptada e o idioma do roteiro final.",
+      "tone": {
+        "label": "Qual tom a copy deve usar?",
+        "description": "Descreva o estilo de comunicação desejado com algumas características claras.",
+        "placeholder": "Exemplo: Direto, acolhedor, confiante e conversacional."
+      },
+      "language": {
+        "label": "Qual idioma o roteiro final deve usar?",
+        "description": "Use um idioma ou localidade, como Português, Inglês, pt-BR ou es-MX.",
+        "placeholder": "Exemplo: pt-BR"
+      }
+    },
+    "platformDuration": {
+      "title": "Plataforma e duração",
+      "description": "Defina onde a copy será usada e a duração aproximada do roteiro final.",
+      "platform": {
+        "label": "Onde essa copy será usada?",
+        "description": "Exemplos: Instagram, YouTube, página de vendas, webinar ou anúncio pago.",
+        "placeholder": "Exemplo: Instagram"
+      },
+      "duration": {
+        "label": "Duração desejada em minutos",
+        "placeholder": "Exemplo: 2",
+        "hint": "Use valores decimais quando necessário, como 1.5 para um minuto e trinta segundos."
+      }
+    },
+    "restrictions": {
+      "title": "Restrições",
+      "description": "Defina os limites que o roteiro adaptado deve respeitar.",
+      "list": {
+        "label": "O que a copy adaptada deve evitar?",
+        "description": "Adicione promessas proibidas, alegações sem prova, temas sensíveis, palavras ou abordagens que não devem aparecer.",
+        "itemLabel": "Descreva uma restrição",
+        "add": "Adicionar restrição"
+      }
+    },
+    "repeatable": {
+      "empty": "Nenhum item adicionado ainda.",
+      "remove": "Remover",
+      "removeItem": "Remover {{itemLabel}} {{number}}"
+    },
+    "validation": {
+      "listItemRequired": "Os itens da lista não podem ficar vazios.",
+      "productOrSolutionRequired": "Descreva o produto ou solução.",
+      "targetAudienceRequired": "Descreva o público-alvo.",
+      "coreProblemRequired": "Descreva o problema principal.",
+      "coreDesireRequired": "Descreva o principal desejo do público.",
+      "mainPromiseRequired": "Descreva a promessa principal.",
+      "callToActionRequired": "Descreva a chamada para ação desejada.",
+      "desiredDurationPositive": "A duração deve ser maior que zero."
+    }
+  },
+  "jobStatus": {
+    "page": {
+      "eyebrow": "Status do projeto"
+    },
+    "loading": "Carregando status do projeto",
+    "actions": {
+      "returnToDashboard": "Voltar ao painel",
+      "retry": "Tentar novamente",
+      "refresh": "Atualizar status",
+      "startAnother": "Criar outro projeto"
+    },
+    "invalid": {
+      "title": "Projeto não encontrado",
+      "description": "O endereço do projeto é inválido ou não está mais disponível."
+    },
+    "notFound": {
+      "title": "Projeto não encontrado",
+      "description": "Este projeto não existe ou não está disponível para sua conta."
+    },
+    "unavailable": {
+      "title": "Status indisponível",
+      "description": "Não foi possível carregar o status mais recente do projeto."
+    },
+    "unknown": {
+      "description": "O projeto retornou um status que esta versão do aplicativo não reconhece."
+    },
+    "reconnecting": {
+      "title": "Reconectando",
+      "description": "O último status conhecido é exibido enquanto reconectamos ao servidor."
+    },
+    "panel": {
+      "projectNumber": "Projeto #{{id}}",
+      "status": {
+        "uploaded": {
+          "badge": "Aguardando início",
+          "title": "Seu projeto está na fila",
+          "description": "O arquivo foi recebido com sucesso. O processamento começará assim que houver um worker disponível."
+        },
+        "running": {
+          "badge": "Processando",
+          "title": "Estamos analisando sua referência",
+          "description": "A transcrição e a análise da copy estão rodando em segundo plano. Você pode fechar esta página e voltar depois."
+        },
+        "completed": {
+          "badge": "Concluído",
+          "title": "Seu resultado está pronto",
+          "description": "O processamento terminou com sucesso. Estamos abrindo o resultado agora."
+        },
+        "failed": {
+          "badge": "Processamento interrompido",
+          "title": "Não foi possível concluir este projeto",
+          "description": "O projeto parou antes de gerar um resultado. Sua conta e outros projetos não foram afetados."
+        }
+      },
+      "pipeline": {
+        "analysis": "Análise de copy",
+        "adaptation": "Adaptação de copy"
+      },
+      "details": {
+        "projectType": "Tipo de projeto",
+        "created": "Criado em",
+        "elapsedTime": "Tempo decorrido"
+      },
+      "empty": {
+        "notAvailable": "Não disponível",
+        "inProgress": "Em andamento"
+      },
+      "elapsed": {
+        "seconds_one": "{{count}} segundo",
+        "seconds_other": "{{count}} segundos",
+        "minutesSeconds": "{{minutes}}m {{seconds}}s"
+      },
+      "failures": {
+        "mediaProcessingFailed": "A mídia enviada não pôde ser lida ou preparada para análise.",
+        "transcriptionFailed": "Não foi possível produzir uma transcrição utilizável a partir desta referência.",
+        "structuredOutputFailed": "O serviço de análise não conseguiu produzir um resultado válido para este projeto.",
+        "storageError": "O arquivo de referência ficou indisponível durante o processamento.",
+        "timeout": "O processamento demorou mais que o tempo permitido e foi interrompido."
+      }
+    },
+    "timeline": {
+      "ariaLabel": "Progresso do projeto",
+      "failedStepDescription": "O processamento foi interrompido antes que esta etapa pudesse terminar.",
+      "steps": {
+        "fileReceived": {
+          "title": "Arquivo recebido",
+          "description": "Sua referência está anexada com segurança a este projeto."
+        },
+        "processing": {
+          "title": "Processamento",
+          "description": "Transcrevemos e examinamos a mensagem de vendas."
+        },
+        "resultReady": {
+          "title": "Resultado pronto",
+          "description": "Sua análise ou roteiro adaptado está disponível."
+        }
+      }
+    }
+  },
+  "adaptationResult": {
+    "scriptEditor": {},
+    "scriptSections": {},
+    "validation": {},
+    "missingProofs": {},
+    "referenceAnalysis": {},
+    "common": {}
   }
 }

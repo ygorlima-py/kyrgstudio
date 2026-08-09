@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import { ProfileTextField } from './profile-text-field'
 
 /**
@@ -5,6 +7,8 @@ import { ProfileTextField } from './profile-text-field'
  * intended result.
  */
 export function MechanismFields() {
+  const { t } = useTranslation()
+
   return (
     <section
       aria-labelledby="mechanism-heading"
@@ -15,20 +19,19 @@ export function MechanismFields() {
           className="font-heading text-heading-sm text-text"
           id="mechanism-heading"
         >
-          Unique mechanism
+          {t('userProfile.mechanism.title')}
         </h3>
 
         <p className="text-body-sm text-text-muted">
-          Explain what makes the approach different and why it may work better
-          for this audience.
+          {t('userProfile.mechanism.description')}
         </p>
       </div>
 
       <ProfileTextField
-        description="This field is optional. Describe a real method, process, framework, or differentiator without inventing claims."
-        label="How does your solution work?"
+        description={t('userProfile.mechanism.field.description')}
+        label={t('userProfile.mechanism.field.label')}
         name="user_profile.unique_mechanism"
-        placeholder="Example: Conversation practice based on situations the student encounters in everyday life."
+        placeholder={t('userProfile.mechanism.field.placeholder')}
       />
     </section>
   )
