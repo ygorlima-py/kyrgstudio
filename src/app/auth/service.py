@@ -16,6 +16,7 @@ from uuid import uuid4
 from app.auth.google import GoogleTokenVerifier
 from app.auth.passwords import PasswordHasher
 from app.auth.principal import AuthenticatedPrincipal, IssuedAuthTokens
+from app.auth.email_verification import EmailVerificationService
 from app.auth.tokens import AccessTokenService, RefreshTokenGenerator
 from app.auth.transactional_store import (
     AuthStore,
@@ -71,12 +72,14 @@ class AuthService:
         "password_hasher",
         "refresh_token_generator",
         "refresh_token_ttl_seconds",
+        "email_verification_service",
     )
 
     def __init__(
         self,
         *,
         auth_store: AuthStore,
+        email_verification_service: EmailVerificationService,
         password_hasher: PasswordHasher,
         access_token_service: AccessTokenService,
         refresh_token_generator: RefreshTokenGenerator,
@@ -87,6 +90,7 @@ class AuthService:
         """Create the service from ready-to-use application dependencies."""
 
         self.auth_store = auth_store
+        self.email_verification_service = email_verification_service
         self.password_hasher = password_hasher
         self.access_token_service = access_token_service
         self.refresh_token_generator = refresh_token_generator
@@ -112,34 +116,25 @@ class AuthService:
         *,
         email: str,
         password: str,
-        name: str | None = None,
-    ) -> AuthenticationResult:
-        """Register a password user and issue the initial token pair.
+        name: str,
+    ) -> AuthUserRecord:
+        """Register a password user and send its confirmation email.
 
-        Password hashing happens before the database transaction. The store
-        receives only the Argon2id hash and creates the user and refresh session
-        atomically.
+        Registration deliberately does not create a refresh session. The user
+        becomes authenticated only after consuming the email confirmation link.
         """
 
         normalized_email = _registration_email(email)
-        normalized_name = _optional_name(name)
+        normalized_name = _required_name(name)
         password_hash = _password_hash_for_registration(
             self.password_hasher,
             password,
         )
-        issued_at = self._current_time()
-        refresh_token = self._new_refresh_token(issued_at)
-
         try:
-            created_records = (
-                await self.auth_store.create_password_user_with_session(
-                    email=normalized_email,
-                    password_hash=password_hash,
-                    name=normalized_name,
-                    token_hash=refresh_token.token_hash,
-                    family_id=str(uuid4()),
-                    session_expires_at=refresh_token.expires_at,
-                )
+            created_user = await self.auth_store.create_password_user(
+                email=normalized_email,
+                password_hash=password_hash,
+                name=normalized_name,
             )
         except UserStoreError as error:
             if "conflict_fields" not in error.details:
@@ -150,9 +145,39 @@ class AuthService:
                 details={"field": "email", "code": "already_exists"},
             ) from error
 
-        return self._authentication_result(
-            user=created_records.user,
-            refresh_token=refresh_token,
+        await self.email_verification_service.send_verification_email(
+            user_id=created_user.user_id,
+            email=created_user.email,
+        )
+
+        return created_user
+
+    async def verify_email(self, token: str) -> AuthenticationResult:
+        """Verify email and create the user's first authenticated session."""
+
+        user = await self.email_verification_service.verify_email_token(token)
+        _require_active_user(user)
+
+        return await self._create_session_and_authentication_result(user)
+
+    async def resend_email_verification(self, email: str) -> None:
+        """Resend confirmation without revealing whether the email exists."""
+
+        normalized_email = _registration_email(email)
+        user = await self.auth_store.get_user_by_email(normalized_email)
+
+        if user is None:
+            return
+
+        if user.disabled:
+            return
+
+        if user.email_verified:
+            return
+
+        await self.email_verification_service.send_verification_email(
+            user_id=user.user_id,
+            email=user.email,
         )
 
     async def login_with_password(
@@ -177,6 +202,11 @@ class AuthService:
             raise _invalid_credentials()
 
         _require_active_user(user)
+
+        if not user.email_verified:
+            raise EmailVerificationRequiredError(
+                technical_message="Email verification is required before login.",
+            )
 
         if updated_password_hash is not None:
             user = await self.auth_store.update_password_hash(
@@ -337,6 +367,8 @@ class AuthService:
         _require_active_user(user)
         return _principal_from_user(user)
 
+
+
     async def _create_session_and_authentication_result(
         self,
         user: AuthUserRecord,
@@ -481,10 +513,7 @@ def _normalized_email(value: object) -> str:
     return normalized_email
 
 
-def _optional_name(value: object) -> str | None:
-    if value is None:
-        return None
-
+def _required_name(value: object) -> str:
     if not isinstance(value, str):
         raise InvalidInputError(
             technical_message="Registration name must be a string.",
@@ -499,7 +528,13 @@ def _optional_name(value: object) -> str | None:
             details={"field": "name"},
         )
 
-    return normalized_name or None
+    if not normalized_name:
+        raise InvalidInputError(
+            technical_message="Registration name is required.",
+            details={"field": "name"},
+        )
+
+    return normalized_name
 
 
 def _password_hash_for_registration(

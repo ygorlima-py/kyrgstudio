@@ -13,11 +13,16 @@ from typing import cast
 
 from fastapi import FastAPI
 
+from app.auth.email_verification import (
+    EmailVerificationConfig,
+    EmailVerificationService,
+)
 from app.auth.google import GoogleTokenVerifier
 from app.auth.passwords import Argon2PasswordHasher
 from app.auth.service import AuthService
 from app.auth.tokens import AccessTokenService, RefreshTokenGenerator
 from app.auth.transactional_store import AuthStore
+from app.email.senders import SMTPEmailSender
 from app.errors import AuthConfigurationError
 from app.queue.base import QueueBase
 from app.queue.celery import CeleryQueue, CeleryTask
@@ -108,6 +113,14 @@ def _create_auth_service(
         ) from error
 
     auth_store = AuthStore(session_factory)
+    email_sender = _create_email_sender(settings)
+    email_verification_service = EmailVerificationService(
+        auth_store=auth_store,
+        email_sender=email_sender,
+        config=EmailVerificationConfig(
+            public_web_url=settings.public_web_url,
+        ),
+    )
     password_hasher = Argon2PasswordHasher()
     access_token_service = AccessTokenService(
         secret=jwt_signing_secret,
@@ -133,6 +146,7 @@ def _create_auth_service(
 
     return AuthService(
         auth_store=auth_store,
+        email_verification_service=email_verification_service,
         password_hasher=password_hasher,
         access_token_service=access_token_service,
         refresh_token_generator=refresh_token_generator,
@@ -141,6 +155,24 @@ def _create_auth_service(
             settings.auth_refresh_token_ttl_seconds
         ),
     )
+
+
+def _create_email_sender(settings: AppSettings) -> SMTPEmailSender:
+    """Create the SMTP sender required by registration verification emails."""
+
+    try:
+        return SMTPEmailSender(
+            username=settings.email_username,
+            password=settings.email_password,
+            sender=settings.email_from,
+            from_name=settings.email_from_name,
+            host=settings.email_host,
+            port=settings.email_port,
+        )
+    except ValueError as error:
+        raise AuthConfigurationError(
+            technical_message="Email delivery configuration is invalid.",
+        ) from error
 
 
 def _create_pipeline_queue() -> QueueBase:

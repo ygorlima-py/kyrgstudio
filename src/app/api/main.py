@@ -11,6 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.access_logging import install_verification_token_access_log_filter
 from app.api.exception_handlers import install_exception_handlers
 from app.api.lifespan import api_lifespan
 from app.api.middleware import (
@@ -51,6 +52,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     application = FastAPI(lifespan=api_lifespan)
     application.state.settings = resolved_settings
 
+    install_verification_token_access_log_filter()
     _configure_cors(application, settings=resolved_settings)
     install_request_id_middleware(application)
     install_exception_handlers(application)

@@ -71,6 +71,7 @@ class AppSettings:
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     api_cors_origins: tuple[str, ...] = ()
+    public_web_url: str = "http://localhost:8080"
     max_upload_bytes: int = 2 * 1024 * 1024 * 1024
     api_upload_timeout_seconds: int = 1800
     accepted_input_media_types: tuple[str, ...] = (
@@ -236,6 +237,10 @@ def load_settings() -> AppSettings:
         ),
         api_cors_origins=_environment_cors_origins(
             "APP_API_CORS_ORIGINS",
+        ),
+        public_web_url=_environment_text(
+            "APP_PUBLIC_WEB_URL",
+            default="http://localhost:8080",
         ),
         max_upload_bytes=_positive_environment_int(
             "APP_MAX_UPLOAD_BYTES",

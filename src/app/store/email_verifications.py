@@ -30,7 +30,7 @@ class SQLAlchemyEmailVerificationStore(EmailVerificationStoreBase):
             user_id=user_id,
             email=email.strip().lower(),
             token_hash=token_hash,
-            expire_at=expires_at,
+            expires_at=expires_at,
         )
 
         self.session.add(token)
@@ -78,7 +78,7 @@ class SQLAlchemyEmailVerificationStore(EmailVerificationStoreBase):
             update(EmailVerificationToken)
             .where(
                 EmailVerificationToken.id == token_id,
-                EmailVerificationToken.user_id.is_(None),
+                EmailVerificationToken.used_at.is_(None),
             )
             .values(used_at=func.now())
             .returning(EmailVerificationToken)

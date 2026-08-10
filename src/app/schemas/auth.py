@@ -83,10 +83,22 @@ class RegisterRequest(_EmailCredentialsRequest):
         repr=False,
         description="Plain password to hash during account registration.",
     )
-    name: OptionalName | None = Field(
-        default=None,
-        description="Optional display name for the new account.",
+    name: OptionalName = Field(
+        description="Display name for the new account.",
     )
+
+
+class RegisterResponse(_AuthenticationSchema):
+    """Response returned while an account waits for email confirmation."""
+
+    email: NormalizedEmail = Field(
+        description="Email address that received the confirmation link.",
+    )
+    email_verification_required: Literal[True] = True
+
+
+class ResendEmailVerificationRequest(_EmailCredentialsRequest):
+    """Request used to request another confirmation email."""
 
 
 class PasswordLoginRequest(_EmailCredentialsRequest):
@@ -231,6 +243,16 @@ def _normalize_email_address(value: str) -> str:
 
     return normalized_email
 
+class VerifyEmailRequest(_AuthenticationSchema):
+    """Request used to confirm an email verification token."""
+
+    token: str
+
+
+class ResendEmailVerificationResponse(_AuthenticationSchema):
+    """Response returned after requesting a new verification email."""
+
+    sent: Literal[True] = True
 
 __all__ = [
     "AccessTokenResponse",
@@ -238,4 +260,8 @@ __all__ = [
     "GoogleLoginRequest",
     "PasswordLoginRequest",
     "RegisterRequest",
+    "RegisterResponse",
+    "ResendEmailVerificationRequest",
+    "ResendEmailVerificationResponse",
+    "VerifyEmailRequest",
 ]

@@ -11,7 +11,8 @@ from __future__ import annotations
 import secrets
 from typing import Annotated, Final
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
 
 from app.auth.dependencies import (
     RefreshCookieCredentials,
@@ -26,12 +27,16 @@ from app.auth.principal import (
 )
 from app.auth.service import AuthenticationResult, AuthService
 from app.errors import AuthConfigurationError
-from app.schemas.auth import (
+from app.schemas import (
     AccessTokenResponse,
     CurrentUserResponse,
     GoogleLoginRequest,
     PasswordLoginRequest,
     RegisterRequest,
+    RegisterResponse,
+    ResendEmailVerificationRequest,
+    VerifyEmailRequest,
+    ResendEmailVerificationResponse,
 )
 from app.settings import AppSettings
 
@@ -64,28 +69,22 @@ router = APIRouter(
 
 @router.post(
     "/register",
-    response_model=AccessTokenResponse,
-    status_code=status.HTTP_201_CREATED,
+    response_model=RegisterResponse,
+    status_code=status.HTTP_202_ACCEPTED,
     summary="Register with email and password",
 )
 async def register_with_password(
     payload: RegisterRequest,
-    request: Request,
-    response: Response,
     auth_service: AuthServiceDependency,
-) -> AccessTokenResponse:
-    """Create a password account and establish its first session."""
+) -> RegisterResponse:
+    """Create a password account and request email confirmation."""
 
-    authentication = await auth_service.register_with_password(
+    user = await auth_service.register_with_password(
         email=payload.email,
         password=payload.password,
         name=payload.name,
     )
-    return _authentication_response(
-        authentication,
-        request=request,
-        response=response,
-    )
+    return RegisterResponse(email=user.email)
 
 
 @router.post(
@@ -192,6 +191,74 @@ async def get_current_authenticated_user(
 
     _set_no_store_headers(response)
     return CurrentUserResponse.from_principal(principal)
+
+
+@router.post(
+    "/verify-email",
+    response_model=AccessTokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify account email",
+)
+
+async def verify_email(
+    request: VerifyEmailRequest,
+    http_request: Request,
+    response: Response,
+    auth_service: AuthServiceDependency,
+) -> AccessTokenResponse:
+    """Confirm an email verification token sent to the user's inbox."""
+
+    authentication = await auth_service.verify_email(request.token)
+
+    return _authentication_response(
+        authentication,
+        request=http_request,
+        response=response,
+    )
+
+
+@router.get(
+    "/verify-email",
+    include_in_schema=False,
+)
+async def verify_email_from_link(
+    token: Annotated[str, Query(min_length=1)],
+    request: Request,
+    auth_service: AuthServiceDependency,
+) -> RedirectResponse:
+    """Verify the email link, set credentials, and open the application."""
+
+    authentication = await auth_service.verify_email(token)
+    settings = _application_settings(request)
+    redirect_response = RedirectResponse(
+        url=f"{settings.public_web_url.rstrip('/')}/app",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+    _set_authentication_cookies(
+        redirect_response,
+        settings=settings,
+        tokens=authentication.tokens,
+    )
+    _set_no_store_headers(redirect_response)
+    return redirect_response
+
+
+@router.post(
+    "/resend-verification-email",
+    response_model=ResendEmailVerificationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Resend account email verification",
+)
+
+async def resend_verification_email(
+    payload: ResendEmailVerificationRequest,
+    auth_service: AuthServiceDependency,
+) -> ResendEmailVerificationResponse:
+    """Request another email without revealing account existence."""
+
+    await auth_service.resend_email_verification(payload.email)
+
+    return ResendEmailVerificationResponse()
 
 
 def _authentication_response(

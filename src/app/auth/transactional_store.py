@@ -19,7 +19,8 @@ from app.store.database import (
     async_session_scope,
     async_transaction_scope,
 )
-from app.store.models import AuthSession, User
+from app.store.email_verifications import SQLAlchemyEmailVerificationStore
+from app.store.models import AuthSession, EmailVerificationToken, User
 from app.store.users import (
     DEFAULT_AUTH_PROVIDER,
     GOOGLE_AUTH_PROVIDER,
@@ -88,6 +89,25 @@ class AuthSessionRecord:
         """Return whether this refresh session can no longer be used."""
 
         return self.revoked_at is not None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class EmailVerificationTokenRecord:
+    """Session-independent snapshot of one email verification token."""
+
+    token_id: int
+    user_id: int
+    token_hash: str = field(repr=False)
+    email: str
+    expires_at: datetime
+    used_at: datetime | None
+    created_at: datetime
+
+    @property
+    def used(self) -> bool:
+        """Return whether this verification link was already consumed."""
+
+        return self.used_at is not None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -173,6 +193,131 @@ class AuthStore:
             session_record = _optional_auth_session_record(auth_session)
 
         return session_record
+
+    async def create_email_verification_token(
+        self,
+        *,
+        user_id: int,
+        email: str,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> EmailVerificationTokenRecord:
+        """Create and commit one email verification token hash."""
+
+        normalized_user_id = _positive_identifier(
+            user_id,
+            field_name="user_id",
+        )
+        normalized_expires_at = _utc_datetime(
+            expires_at,
+            field_name="expires_at",
+        )
+
+        async with async_transaction_scope(self.session_factory) as session:
+            token = await SQLAlchemyEmailVerificationStore(
+                session
+            ).create_token(
+                user_id=normalized_user_id,
+                email=email,
+                token_hash=token_hash,
+                expires_at=normalized_expires_at,
+            )
+            token_record = _email_verification_token_record(token)
+
+        return token_record
+
+    async def get_email_verification_token_by_hash(
+        self,
+        token_hash: str,
+    ) -> EmailVerificationTokenRecord | None:
+        """Load one email verification token by its deterministic digest."""
+
+        async with async_session_scope(self.session_factory) as session:
+            token = await SQLAlchemyEmailVerificationStore(
+                session
+            ).get_token_by_hash(token_hash)
+            token_record = _optional_email_verification_token_record(token)
+
+        return token_record
+
+    async def mark_email_verification_token_used(
+        self,
+        token_id: int,
+    ) -> EmailVerificationTokenRecord:
+        """Mark one email verification token as used and commit it."""
+
+        normalized_token_id = _positive_identifier(
+            token_id,
+            field_name="token_id",
+        )
+
+        async with async_transaction_scope(self.session_factory) as session:
+            token = await SQLAlchemyEmailVerificationStore(
+                session
+            ).mark_token_used(normalized_token_id)
+            token_record = _email_verification_token_record(token)
+
+        return token_record
+
+    async def revoke_pending_email_verification_tokens_for_user(
+        self,
+        user_id: int,
+    ) -> int:
+        """Mark pending verification tokens for one user as unusable."""
+
+        normalized_user_id = _positive_identifier(
+            user_id,
+            field_name="user_id",
+        )
+
+        async with async_transaction_scope(self.session_factory) as session:
+            revoked_token_count = await SQLAlchemyEmailVerificationStore(
+                session
+            ).revoke_pending_tokens_for_user(normalized_user_id)
+
+        return revoked_token_count
+
+    async def create_password_user(
+        self,
+        *,
+        email: str,
+        password_hash: str,
+        name: str,
+    ) -> AuthUserRecord:
+        """Create an unverified password user without opening a session."""
+
+        user_payload = {
+            "email": email,
+            "password_hash": password_hash,
+            "name": name,
+            "auth_provider": DEFAULT_AUTH_PROVIDER,
+            "email_verified_at": None,
+        }
+
+        async with async_transaction_scope(self.session_factory) as session:
+            user = await SQLAlchemyUserStore(session).create_user(user_payload)
+            user_record = _user_record(user)
+
+        return user_record
+
+    async def mark_user_email_verified(
+        self,
+        user_id: int,
+    ) -> AuthUserRecord:
+        """Mark one user's email as verified and commit the change."""
+
+        normalized_user_id = _positive_identifier(
+            user_id,
+            field_name="user_id",
+        )
+
+        async with async_transaction_scope(self.session_factory) as session:
+            user = await SQLAlchemyUserStore(session).mark_email_verified(
+                normalized_user_id
+            )
+            user_record = _user_record(user)
+
+        return user_record
 
     async def create_password_user_with_session(
         self,
@@ -505,6 +650,29 @@ def _optional_auth_session_record(
     return _auth_session_record(auth_session)
 
 
+def _optional_email_verification_token_record(
+    token: EmailVerificationToken | None,
+) -> EmailVerificationTokenRecord | None:
+    if token is None:
+        return None
+
+    return _email_verification_token_record(token)
+
+
+def _email_verification_token_record(
+    token: EmailVerificationToken,
+) -> EmailVerificationTokenRecord:
+    return EmailVerificationTokenRecord(
+        token_id=token.id,
+        user_id=token.user_id,
+        token_hash=token.token_hash,
+        email=token.email,
+        expires_at=token.expires_at,
+        used_at=token.used_at,
+        created_at=token.created_at,
+    )
+
+
 def _auth_session_record(auth_session: AuthSession) -> AuthSessionRecord:
     return AuthSessionRecord(
         session_id=auth_session.id,
@@ -547,5 +715,6 @@ __all__ = [
     "AuthStore",
     "AuthUserRecord",
     "AuthUserSessionRecord",
+    "EmailVerificationTokenRecord",
     "RefreshSessionRotationRecord",
 ]

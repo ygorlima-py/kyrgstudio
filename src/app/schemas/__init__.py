@@ -1,5 +1,17 @@
 """Public data contracts shared by application components."""
 
+from app.schemas.auth import (
+    AccessTokenResponse,
+    CurrentUserResponse,
+    GoogleLoginRequest,
+    PasswordLoginRequest,
+    RegisterRequest,
+    RegisterResponse,
+    ResendEmailVerificationRequest,
+    ResendEmailVerificationResponse,
+    VerifyEmailRequest,
+)
+
 from app.schemas.jobs import (
     ApiErrorResponse,
     CreateCopyAdaptationJobRequest,
@@ -33,6 +45,7 @@ from app.schemas.workflow import (
 
 
 __all__ = [
+    "AccessTokenResponse",
     "ApiErrorResponse",
     "BasePipelineInput",
     "CopyAdaptationPipelineInput",
@@ -42,13 +55,21 @@ __all__ = [
     "CreateCopyAdaptationJobRequest",
     "CreateCopyAnalysisJobRequest",
     "CreateJobRequest",
+    "CurrentUserResponse",
+    "GoogleLoginRequest",
     "JobResultResponse",
     "JobStatusResponse",
     "JobSubmissionResponse",
+    "PasswordLoginRequest",
     "PipelineInputFile",
     "PipelineStartResult",
     "PipelineType",
+    "RegisterRequest",
+    "RegisterResponse",
+    "ResendEmailVerificationRequest",
+    "ResendEmailVerificationResponse",
     "ResolvedInputFile",
+    "VerifyEmailRequest",
     "WorkerRunResult",
     "WorkflowExecutionRequest",
     "WorkflowExecutionResult",

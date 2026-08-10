@@ -201,6 +201,12 @@ class UserStoreBase(ABC):
         """Return a user by Google subject id, or ``None`` when absent."""
 
         ...
+
+    @abstractmethod
+    async def mark_email_verified(self, user_id: int) -> Any:
+        """Mark a user's email address as verified."""
+
+        ...
         
 
 class AuthSessionStoreBase(ABC):
