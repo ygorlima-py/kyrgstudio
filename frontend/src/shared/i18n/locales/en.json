@@ -313,6 +313,33 @@
         "network": "We could not reach the server. Check your connection and try again.",
         "invalidData": "Please review your information and try again."
       }
+    },
+    "emailVerification": {
+      "eyebrow": "Check your inbox",
+      "title": "Confirm your email",
+      "description": "We sent a secure confirmation link to:",
+      "steps": {
+        "openInbox": "Open the confirmation email from Kyrg Studio.",
+        "followLink": "Select “Confirm my email” before the link expires in 24 hours.",
+        "enterWorkspace": "You will return to Kyrg Studio with your account ready to use."
+      },
+      "actions": {
+        "resend": "Resend confirmation email",
+        "resending": "Sending a new email...",
+        "resendIn": "Resend in {{seconds}}s",
+        "changeEmail": "Use a different email",
+        "returnToRegistration": "Return to registration",
+        "login": "Log in"
+      },
+      "feedback": {
+        "resent": "A new confirmation email is on its way. Check your inbox and spam folder.",
+        "error": "We could not send another email. Check your connection and try again."
+      },
+      "loginPrompt": "Already confirmed your account?",
+      "missingEmail": {
+        "title": "Start with your email",
+        "description": "Return to registration so we know where to send your confirmation link."
+      }
     }
   },
 

@@ -32,4 +32,7 @@ export type {
   PublicAdaptedScriptOutput,
   PublicTranscriptionOutput,
   RegisterRequest,
+  RegisterResponse,
+  ResendEmailVerificationRequest,
+  ResendEmailVerificationResponse,
 } from './types'

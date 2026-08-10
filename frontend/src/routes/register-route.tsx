@@ -2,16 +2,20 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 
 import { RegisterForm } from '@/features/auth/components/register-form'
+import type { RegisterResponse } from '@/shared/api'
 
 /**
- * Presents account registration and redirects authenticated users to the app.
+ * Presents account registration and continues to email confirmation.
  */
 export function RegisterRoute() {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
-  function handleRegistrationSuccess(): void {
-    navigate('/app', { replace: true })
+  function handleRegistrationSuccess(registration: RegisterResponse): void {
+    navigate('/verify-email', {
+      replace: true,
+      state: { email: registration.email },
+    })
   }
 
   return (
@@ -26,11 +30,7 @@ export function RegisterRoute() {
 
       <p className="mt-6 text-center text-body-sm text-text-muted">
         {t('auth.register.loginPrompt')}{' '}
-
-        <Link
-          className="font-semibold text-action underline-offset-4 hover:underline"
-          to="/login"
-        >
+        <Link className="font-semibold text-action underline-offset-4 hover:underline" to="/login">
           {t('auth.register.login')}
         </Link>
       </p>

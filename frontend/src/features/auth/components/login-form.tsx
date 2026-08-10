@@ -12,30 +12,25 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 
 import { useAuth } from '../hooks/use-auth'
-import {
-  loginFormSchema,
-  type LoginFormData,
-  type LoginFormInput,
-} from '../schemas/auth-schemas'
+import { loginFormSchema, type LoginFormData, type LoginFormInput } from '../schemas/auth-schemas'
 
 const validationTranslationKeys: Readonly<Record<string, string>> = {
   'Email is required.': 'auth.login.validation.emailRequired',
   'Email is too long.': 'auth.login.validation.emailTooLong',
   'Enter a valid email address.': 'auth.login.validation.emailInvalid',
-  'Password must contain at least 8 characters.':
-    'auth.login.validation.passwordMinimum',
-  'Password must contain at most 128 characters.':
-    'auth.login.validation.passwordMaximum',
+  'Password must contain at least 8 characters.': 'auth.login.validation.passwordMinimum',
+  'Password must contain at most 128 characters.': 'auth.login.validation.passwordMaximum',
 }
 
 export interface LoginFormProps {
+  readonly onEmailVerificationRequired: (email: string) => void
   readonly onSuccess: () => void
 }
 
 /**
  * Validates credentials and starts an authenticated application session.
  */
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onEmailVerificationRequired, onSuccess }: LoginFormProps) {
   const { t } = useTranslation()
   const { loginWithPassword } = useAuth()
   const [submissionError, setSubmissionError] = useState<string | null>(null)
@@ -64,6 +59,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       await loginWithPassword(request)
       onSuccess()
     } catch (error) {
+      if (isEmailVerificationRequired(error)) {
+        onEmailVerificationRequired(request.email)
+        return
+      }
+
       setSubmissionError(loginErrorMessage(error, t))
     }
   }
@@ -98,9 +98,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="login-password">
-            {t('auth.login.fields.password')}
-          </Label>
+          <Label htmlFor="login-password">{t('auth.login.fields.password')}</Label>
           <span className="text-body-sm text-text-subtle">
             {t('auth.login.fields.forgotPassword')}
           </span>
@@ -134,10 +132,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   )
 }
 
-function validationErrorMessage(
-  message: string | undefined,
-  t: TFunction,
-): string {
+function isEmailVerificationRequired(error: unknown): boolean {
+  return error instanceof ApiError && error.code === 'email_verification_required'
+}
+
+function validationErrorMessage(message: string | undefined, t: TFunction): string {
   if (message === undefined) {
     return t('auth.login.errors.generic')
   }
@@ -154,13 +153,6 @@ function loginErrorMessage(error: unknown, t: TFunction): string {
 
   if (error instanceof ApiError && error.code === 'account_disabled') {
     return t('auth.login.errors.accountDisabled')
-  }
-
-  if (
-    error instanceof ApiError &&
-    error.code === 'email_verification_required'
-  ) {
-    return t('auth.login.errors.emailVerificationRequired')
   }
 
   if (error instanceof ApiError && error.status === null) {

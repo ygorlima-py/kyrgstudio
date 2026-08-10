@@ -1,4 +1,11 @@
-import type { CurrentUserResponse, PasswordLoginRequest, RegisterRequest } from '@/shared/api'
+import type {
+  CurrentUserResponse,
+  PasswordLoginRequest,
+  RegisterRequest,
+  RegisterResponse,
+  ResendEmailVerificationRequest,
+  ResendEmailVerificationResponse,
+} from '@/shared/api'
 
 export type AuthSession =
   | {
@@ -22,7 +29,11 @@ export type AuthSession =
  * Authentication operations available to application components.
  */
 export interface AuthActions {
-  readonly registerWithPassword: (request: RegisterRequest) => Promise<void>
+  readonly registerWithPassword: (request: RegisterRequest) => Promise<RegisterResponse>
+
+  readonly resendEmailVerification: (
+    request: ResendEmailVerificationRequest,
+  ) => Promise<ResendEmailVerificationResponse>
 
   readonly loginWithPassword: (request: PasswordLoginRequest) => Promise<void>
 

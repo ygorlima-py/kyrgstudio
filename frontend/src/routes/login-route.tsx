@@ -18,6 +18,13 @@ export function LoginRoute() {
     navigate(getSafeReturnPath(location.state), { replace: true })
   }
 
+  function handleEmailVerificationRequired(email: string): void {
+    navigate('/verify-email', {
+      replace: true,
+      state: { email },
+    })
+  }
+
   return (
     <div>
       <p className="text-center font-mono text-meta uppercase tracking-[0.16em] text-action">
@@ -39,7 +46,10 @@ export function LoginRoute() {
       ) : null}
 
       <div className="mt-8">
-        <LoginForm onSuccess={handleLoginSuccess} />
+        <LoginForm
+          onEmailVerificationRequired={handleEmailVerificationRequired}
+          onSuccess={handleLoginSuccess}
+        />
       </div>
 
       <p className="mt-6 text-center text-body-sm text-text-muted">

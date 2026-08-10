@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 
 import {
   clearApiAccessToken,
@@ -13,6 +7,9 @@ import {
   type AccessTokenResponse,
   type PasswordLoginRequest,
   type RegisterRequest,
+  type RegisterResponse,
+  type ResendEmailVerificationRequest,
+  type ResendEmailVerificationResponse,
   type CurrentUserResponse,
 } from '@/shared/api'
 
@@ -22,8 +19,10 @@ import {
   logout as requestLogout,
   refreshAuthentication,
   registerWithPassword as requestPasswordRegistration,
+  resendEmailVerification as requestEmailVerification,
 } from '../api/auth-api'
 import type { AuthContextValue, AuthSession } from '../types/auth-types'
+import { clearPendingVerificationEmail } from '../utils/pending-verification-email'
 import { AuthContext } from './auth-context'
 
 const INITIAL_SESSION: AuthSession = {
@@ -36,8 +35,7 @@ const RESTORING_SESSION: AuthSession = {
   user: null,
 }
 
-let activeSessionRestoration:
-  Promise<CurrentUserResponse> | null = null
+let activeSessionRestoration: Promise<CurrentUserResponse> | null = null
 
 type AuthProviderProps = PropsWithChildren
 
@@ -58,6 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           status: 'authenticated',
           user: currentUser,
         })
+        clearPendingVerificationEmail()
       } catch (error) {
         clearApiAccessToken()
         setSession(INITIAL_SESSION)
@@ -68,12 +67,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 
   const registerWithPassword = useCallback(
-    async (request: RegisterRequest): Promise<void> => {
-      const authentication = await requestPasswordRegistration(request)
-
-      await establishAuthenticatedSession(authentication)
+    async (request: RegisterRequest): Promise<RegisterResponse> => {
+      return requestPasswordRegistration(request)
     },
-    [establishAuthenticatedSession],
+    [],
+  )
+
+  const resendEmailVerification = useCallback(
+    async (request: ResendEmailVerificationRequest): Promise<ResendEmailVerificationResponse> => {
+      return requestEmailVerification(request)
+    },
+    [],
   )
 
   const loginWithPassword = useCallback(
@@ -138,6 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           status: 'authenticated',
           user: currentUser,
         })
+        clearPendingVerificationEmail()
       })
       .catch(() => {
         if (!isSubscribed) {
@@ -156,10 +161,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     () => ({
       ...session,
       registerWithPassword,
+      resendEmailVerification,
       loginWithPassword,
       logout,
     }),
-    [session, registerWithPassword, loginWithPassword, logout],
+    [session, registerWithPassword, resendEmailVerification, loginWithPassword, logout],
   )
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

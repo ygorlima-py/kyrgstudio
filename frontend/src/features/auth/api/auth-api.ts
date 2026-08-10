@@ -5,15 +5,32 @@ import {
   type CurrentUserResponse,
   type PasswordLoginRequest,
   type RegisterRequest,
+  type RegisterResponse,
+  type ResendEmailVerificationRequest,
+  type ResendEmailVerificationResponse,
 } from '@/shared/api'
 
 const CSRF_HEADER_NAME = 'X-CSRF-Token'
 
 /**
- * Creates an account authenticated with email and password.
+ * Creates an account that must be confirmed before authentication.
  */
-export async function registerWithPassword(request: RegisterRequest): Promise<AccessTokenResponse> {
-  const response = await apiClient.post<AccessTokenResponse>('/auth/register', request)
+export async function registerWithPassword(request: RegisterRequest): Promise<RegisterResponse> {
+  const response = await apiClient.post<RegisterResponse>('/auth/register', request)
+
+  return response.data
+}
+
+/**
+ * Requests a fresh confirmation email without revealing account existence.
+ */
+export async function resendEmailVerification(
+  request: ResendEmailVerificationRequest,
+): Promise<ResendEmailVerificationResponse> {
+  const response = await apiClient.post<ResendEmailVerificationResponse>(
+    '/auth/resend-verification-email',
+    request,
+  )
 
   return response.data
 }

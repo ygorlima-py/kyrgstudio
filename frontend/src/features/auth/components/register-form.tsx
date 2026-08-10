@@ -4,7 +4,7 @@ import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 
-import { ApiError, type RegisterRequest } from '@/shared/api'
+import { ApiError, type RegisterRequest, type RegisterResponse } from '@/shared/api'
 import { Alert } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { FieldMessage } from '@/shared/ui/field-message'
@@ -24,16 +24,13 @@ const validationTranslationKeys: Readonly<Record<string, string>> = {
   'Email is required.': 'auth.register.validation.emailRequired',
   'Email is too long.': 'auth.register.validation.emailTooLong',
   'Enter a valid email address.': 'auth.register.validation.emailInvalid',
-  'Password must contain at least 8 characters.':
-    'auth.register.validation.passwordMinimum',
-  'Password must contain at most 128 characters.':
-    'auth.register.validation.passwordMaximum',
-  'Passwords do not match.':
-    'auth.register.validation.passwordMismatch',
+  'Password must contain at least 8 characters.': 'auth.register.validation.passwordMinimum',
+  'Password must contain at most 128 characters.': 'auth.register.validation.passwordMaximum',
+  'Passwords do not match.': 'auth.register.validation.passwordMismatch',
 }
 
 export interface RegisterFormProps {
-  readonly onSuccess: () => void
+  readonly onSuccess: (registration: RegisterResponse) => void
 }
 
 /**
@@ -58,9 +55,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     },
   })
 
-  async function submitRegistration(
-    formData: RegisterFormData,
-  ): Promise<void> {
+  async function submitRegistration(formData: RegisterFormData): Promise<void> {
     setSubmissionError(null)
 
     const request: RegisterRequest = {
@@ -70,38 +65,27 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     }
 
     try {
-      await registerWithPassword(request)
-      onSuccess()
+      const registration = await registerWithPassword(request)
+      onSuccess(registration)
     } catch (error) {
       setSubmissionError(registrationErrorMessage(error, t))
     }
   }
 
   return (
-    <form
-      className="space-y-5"
-      noValidate
-      onSubmit={handleSubmit(submitRegistration)}
-    >
+    <form className="space-y-5" noValidate onSubmit={handleSubmit(submitRegistration)}>
       {submissionError !== null ? (
-        <Alert
-          heading={t('auth.register.errors.heading')}
-          variant="danger"
-        >
+        <Alert heading={t('auth.register.errors.heading')} variant="danger">
           {submissionError}
         </Alert>
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="register-name">
-          {t('auth.register.fields.name')}
-        </Label>
+        <Label htmlFor="register-name">{t('auth.register.fields.name')}</Label>
 
         <Input
           {...register('name')}
-          aria-describedby={
-            errors.name ? 'register-name-error' : undefined
-          }
+          aria-describedby={errors.name ? 'register-name-error' : undefined}
           aria-invalid={errors.name ? true : undefined}
           autoComplete="name"
           disabled={isSubmitting}
@@ -117,15 +101,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-email">
-          {t('auth.register.fields.email')}
-        </Label>
+        <Label htmlFor="register-email">{t('auth.register.fields.email')}</Label>
 
         <Input
           {...register('email')}
-          aria-describedby={
-            errors.email ? 'register-email-error' : undefined
-          }
+          aria-describedby={errors.email ? 'register-email-error' : undefined}
           aria-invalid={errors.email ? true : undefined}
           autoComplete="email"
           disabled={isSubmitting}
@@ -143,17 +123,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-password">
-          {t('auth.register.fields.password')}
-        </Label>
+        <Label htmlFor="register-password">{t('auth.register.fields.password')}</Label>
 
         <Input
           {...register('password')}
-          aria-describedby={
-            errors.password
-              ? 'register-password-error'
-              : 'register-password-hint'
-          }
+          aria-describedby={errors.password ? 'register-password-error' : 'register-password-hint'}
           aria-invalid={errors.password ? true : undefined}
           autoComplete="new-password"
           disabled={isSubmitting}
@@ -179,11 +153,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
         <Input
           {...register('confirmPassword')}
-          aria-describedby={
-            errors.confirmPassword
-              ? 'register-confirm-password-error'
-              : undefined
-          }
+          aria-describedby={errors.confirmPassword ? 'register-confirm-password-error' : undefined}
           aria-invalid={errors.confirmPassword ? true : undefined}
           autoComplete="new-password"
           disabled={isSubmitting}
@@ -192,14 +162,8 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         />
 
         {errors.confirmPassword ? (
-          <FieldMessage
-            id="register-confirm-password-error"
-            variant="error"
-          >
-            {validationErrorMessage(
-              errors.confirmPassword.message,
-              t,
-            )}
+          <FieldMessage id="register-confirm-password-error" variant="error">
+            {validationErrorMessage(errors.confirmPassword.message, t)}
           </FieldMessage>
         ) : null}
       </div>
@@ -216,10 +180,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   )
 }
 
-function validationErrorMessage(
-  message: string | undefined,
-  t: TFunction,
-): string {
+function validationErrorMessage(message: string | undefined, t: TFunction): string {
   if (message === undefined) {
     return t('auth.register.errors.invalidData')
   }
@@ -229,10 +190,7 @@ function validationErrorMessage(
   return translationKey !== undefined ? t(translationKey) : message
 }
 
-function registrationErrorMessage(
-  error: unknown,
-  t: TFunction,
-): string {
+function registrationErrorMessage(error: unknown, t: TFunction): string {
   if (
     error instanceof ApiError &&
     error.code === 'invalid_input' &&

@@ -13,6 +13,7 @@ import { LoginRoute } from '@/routes/login-route'
 import { NewJobRoute } from '@/routes/new-job-route'
 import { NotFoundRoute } from '@/routes/not-found-route'
 import { RegisterRoute } from '@/routes/register-route'
+import { VerifyEmailRoute } from '@/routes/verify-email-route'
 
 /** Shared route tree used by both the browser and the production prerenderer. */
 export const applicationRoutes: RouteObject[] = [
@@ -56,6 +57,10 @@ export const applicationRoutes: RouteObject[] = [
       {
         path: '/login',
         Component: LoginRoute,
+      },
+      {
+        path: '/verify-email',
+        Component: VerifyEmailRoute,
       },
     ],
   },

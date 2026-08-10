@@ -35,7 +35,7 @@ export interface paths {
     put?: never
     /**
      * Register with email and password
-     * @description Create a password account and establish its first session.
+     * @description Create a password account and request email confirmation.
      */
     post: operations['register_with_password_v1_auth_register_post']
     delete?: never
@@ -138,6 +138,46 @@ export interface paths {
     get: operations['get_current_authenticated_user_v1_auth_me_get']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/verify-email': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Verify account email
+     * @description Confirm an email verification token sent to the user's inbox.
+     */
+    post: operations['verify_email_v1_auth_verify_email_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/resend-verification-email': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Resend account email verification
+     * @description Request another email without revealing account existence.
+     */
+    post: operations['resend_verification_email_v1_auth_resend_verification_email_post']
     delete?: never
     options?: never
     head?: never
@@ -501,9 +541,49 @@ export interface components {
       password: string
       /**
        * Name
-       * @description Optional display name for the new account.
+       * @description Display name for the new account.
        */
-      name?: string | null
+      name: string
+    }
+    /**
+     * RegisterResponse
+     * @description Response returned while an account waits for email confirmation.
+     */
+    RegisterResponse: {
+      /**
+       * Email
+       * @description Email address that received the confirmation link.
+       */
+      email: string
+      /**
+       * Email Verification Required
+       * @default true
+       * @constant
+       */
+      email_verification_required: true
+    }
+    /**
+     * ResendEmailVerificationRequest
+     * @description Request used to request another confirmation email.
+     */
+    ResendEmailVerificationRequest: {
+      /**
+       * Email
+       * @description Email address used to identify the account.
+       */
+      email: string
+    }
+    /**
+     * ResendEmailVerificationResponse
+     * @description Response returned after requesting a new verification email.
+     */
+    ResendEmailVerificationResponse: {
+      /**
+       * Sent
+       * @default true
+       * @constant
+       */
+      sent: true
     }
     /** ValidationError */
     ValidationError: {
@@ -517,6 +597,14 @@ export interface components {
       input?: unknown
       /** Context */
       ctx?: Record<string, never>
+    }
+    /**
+     * VerifyEmailRequest
+     * @description Request used to confirm an email verification token.
+     */
+    VerifyEmailRequest: {
+      /** Token */
+      token: string
     }
   }
   responses: never
@@ -561,12 +649,12 @@ export interface operations {
     }
     responses: {
       /** @description Successful Response */
-      201: {
+      202: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['AccessTokenResponse']
+          'application/json': components['schemas']['RegisterResponse']
         }
       }
       /** @description Validation Error */
@@ -700,6 +788,72 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CurrentUserResponse']
+        }
+      }
+    }
+  }
+  verify_email_v1_auth_verify_email_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VerifyEmailRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AccessTokenResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  resend_verification_email_v1_auth_resend_verification_email_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResendEmailVerificationRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ResendEmailVerificationResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }
