@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
@@ -61,11 +62,20 @@ class EmailVerificationService:
             raw_token=raw_token,
         )
 
-        self.email_sender.send_text(
-            subject="Confirm your Kyrg Studio email",
-            to=normalized_email,
-            content=_verification_email_text(verification_url),
-        )
+        self.email_sender.send_template_html(
+                subject="Confirm your Kyrg Studio email",
+                to=normalized_email,
+                text_content=_verification_email_text(verification_url),
+                html_path=(
+                    Path(__file__).resolve().parents[1]
+                    / "email"
+                    / "templates"
+                    / "email-verification.en.html"
+                ),
+                template_values={
+                    "verification_url": verification_url,
+                },
+            )
     
     async def verify_email_token(self, raw_token: str) -> AuthUserRecord:
         """Validate a raw token from the email link and verify the user."""
