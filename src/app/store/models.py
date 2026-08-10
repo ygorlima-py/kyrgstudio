@@ -457,3 +457,57 @@ class BillingCustomer(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+class EmailVerificationToken(Base):
+    """One-time token used to confirm ownership of a user's email address.
+
+    The raw token is never persisted. Only ``token_hash`` is stored so a leaked
+    database cannot be used to verify accounts.
+    """
+
+    __tablename__ = "email_verification_tokens"
+
+    # Identificador interno do token de verificacao.
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Usuario que precisa confirmar o email.
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Hash deterministico do token enviado por email.
+    token_hash: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # Email que este token confirma.
+    email: Mapped[str] = mapped_column(
+        String(320),
+        nullable=False,
+    )
+
+    # Momento em que o token deixa de ser aceito.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+
+    # Momento em que o token foi consumido; vazio enquanto estiver pendente.
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # Data de criacao do pedido de verificacao.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
