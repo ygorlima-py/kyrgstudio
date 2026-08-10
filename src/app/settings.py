@@ -90,6 +90,14 @@ class AppSettings:
     auth_csrf_cookie_name: str = "kyrg_csrf_token"
     auth_allowed_clock_skew_seconds: int = 30
     google_client_ids: tuple[str, ...] = ()
+    
+    #Email Auth
+    email_host: str = "smtp.gmail.com"
+    email_port: int = 465
+    email_username: str | None = None
+    email_password: str | None = field(default=None, repr=False)
+    email_from: str | None = None
+    email_from_name: str = "Kyrg Studio"
 
     def require_auth_jwt_secret(self) -> str:
         """Return the configured JWT secret or reject incomplete auth setup.
@@ -259,6 +267,22 @@ def load_settings() -> AppSettings:
         auth_csrf_cookie_name=auth_csrf_cookie_name,
         auth_allowed_clock_skew_seconds=auth_allowed_clock_skew_seconds,
         google_client_ids=_google_client_ids("GOOGLE_CLIENT_IDS"),
+        
+        email_host=_environment_text(
+            "EMAIL_HOST",
+            default="smtp.gmail.com",
+        ),
+        email_port=_positive_environment_int(
+            "EMAIL_PORT",
+            default=465,
+        ),
+        email_username=os.getenv("EMAIL_USERNAME"),
+        email_password=os.getenv("EMAIL_PASSWORD"),
+        email_from=os.getenv("EMAIL_FROM"),
+        email_from_name=_environment_text(
+            "EMAIL_FROM_NAME",
+            default="Kyrg Studio",
+        ),
     )
 
 
