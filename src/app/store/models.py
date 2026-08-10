@@ -511,3 +511,10 @@ class EmailVerificationToken(Base):
         server_default=func.now(),
         index=True,
     )
+    
+    @validates("email")
+    def validate_email(self, key, value):
+        if not "@" in value:
+            raise ValueError("Invalid email address")
+        else:
+            return value.strip().lower()

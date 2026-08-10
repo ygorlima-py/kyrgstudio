@@ -11,6 +11,7 @@ from app.store.base import (
     JobListPage,
     JobStoreBase,
     UserStoreBase,
+    EmailVerificationStoreBase,
 )
 from app.store.billing import (
     ACTIVE_SUBSCRIPTION_STATUSES,
@@ -57,6 +58,7 @@ from app.store.users import (
     UserStore,
 )
 
+from app.store.email_verifications import SQLAlchemyEmailVerificationStore
 
 __all__ = [
     "ACTIVE_SUBSCRIPTION_STATUSES",
@@ -90,6 +92,7 @@ __all__ = [
     "User",
     "UserStore",
     "UserStoreBase",
+    "EmailVerificationStoreBase",
     "async_savepoint_scope",
     "async_session_scope",
     "async_transaction_scope",

@@ -13,6 +13,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
+from datetime import datetime
+from app.store.models import EmailVerificationToken
 
 @dataclass(frozen=True, slots=True)
 class JobListPage:
@@ -295,4 +297,39 @@ class BillingStoreBase(ABC):
     async def get_subscription_by_user_id(self, user_id: int) -> Any:
         """Return the active subscription for a user, or ``None`` when absent."""
 
+        ...
+
+class EmailVerificationStoreBase(ABC):
+    """Persistence contract for one-time email verification tokens."""
+
+    @abstractmethod
+    async def create_token(
+        self,
+        *,
+        user_id: int,
+        email: str,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> EmailVerificationToken:
+        ...
+
+    @abstractmethod
+    async def get_token_by_hash(
+        self,
+        token_hash: str,
+    ) -> EmailVerificationToken | None:
+        ...
+
+    @abstractmethod
+    async def mark_token_used(
+        self,
+        token_id: int,
+    ) -> EmailVerificationToken:
+        ...
+
+    @abstractmethod
+    async def revoke_pending_tokens_for_user(
+        self,
+        user_id: int,
+    ) -> int:
         ...
