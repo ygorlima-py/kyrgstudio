@@ -518,3 +518,56 @@ class EmailVerificationToken(Base):
             raise ValueError("Invalid email address")
         else:
             return value.strip().lower()
+
+class PasswordResetToken(Base):
+    """Single-use token for resetting a user's password.
+
+    The raw token is sent only by email and is never stored. The application
+    persists only ``token_hash`` so a database leak cannot expose a usable
+    password-reset link.
+
+    The token becomes invalid when it expires or when ``used_at`` is set. The
+    relationship with ``users`` uses cascading deletion to remove tokens that
+    belonged to a deleted account.
+    """
+
+    __tablename__ = "password_reset_tokens"
+
+    # Identificador interno do token de redefinicao.
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Usuario que podera definir uma nova senha.
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Hash deterministico do token; o token original nunca e persistido.
+    token_hash: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # Momento limite para aceitar o token.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+
+    # Momento em que o token foi consumido; vazio enquanto estiver pendente.
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # Momento em que a solicitacao de redefinicao foi criada.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )

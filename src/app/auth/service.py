@@ -15,6 +15,7 @@ from uuid import uuid4
 
 from app.auth.google import GoogleTokenVerifier
 from app.auth.passwords import PasswordHasher
+from app.auth.password_reset import PasswordResetService
 from app.auth.principal import AuthenticatedPrincipal, IssuedAuthTokens
 from app.auth.email_verification import EmailVerificationService
 from app.auth.tokens import AccessTokenService, RefreshTokenGenerator
@@ -70,6 +71,7 @@ class AuthService:
         "auth_store",
         "google_token_verifier",
         "password_hasher",
+        "password_reset_service",
         "refresh_token_generator",
         "refresh_token_ttl_seconds",
         "email_verification_service",
@@ -81,6 +83,7 @@ class AuthService:
         auth_store: AuthStore,
         email_verification_service: EmailVerificationService,
         password_hasher: PasswordHasher,
+        password_reset_service: PasswordResetService,
         access_token_service: AccessTokenService,
         refresh_token_generator: RefreshTokenGenerator,
         google_token_verifier: GoogleTokenVerifier | None,
@@ -92,6 +95,7 @@ class AuthService:
         self.auth_store = auth_store
         self.email_verification_service = email_verification_service
         self.password_hasher = password_hasher
+        self.password_reset_service = password_reset_service
         self.access_token_service = access_token_service
         self.refresh_token_generator = refresh_token_generator
         self.google_token_verifier = google_token_verifier
@@ -178,6 +182,24 @@ class AuthService:
         await self.email_verification_service.send_verification_email(
             user_id=user.user_id,
             email=user.email,
+        )
+
+    async def request_password_reset(self, email: str) -> None:
+        """Request account recovery without exposing account existence."""
+
+        await self.password_reset_service.request_password_reset(email)
+
+    async def reset_password(
+        self,
+        *,
+        token: str,
+        new_password: str,
+    ) -> None:
+        """Replace a local password using a verified one-time token."""
+
+        await self.password_reset_service.reset_password(
+            raw_token=token,
+            new_password=new_password,
         )
 
     async def login_with_password(

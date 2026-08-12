@@ -7,7 +7,9 @@ from typing import Any, TypeVar, cast
 
 import pytest
 
+from app.auth.email_verification import EmailVerificationService
 from app.auth.google import GoogleTokenVerifier
+from app.auth.password_reset import PasswordResetService
 from app.auth.passwords import PasswordHasher
 from app.auth.principal import AccessTokenClaims, GoogleIdentity
 from app.auth.service import AuthService
@@ -166,6 +168,54 @@ class FakeGoogleTokenVerifier:
         return self.identity
 
 
+class FakeEmailVerificationService:
+    """Record email-verification delegation without sending email."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, object]] = []
+        self.verified_user = _user()
+
+    async def send_verification_email(
+        self,
+        *,
+        user_id: int,
+        email: str,
+    ) -> None:
+        self.calls.append(
+            ("send_verification_email", (user_id, email))
+        )
+
+    async def verify_email_token(self, token: str) -> AuthUserRecord:
+        self.calls.append(("verify_email_token", token))
+        return self.verified_user
+
+
+class FakePasswordResetService:
+    """Record password-reset use-case delegation."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, object]] = []
+
+    async def request_password_reset(self, email: str) -> None:
+        self.calls.append(("request_password_reset", email))
+
+    async def reset_password(
+        self,
+        *,
+        raw_token: str,
+        new_password: str,
+    ) -> None:
+        self.calls.append(
+            (
+                "reset_password",
+                {
+                    "raw_token": raw_token,
+                    "new_password": new_password,
+                },
+            )
+        )
+
+
 class FakeAuthStore:
     """In-memory call recorder matching the AuthStore service boundary."""
 
@@ -213,6 +263,15 @@ class FakeAuthStore:
             user=self.created_user,
             session=_session(),
         )
+
+    async def create_password_user(
+        self,
+        **payload: object,
+    ) -> AuthUserRecord:
+        self.calls.append(("create_password_user", payload))
+        if self.create_password_error is not None:
+            raise self.create_password_error
+        return self.created_user
 
     async def create_google_user_with_session(
         self,
@@ -279,12 +338,22 @@ class ServiceHarness:
     ) -> None:
         self.store = FakeAuthStore()
         self.password_hasher = FakePasswordHasher()
+        self.email_verification = FakeEmailVerificationService()
+        self.password_reset = FakePasswordResetService()
         self.access_tokens = FakeAccessTokenService()
         self.refresh_tokens = FakeRefreshTokenGenerator()
         self.google = FakeGoogleTokenVerifier()
         self.service = AuthService(
             auth_store=cast(AuthStore, self.store),
+            email_verification_service=cast(
+                EmailVerificationService,
+                self.email_verification,
+            ),
             password_hasher=cast(PasswordHasher, self.password_hasher),
+            password_reset_service=cast(
+                PasswordResetService,
+                self.password_reset,
+            ),
             access_token_service=cast(
                 AccessTokenService,
                 self.access_tokens,
@@ -340,25 +409,28 @@ def test_register_normalizes_input_and_never_sends_plain_password_to_store(
     assert harness.password_hasher.hash_calls == ["plain-password"]
 
 
-def test_register_creates_user_and_refresh_session_atomically(
+def test_register_creates_unverified_user_and_sends_verification_email(
     harness: ServiceHarness,
 ) -> None:
-    """Delegate user and initial-session creation to one atomic store call."""
+    """Create no session until the user verifies ownership of the email."""
 
     result = _run(
         harness.service.register_with_password(
             email="user@example.com",
             password="plain-password",
+            name="Ada",
         )
     )
 
     operation, payload = harness.store.calls[0]
-    assert operation == "create_password_user_with_session"
+    assert operation == "create_password_user"
     assert isinstance(payload, dict)
-    assert payload["token_hash"] == "digest:refresh-token"
-    assert payload["session_expires_at"] == NOW + timedelta(hours=1)
-    assert result.principal.user_id == harness.store.created_user.user_id
-    assert result.tokens.refresh_token == "refresh-token"
+    assert payload["password_hash"] == "generated-password-hash"
+    assert result.user_id == harness.store.created_user.user_id
+    assert harness.email_verification.calls == [
+        ("send_verification_email", (7, "user@example.com"))
+    ]
+    assert not any(call[0] == "create_session" for call in harness.store.calls)
 
 
 def test_register_maps_email_conflict_to_invalid_input(
@@ -376,6 +448,7 @@ def test_register_maps_email_conflict_to_invalid_input(
             harness.service.register_with_password(
                 email="user@example.com",
                 password="plain-password",
+                name="Ada",
             )
         )
 
@@ -383,6 +456,43 @@ def test_register_maps_email_conflict_to_invalid_input(
         "field": "email",
         "code": "already_exists",
     }
+
+
+def test_request_password_reset_delegates_without_authentication_logic(
+    harness: ServiceHarness,
+) -> None:
+    """Leave account lookup, token generation, and email delivery isolated."""
+
+    _run(harness.service.request_password_reset("user@example.com"))
+
+    assert harness.password_reset.calls == [
+        ("request_password_reset", "user@example.com")
+    ]
+    assert harness.store.calls == []
+
+
+def test_reset_password_delegates_token_and_new_password(
+    harness: ServiceHarness,
+) -> None:
+    """Leave token validation, hashing, and transactions in the reset service."""
+
+    _run(
+        harness.service.reset_password(
+            token="raw-reset-token",
+            new_password="new-plain-password",
+        )
+    )
+
+    assert harness.password_reset.calls == [
+        (
+            "reset_password",
+            {
+                "raw_token": "raw-reset-token",
+                "new_password": "new-plain-password",
+            },
+        )
+    ]
+    assert harness.store.calls == []
 
 
 def test_password_login_uses_dummy_verification_for_unknown_email(

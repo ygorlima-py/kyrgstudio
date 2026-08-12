@@ -19,6 +19,10 @@ from app.auth.email_verification import (
 )
 from app.auth.google import GoogleTokenVerifier
 from app.auth.passwords import Argon2PasswordHasher
+from app.auth.password_reset import (
+    PasswordResetConfig,
+    PasswordResetService,
+)
 from app.auth.service import AuthService
 from app.auth.tokens import AccessTokenService, RefreshTokenGenerator
 from app.auth.transactional_store import AuthStore
@@ -114,6 +118,7 @@ def _create_auth_service(
 
     auth_store = AuthStore(session_factory)
     email_sender = _create_email_sender(settings)
+    password_hasher = Argon2PasswordHasher()
     email_verification_service = EmailVerificationService(
         auth_store=auth_store,
         email_sender=email_sender,
@@ -121,7 +126,12 @@ def _create_auth_service(
             public_web_url=settings.public_web_url,
         ),
     )
-    password_hasher = Argon2PasswordHasher()
+    password_reset_service = _create_password_reset_service(
+        settings=settings,
+        auth_store=auth_store,
+        password_hasher=password_hasher,
+        email_sender=email_sender,
+    )
     access_token_service = AccessTokenService(
         secret=jwt_signing_secret,
         issuer=settings.auth_issuer,
@@ -148,12 +158,42 @@ def _create_auth_service(
         auth_store=auth_store,
         email_verification_service=email_verification_service,
         password_hasher=password_hasher,
+        password_reset_service=password_reset_service,
         access_token_service=access_token_service,
         refresh_token_generator=refresh_token_generator,
         google_token_verifier=google_token_verifier,
         refresh_token_ttl_seconds=(
             settings.auth_refresh_token_ttl_seconds
         ),
+    )
+
+
+def _create_password_reset_service(
+    *,
+    settings: AppSettings,
+    auth_store: AuthStore,
+    password_hasher: Argon2PasswordHasher,
+    email_sender: SMTPEmailSender,
+) -> PasswordResetService:
+    """Compose password recovery from shared authentication dependencies."""
+
+    try:
+        config = PasswordResetConfig(
+            public_web_url=settings.public_web_url,
+            token_ttl_seconds=(
+                settings.auth_password_reset_token_ttl_seconds
+            ),
+        )
+    except ValueError as error:
+        raise AuthConfigurationError(
+            technical_message="Password-reset configuration is invalid.",
+        ) from error
+
+    return PasswordResetService(
+        auth_store=auth_store,
+        password_hasher=password_hasher,
+        email_sender=email_sender,
+        config=config,
     )
 
 

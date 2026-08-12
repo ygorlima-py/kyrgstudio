@@ -14,8 +14,9 @@ from app.auth.transactional_store import (
     AuthSessionRecord,
     AuthStore,
     AuthUserRecord,
+    PasswordResetTokenRecord,
 )
-from app.errors import UserStoreError
+from app.errors import StoreError, UserStoreError
 from app.store.database import SessionFactory
 
 
@@ -53,6 +54,19 @@ def _session_model(**overrides: object) -> SimpleNamespace:
         "last_used_at": NOW,
         "revoked_at": None,
         "replaced_by_session_id": None,
+        "created_at": NOW,
+    }
+    values.update(overrides)
+    return SimpleNamespace(**values)
+
+
+def _password_reset_token_model(**overrides: object) -> SimpleNamespace:
+    values: dict[str, object] = {
+        "id": 29,
+        "user_id": 7,
+        "token_hash": "password-reset-token-hash",
+        "expires_at": NOW + timedelta(minutes=30),
+        "used_at": None,
         "created_at": NOW,
     }
     values.update(overrides)
@@ -156,6 +170,80 @@ class FakeAuthSessionStore:
         return 2
 
 
+class FakePasswordResetStore:
+    """Configurable password-reset store replacement."""
+
+    def __init__(self, session: object) -> None:
+        self.session = session
+        self.calls: list[tuple[str, object]] = []
+        self.token: SimpleNamespace | None = _password_reset_token_model()
+        self.consume_error: Exception | None = None
+
+    async def create_token(
+        self,
+        *,
+        user_id: int,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> SimpleNamespace:
+        self.calls.append(
+            (
+                "create_token",
+                {
+                    "user_id": user_id,
+                    "token_hash": token_hash,
+                    "expires_at": expires_at,
+                },
+            )
+        )
+        self.token = _password_reset_token_model(
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+        )
+        return self.token
+
+    async def get_token_by_hash(
+        self,
+        *,
+        token_hash: str,
+    ) -> SimpleNamespace | None:
+        self.calls.append(("get_token_by_hash", token_hash))
+        return self.token
+
+    async def consume_token(
+        self,
+        *,
+        token_hash: str,
+        consumed_at: datetime,
+    ) -> SimpleNamespace:
+        self.calls.append(
+            ("consume_token", (token_hash, consumed_at))
+        )
+
+        if self.consume_error is not None:
+            raise self.consume_error
+
+        assert self.token is not None
+        self.token.used_at = consumed_at
+        return self.token
+
+    async def revoke_pending_tokens_for_user(
+        self,
+        *,
+        user_id: int,
+        revoked_at: datetime,
+    ) -> int:
+        self.calls.append(
+            ("revoke_pending_tokens_for_user", (user_id, revoked_at))
+        )
+        return 2
+
+    async def delete_expired_tokens(self, *, before: datetime) -> int:
+        self.calls.append(("delete_expired_tokens", before))
+        return 3
+
+
 class StoreHarness:
     """Install fake transaction scopes and concrete persistence stores."""
 
@@ -166,6 +254,10 @@ class StoreHarness:
         self.session_factory = cast(SessionFactory, object())
         self.user_stores: dict[object, FakeUserStore] = {}
         self.session_stores: dict[object, FakeAuthSessionStore] = {}
+        self.password_reset_stores: dict[
+            object,
+            FakePasswordResetStore,
+        ] = {}
 
         @asynccontextmanager
         async def read_scope(
@@ -196,6 +288,14 @@ class StoreHarness:
                 FakeAuthSessionStore(session),
             )
 
+        def password_reset_store_factory(
+            session: object,
+        ) -> FakePasswordResetStore:
+            return self.password_reset_stores.setdefault(
+                session,
+                FakePasswordResetStore(session),
+            )
+
         monkeypatch.setattr(transactional_store, "async_session_scope", read_scope)
         monkeypatch.setattr(
             transactional_store,
@@ -211,6 +311,11 @@ class StoreHarness:
             transactional_store,
             "SQLAlchemyAuthSessionStore",
             session_store_factory,
+        )
+        monkeypatch.setattr(
+            transactional_store,
+            "SQLAlchemyPasswordResetStore",
+            password_reset_store_factory,
         )
 
     @property
@@ -239,6 +344,20 @@ class StoreHarness:
         return self.session_stores.setdefault(
             self.write_session,
             FakeAuthSessionStore(self.write_session),
+        )
+
+    @property
+    def read_password_reset_store(self) -> FakePasswordResetStore:
+        return self.password_reset_stores.setdefault(
+            self.read_session,
+            FakePasswordResetStore(self.read_session),
+        )
+
+    @property
+    def write_password_reset_store(self) -> FakePasswordResetStore:
+        return self.password_reset_stores.setdefault(
+            self.write_session,
+            FakePasswordResetStore(self.write_session),
         )
 
     def auth_store(self) -> AuthStore:
@@ -292,6 +411,22 @@ def test_auth_session_record_exposes_revoked_property() -> None:
 
     assert active.revoked is False
     assert revoked.revoked is True
+
+
+def test_password_reset_record_hides_hash_and_exposes_used_property() -> None:
+    """Keep token hashes out of repr output and derive consumption state."""
+
+    pending = transactional_store._password_reset_token_record(
+        _password_reset_token_model()
+    )
+    used = transactional_store._password_reset_token_record(
+        _password_reset_token_model(used_at=NOW)
+    )
+
+    assert isinstance(pending, PasswordResetTokenRecord)
+    assert pending.used is False
+    assert used.used is True
+    assert "password-reset-token-hash" not in repr(pending)
 
 
 def test_get_user_uses_short_read_session_and_returns_detached_record(
@@ -354,6 +489,129 @@ def test_get_session_by_token_hash_uses_short_read_session(
         ("get_session_by_token_hash", ("token-hash", False))
     ]
     assert harness.events[-1] == ("read_exit", harness.read_session)
+
+
+def test_create_password_reset_token_replaces_pending_tokens_atomically(
+    harness: StoreHarness,
+) -> None:
+    """Revoke pending tokens and create the replacement in one transaction."""
+
+    result = _run(
+        harness.auth_store().create_password_reset_token(
+            user_id=7,
+            token_hash="replacement-reset-hash",
+            expires_at=NOW + timedelta(minutes=30),
+            requested_at=NOW,
+        )
+    )
+
+    assert isinstance(result, PasswordResetTokenRecord)
+    assert result.token_hash == "replacement-reset-hash"
+    assert harness.write_password_reset_store.calls == [
+        ("revoke_pending_tokens_for_user", (7, NOW)),
+        (
+            "create_token",
+            {
+                "user_id": 7,
+                "token_hash": "replacement-reset-hash",
+                "expires_at": NOW + timedelta(minutes=30),
+            },
+        ),
+    ]
+    assert harness.events == [
+        ("write_enter", harness.session_factory),
+        ("write_exit", harness.write_session),
+    ]
+
+
+def test_get_password_reset_token_uses_short_read_session(
+    harness: StoreHarness,
+) -> None:
+    """Return a detached reset-token snapshot after closing the session."""
+
+    result = _run(
+        harness.auth_store().get_password_reset_token_by_hash(
+            "password-reset-token-hash"
+        )
+    )
+
+    assert isinstance(result, PasswordResetTokenRecord)
+    assert harness.read_password_reset_store.calls == [
+        ("get_token_by_hash", "password-reset-token-hash")
+    ]
+    assert harness.events[-1] == ("read_exit", harness.read_session)
+
+
+def test_reset_password_consumes_token_and_revokes_sessions_atomically(
+    harness: StoreHarness,
+) -> None:
+    """Run every password-reset write through one transaction and session."""
+
+    result = _run(
+        harness.auth_store().reset_password_with_token(
+            token_hash="password-reset-token-hash",
+            password_hash="new-argon2-hash",
+            consumed_at=NOW,
+        )
+    )
+
+    assert result.password_hash == "new-argon2-hash"
+    assert harness.write_password_reset_store.calls == [
+        ("consume_token", ("password-reset-token-hash", NOW))
+    ]
+    assert harness.write_user_store.calls == [
+        ("update_password_hash", (7, "new-argon2-hash"))
+    ]
+    assert harness.write_session_store.calls == [
+        ("revoke_user_sessions", 7)
+    ]
+    assert (
+        harness.write_password_reset_store.session
+        is harness.write_user_store.session
+        is harness.write_session_store.session
+    )
+    assert harness.events == [
+        ("write_enter", harness.session_factory),
+        ("write_exit", harness.write_session),
+    ]
+
+
+def test_reset_password_stops_when_token_cannot_be_consumed(
+    harness: StoreHarness,
+) -> None:
+    """Do not update credentials or sessions after token rejection."""
+
+    harness.write_password_reset_store.consume_error = StoreError(
+        technical_message="Reset token cannot be consumed.",
+    )
+
+    with pytest.raises(StoreError):
+        _run(
+            harness.auth_store().reset_password_with_token(
+                token_hash="invalid-reset-token-hash",
+                password_hash="new-argon2-hash",
+                consumed_at=NOW,
+            )
+        )
+
+    assert harness.write_user_store.calls == []
+    assert harness.write_session_store.calls == []
+
+
+def test_delete_expired_password_reset_tokens_uses_write_transaction(
+    harness: StoreHarness,
+) -> None:
+    """Commit bounded password-reset token cleanup before returning."""
+
+    result = _run(
+        harness.auth_store().delete_expired_password_reset_tokens(before=NOW)
+    )
+
+    assert result == 3
+    assert harness.write_password_reset_store.calls == [
+        ("delete_expired_tokens", NOW)
+    ]
+    assert harness.events[-1] == ("write_exit", harness.write_session)
 
 
 def test_create_password_user_with_session_commits_user_and_session_together(

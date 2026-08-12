@@ -20,7 +20,13 @@ from app.store.database import (
     async_transaction_scope,
 )
 from app.store.email_verifications import SQLAlchemyEmailVerificationStore
-from app.store.models import AuthSession, EmailVerificationToken, User
+from app.store.models import (
+    AuthSession,
+    EmailVerificationToken,
+    PasswordResetToken,
+    User,
+)
+from app.store.password_resets import SQLAlchemyPasswordResetStore
 from app.store.users import (
     DEFAULT_AUTH_PROVIDER,
     GOOGLE_AUTH_PROVIDER,
@@ -106,6 +112,24 @@ class EmailVerificationTokenRecord:
     @property
     def used(self) -> bool:
         """Return whether this verification link was already consumed."""
+
+        return self.used_at is not None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PasswordResetTokenRecord:
+    """Session-independent snapshot of one password-reset token."""
+
+    token_id: int
+    user_id: int
+    token_hash: str = field(repr=False)
+    expires_at: datetime
+    used_at: datetime | None
+    created_at: datetime
+
+    @property
+    def used(self) -> bool:
+        """Return whether this password-reset token is no longer pending."""
 
         return self.used_at is not None
 
@@ -276,6 +300,128 @@ class AuthStore:
             ).revoke_pending_tokens_for_user(normalized_user_id)
 
         return revoked_token_count
+
+    async def create_password_reset_token(
+        self,
+        *,
+        user_id: int,
+        token_hash: str,
+        expires_at: datetime,
+        requested_at: datetime,
+    ) -> PasswordResetTokenRecord:
+        """Replace pending reset tokens and persist a new one atomically."""
+
+        normalized_user_id = _positive_identifier(
+            user_id,
+            field_name="user_id",
+        )
+        normalized_token_hash = _required_sensitive_text(
+            token_hash,
+            field_name="token_hash",
+        )
+        normalized_requested_at = _utc_datetime(
+            requested_at,
+            field_name="requested_at",
+        )
+        normalized_expires_at = _utc_datetime(
+            expires_at,
+            field_name="expires_at",
+        )
+
+        if normalized_expires_at <= normalized_requested_at:
+            raise UserStoreError(
+                technical_message="expires_at must be later than requested_at.",
+                details={"field": "expires_at"},
+            )
+
+        async with async_transaction_scope(self.session_factory) as session:
+            password_reset_store = SQLAlchemyPasswordResetStore(session)
+            await password_reset_store.revoke_pending_tokens_for_user(
+                user_id=normalized_user_id,
+                revoked_at=normalized_requested_at,
+            )
+            token = await password_reset_store.create_token(
+                user_id=normalized_user_id,
+                token_hash=normalized_token_hash,
+                expires_at=normalized_expires_at,
+            )
+            token_record = _password_reset_token_record(token)
+
+        return token_record
+
+    async def get_password_reset_token_by_hash(
+        self,
+        token_hash: str,
+    ) -> PasswordResetTokenRecord | None:
+        """Load password-reset metadata in a short-lived read session."""
+
+        normalized_token_hash = _required_sensitive_text(
+            token_hash,
+            field_name="token_hash",
+        )
+
+        async with async_session_scope(self.session_factory) as session:
+            token = await SQLAlchemyPasswordResetStore(
+                session
+            ).get_token_by_hash(token_hash=normalized_token_hash)
+            token_record = _optional_password_reset_token_record(token)
+
+        return token_record
+
+    async def reset_password_with_token(
+        self,
+        *,
+        token_hash: str,
+        password_hash: str,
+        consumed_at: datetime,
+    ) -> AuthUserRecord:
+        """Consume a reset token, replace the password, and revoke sessions.
+
+        All three writes share one transaction. A failure in any operation
+        rolls back token consumption, password replacement, and revocation.
+        This method accepts only an already-generated password hash.
+        """
+
+        normalized_token_hash = _required_sensitive_text(
+            token_hash,
+            field_name="token_hash",
+        )
+        normalized_consumed_at = _utc_datetime(
+            consumed_at,
+            field_name="consumed_at",
+        )
+
+        async with async_transaction_scope(self.session_factory) as session:
+            token = await SQLAlchemyPasswordResetStore(session).consume_token(
+                token_hash=normalized_token_hash,
+                consumed_at=normalized_consumed_at,
+            )
+            user = await SQLAlchemyUserStore(session).update_password_hash(
+                token.user_id,
+                password_hash,
+            )
+            await SQLAlchemyAuthSessionStore(session).revoke_user_sessions(
+                token.user_id
+            )
+            user_record = _user_record(user)
+
+        return user_record
+
+    async def delete_expired_password_reset_tokens(
+        self,
+        *,
+        before: datetime,
+    ) -> int:
+        """Delete expired reset tokens in one short write transaction."""
+
+        normalized_before = _utc_datetime(before, field_name="before")
+
+        async with async_transaction_scope(self.session_factory) as session:
+            deleted_token_count = await SQLAlchemyPasswordResetStore(
+                session
+            ).delete_expired_tokens(before=normalized_before)
+
+        return deleted_token_count
 
     async def create_password_user(
         self,
@@ -659,6 +805,15 @@ def _optional_email_verification_token_record(
     return _email_verification_token_record(token)
 
 
+def _optional_password_reset_token_record(
+    token: PasswordResetToken | None,
+) -> PasswordResetTokenRecord | None:
+    if token is None:
+        return None
+
+    return _password_reset_token_record(token)
+
+
 def _email_verification_token_record(
     token: EmailVerificationToken,
 ) -> EmailVerificationTokenRecord:
@@ -667,6 +822,19 @@ def _email_verification_token_record(
         user_id=token.user_id,
         token_hash=token.token_hash,
         email=token.email,
+        expires_at=token.expires_at,
+        used_at=token.used_at,
+        created_at=token.created_at,
+    )
+
+
+def _password_reset_token_record(
+    token: PasswordResetToken,
+) -> PasswordResetTokenRecord:
+    return PasswordResetTokenRecord(
+        token_id=token.id,
+        user_id=token.user_id,
+        token_hash=token.token_hash,
         expires_at=token.expires_at,
         used_at=token.used_at,
         created_at=token.created_at,
@@ -710,11 +878,22 @@ def _utc_datetime(value: object, *, field_name: str) -> datetime:
     return value.astimezone(timezone.utc)
 
 
+def _required_sensitive_text(value: object, *, field_name: str) -> str:
+    if not isinstance(value, str) or value.strip() == "":
+        raise UserStoreError(
+            technical_message=f"{field_name} must be a non-empty string.",
+            details={"field": field_name},
+        )
+
+    return value.strip()
+
+
 __all__ = [
     "AuthSessionRecord",
     "AuthStore",
     "AuthUserRecord",
     "AuthUserSessionRecord",
     "EmailVerificationTokenRecord",
+    "PasswordResetTokenRecord",
     "RefreshSessionRotationRecord",
 ]

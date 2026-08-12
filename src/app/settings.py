@@ -85,6 +85,7 @@ class AppSettings:
     auth_audience: str = "kyrgstudio-api"
     auth_access_token_ttl_seconds: int = 900
     auth_refresh_token_ttl_seconds: int = 30 * 24 * 60 * 60
+    auth_password_reset_token_ttl_seconds: int = 30 * 60
     auth_refresh_cookie_name: str = "kyrg_refresh_token"
     auth_refresh_cookie_secure: bool = False
     auth_refresh_cookie_samesite: AuthCookieSameSite = "lax"
@@ -134,6 +135,10 @@ def load_settings() -> AppSettings:
     auth_refresh_token_ttl_seconds = _positive_environment_int(
         "AUTH_REFRESH_TOKEN_TTL_SECONDS",
         default=30 * 24 * 60 * 60,
+    )
+    auth_password_reset_token_ttl_seconds = _positive_environment_int(
+        "AUTH_PASSWORD_RESET_TOKEN_TTL_SECONDS",
+        default=30 * 60,
     )
     auth_refresh_cookie_secure = _environment_bool(
         "AUTH_REFRESH_COOKIE_SECURE",
@@ -266,6 +271,9 @@ def load_settings() -> AppSettings:
         ),
         auth_access_token_ttl_seconds=auth_access_token_ttl_seconds,
         auth_refresh_token_ttl_seconds=auth_refresh_token_ttl_seconds,
+        auth_password_reset_token_ttl_seconds=(
+            auth_password_reset_token_ttl_seconds
+        ),
         auth_refresh_cookie_name=auth_refresh_cookie_name,
         auth_refresh_cookie_secure=auth_refresh_cookie_secure,
         auth_refresh_cookie_samesite=auth_refresh_cookie_samesite,

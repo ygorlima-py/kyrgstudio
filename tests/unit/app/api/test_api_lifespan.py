@@ -14,7 +14,7 @@ from fastapi import FastAPI
 import app.api.lifespan as lifespan_module
 from app.errors import AuthConfigurationError
 from app.queue.celery import CeleryTask
-from app.settings import AppSettings
+from app.settings import AppSettings, load_settings
 from app.store.database import SessionFactory
 
 
@@ -57,6 +57,7 @@ def _settings() -> AppSettings:
         auth_audience="test-audience",
         auth_access_token_ttl_seconds=900,
         auth_refresh_token_ttl_seconds=3600,
+        auth_password_reset_token_ttl_seconds=1800,
         auth_allowed_clock_skew_seconds=15,
         google_client_ids=("client.apps.googleusercontent.com",),
     )
@@ -353,7 +354,10 @@ def test_create_auth_service_uses_auth_settings(
     settings = _settings()
     session_factory = cast(SessionFactory, object())
     auth_store = object()
+    email_sender = object()
+    email_verification_service = object()
     password_hasher = object()
+    password_reset_service = object()
     access_tokens = object()
     refresh_tokens = object()
     google_verifier = object()
@@ -371,6 +375,34 @@ def test_create_auth_service_uses_auth_settings(
         lifespan_module,
         "Argon2PasswordHasher",
         lambda: password_hasher,
+    )
+    monkeypatch.setattr(
+        lifespan_module,
+        "_create_email_sender",
+        lambda received_settings: (
+            captured.update(email_sender_settings=received_settings)
+            or email_sender
+        ),
+    )
+
+    def create_email_verification_service(**kwargs: Any) -> object:
+        captured["email_verification_dependencies"] = kwargs
+        return email_verification_service
+
+    monkeypatch.setattr(
+        lifespan_module,
+        "EmailVerificationService",
+        create_email_verification_service,
+    )
+
+    def create_password_reset_service(**kwargs: Any) -> object:
+        captured["password_reset_dependencies"] = kwargs
+        return password_reset_service
+
+    monkeypatch.setattr(
+        lifespan_module,
+        "PasswordResetService",
+        create_password_reset_service,
     )
 
     def create_access_tokens(**kwargs: Any) -> object:
@@ -411,6 +443,25 @@ def test_create_auth_service_uses_auth_settings(
 
     assert result is auth_service
     assert captured["auth_store_factory"] is session_factory
+    assert captured["email_sender_settings"] is settings
+    assert captured["email_verification_dependencies"] == {
+        "auth_store": auth_store,
+        "email_sender": email_sender,
+        "config": lifespan_module.EmailVerificationConfig(
+            public_web_url=settings.public_web_url,
+        ),
+    }
+    assert captured["password_reset_dependencies"] == {
+        "auth_store": auth_store,
+        "password_hasher": password_hasher,
+        "email_sender": email_sender,
+        "config": lifespan_module.PasswordResetConfig(
+            public_web_url=settings.public_web_url,
+            token_ttl_seconds=(
+                settings.auth_password_reset_token_ttl_seconds
+            ),
+        ),
+    }
     assert captured["access_token_settings"] == {
         "secret": settings.auth_jwt_secret,
         "issuer": settings.auth_issuer,
@@ -429,7 +480,9 @@ def test_create_auth_service_uses_auth_settings(
     }
     assert captured["auth_service_dependencies"] == {
         "auth_store": auth_store,
+        "email_verification_service": email_verification_service,
         "password_hasher": password_hasher,
+        "password_reset_service": password_reset_service,
         "access_token_service": access_tokens,
         "refresh_token_generator": refresh_tokens,
         "google_token_verifier": google_verifier,
@@ -484,6 +537,11 @@ def test_create_auth_service_allows_google_authentication_to_be_disabled(
         "AuthService",
         create_auth_service,
     )
+    monkeypatch.setattr(
+        lifespan_module,
+        "_create_email_sender",
+        lambda settings: object(),
+    )
 
     result = lifespan_module._create_auth_service(
         settings=settings,
@@ -492,6 +550,49 @@ def test_create_auth_service_allows_google_authentication_to_be_disabled(
 
     assert result is auth_service
     assert captured_dependencies["google_token_verifier"] is None
+
+
+def test_create_password_reset_service_rejects_invalid_ttl() -> None:
+    """Reject invalid reset-token lifetime during API composition."""
+
+    settings = replace(
+        _settings(),
+        auth_password_reset_token_ttl_seconds=0,
+    )
+
+    with pytest.raises(
+        AuthConfigurationError,
+        match="Password-reset configuration is invalid",
+    ) as error_info:
+        lifespan_module._create_password_reset_service(
+            settings=settings,
+            auth_store=cast(Any, object()),
+            password_hasher=cast(Any, object()),
+            email_sender=cast(Any, object()),
+        )
+
+    assert isinstance(error_info.value.__cause__, ValueError)
+
+
+def test_load_settings_reads_password_reset_token_ttl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Load the reset-token lifetime from its dedicated environment value."""
+
+    monkeypatch.setenv("AUTH_PASSWORD_RESET_TOKEN_TTL_SECONDS", "2400")
+
+    assert load_settings().auth_password_reset_token_ttl_seconds == 2400
+
+
+def test_load_settings_rejects_invalid_password_reset_token_ttl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject non-positive reset-token lifetime before API startup."""
+
+    monkeypatch.setenv("AUTH_PASSWORD_RESET_TOKEN_TTL_SECONDS", "0")
+
+    with pytest.raises(ValueError):
+        load_settings()
 
 
 def test_create_pipeline_queue_wraps_public_celery_task(

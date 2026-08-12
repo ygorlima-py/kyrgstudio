@@ -15,6 +15,7 @@ from typing import Any
 
 from datetime import datetime
 from app.store.models import EmailVerificationToken
+from app.store.models import PasswordResetToken
 
 @dataclass(frozen=True, slots=True)
 class JobListPage:
@@ -338,4 +339,61 @@ class EmailVerificationStoreBase(ABC):
         self,
         user_id: int,
     ) -> int:
+        ...
+
+class PasswordResetStoreBase(ABC):
+    """Persistence contract for single-use password-reset tokens."""
+
+    @abstractmethod
+    async def create_token(
+        self,
+        *,
+        user_id: int,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> PasswordResetToken:
+        """Persist a password-reset token hash for one user."""
+
+        ...
+
+    @abstractmethod
+    async def get_token_by_hash(
+        self,
+        *,
+        token_hash: str,
+    ) -> PasswordResetToken | None:
+        """Return a password-reset token by hash, when it exists."""
+
+        ...
+
+    @abstractmethod
+    async def consume_token(
+        self,
+        *,
+        token_hash: str,
+        consumed_at: datetime,
+    ) -> PasswordResetToken:
+        """Atomically consume a valid, unused password-reset token."""
+
+        ...
+
+    @abstractmethod
+    async def revoke_pending_tokens_for_user(
+        self,
+        *,
+        user_id: int,
+        revoked_at: datetime,
+    ) -> int:
+        """Invalidate every unused password-reset token for one user."""
+
+        ...
+
+    @abstractmethod
+    async def delete_expired_tokens(
+        self,
+        *,
+        before: datetime,
+    ) -> int:
+        """Delete tokens that expired on or before the supplied timestamp."""
+
         ...

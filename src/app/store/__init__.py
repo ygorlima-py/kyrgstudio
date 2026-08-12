@@ -8,10 +8,11 @@ exported here.
 
 from app.store.base import (
     BillingStoreBase,
+    EmailVerificationStoreBase,
     JobListPage,
     JobStoreBase,
+    PasswordResetStoreBase,
     UserStoreBase,
-    EmailVerificationStoreBase,
 )
 from app.store.billing import (
     ACTIVE_SUBSCRIPTION_STATUSES,
@@ -48,9 +49,11 @@ from app.store.models import (
     BillingEvent,
     Job,
     JobEvent,
+    PasswordResetToken,
     Subscription,
     User,
 )
+from app.store.password_resets import SQLAlchemyPasswordResetStore
 from app.store.users import (
     DEFAULT_AUTH_PROVIDER,
     GOOGLE_AUTH_PROVIDER,
@@ -84,8 +87,11 @@ __all__ = [
     "JobEvent",
     "JobListPage",
     "JobStoreBase",
+    "PasswordResetStoreBase",
+    "PasswordResetToken",
     "SQLAlchemyBillingStore",
     "SQLAlchemyJobStore",
+    "SQLAlchemyPasswordResetStore",
     "SQLAlchemyUserStore",
     "SessionFactory",
     "Subscription",
