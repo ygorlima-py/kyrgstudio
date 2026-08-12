@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, TypeVar, cast
 
+from app.auth.email_verification import (
+    EmailVerificationConfig,
+    EmailVerificationService,
+)
 from app.auth.google import GoogleTokenVerifier
+from app.auth.password_reset import PasswordResetConfig, PasswordResetService
 from app.auth.passwords import Argon2PasswordHasher
 from app.auth.principal import GoogleIdentity
 from app.auth.service import AuthService
 from app.auth.tokens import AccessTokenService, RefreshTokenGenerator
 from app.auth.transactional_store import AuthStore
+from app.email.senders import EmailSender
 from app.store.database import SessionFactory
 
 
@@ -47,6 +54,64 @@ class StubGoogleTokenVerifier:
 
 
 @dataclass(frozen=True, slots=True)
+class CapturedEmail:
+    """Represent one email emitted during an integration scenario."""
+
+    subject: str
+    recipient: str
+    text_content: str
+    html_path: Path
+    template_values: dict[str, str]
+
+
+@dataclass
+class CapturingEmailSender:
+    """Capture email output without contacting an external SMTP provider."""
+
+    messages: list[CapturedEmail] = field(default_factory=list)
+
+    def send_text(
+        self,
+        *,
+        subject: str,
+        to: str,
+        content: str,
+    ) -> None:
+        """Record plain-text email output."""
+
+        self.messages.append(
+            CapturedEmail(
+                subject=subject,
+                recipient=to,
+                text_content=content,
+                html_path=Path(),
+                template_values={},
+            )
+        )
+
+    def send_template_html(
+        self,
+        *,
+        subject: str,
+        to: str,
+        text_content: str,
+        html_path: Path,
+        template_values: dict[str, str],
+    ) -> None:
+        """Record the template and values used to render an email."""
+
+        self.messages.append(
+            CapturedEmail(
+                subject=subject,
+                recipient=to,
+                text_content=text_content,
+                html_path=html_path,
+                template_values=dict(template_values),
+            )
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class AuthIntegrationContext:
     """Real authentication components sharing one temporary database."""
 
@@ -57,6 +122,9 @@ class AuthIntegrationContext:
     access_tokens: AccessTokenService
     refresh_tokens: RefreshTokenGenerator
     google_verifier: StubGoogleTokenVerifier
+    email_sender: CapturingEmailSender
+    email_verification_service: EmailVerificationService
+    password_reset_service: PasswordResetService
 
 
 def build_auth_context(
@@ -74,6 +142,23 @@ def build_auth_context(
         hash_length=16,
         salt_length=8,
     )
+    email_sender = CapturingEmailSender()
+    email_verification_service = EmailVerificationService(
+        auth_store=store,
+        email_sender=cast(EmailSender, email_sender),
+        config=EmailVerificationConfig(
+            public_web_url="https://frontend.example.com",
+        ),
+    )
+    password_reset_service = PasswordResetService(
+        auth_store=store,
+        password_hasher=password_hasher,
+        email_sender=cast(EmailSender, email_sender),
+        config=PasswordResetConfig(
+            public_web_url="https://frontend.example.com",
+            token_ttl_seconds=1800,
+        ),
+    )
     access_tokens = AccessTokenService(
         secret=TEST_JWT_SECRET,
         issuer=TEST_JWT_ISSUER,
@@ -85,7 +170,9 @@ def build_auth_context(
     google_verifier = StubGoogleTokenVerifier()
     service = AuthService(
         auth_store=store,
+        email_verification_service=email_verification_service,
         password_hasher=password_hasher,
+        password_reset_service=password_reset_service,
         access_token_service=access_tokens,
         refresh_token_generator=refresh_tokens,
         google_token_verifier=cast(
@@ -102,4 +189,7 @@ def build_auth_context(
         access_tokens=access_tokens,
         refresh_tokens=refresh_tokens,
         google_verifier=google_verifier,
+        email_sender=email_sender,
+        email_verification_service=email_verification_service,
+        password_reset_service=password_reset_service,
     )

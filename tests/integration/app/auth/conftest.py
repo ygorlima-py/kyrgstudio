@@ -10,6 +10,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import delete
+from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -36,7 +37,16 @@ def _upgrade_database(database_url: str) -> None:
     config = Config(str(ALEMBIC_INI_PATH))
     config.set_main_option("script_location", str(ALEMBIC_SCRIPT_LOCATION))
     config.set_main_option("sqlalchemy.url", database_url)
-    command.upgrade(config, "head")
+    previous_database_url = os.environ.get("APP_DATABASE_URL")
+    os.environ["APP_DATABASE_URL"] = database_url
+
+    try:
+        command.upgrade(config, "head")
+    finally:
+        if previous_database_url is None:
+            os.environ.pop("APP_DATABASE_URL", None)
+        else:
+            os.environ["APP_DATABASE_URL"] = previous_database_url
 
 
 @pytest.fixture(scope="session")
@@ -61,7 +71,12 @@ def auth_database_url() -> str:
 def auth_engine(auth_database_url: str) -> Iterator[AsyncEngine]:
     """Create and dispose the async integration database engine."""
 
-    engine = create_async_engine(auth_database_url)
+    # Tests call async scenarios through separate event loops. NullPool avoids
+    # reusing an asyncpg connection that belongs to a previous loop.
+    engine = create_async_engine(
+        auth_database_url,
+        poolclass=pool.NullPool,
+    )
 
     try:
         yield engine

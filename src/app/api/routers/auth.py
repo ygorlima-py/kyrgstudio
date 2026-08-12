@@ -30,13 +30,16 @@ from app.errors import AuthConfigurationError
 from app.schemas import (
     AccessTokenResponse,
     CurrentUserResponse,
+    ForgotPasswordRequest,
     GoogleLoginRequest,
     PasswordLoginRequest,
+    PasswordResetRequestedResponse,
     RegisterRequest,
     RegisterResponse,
     ResendEmailVerificationRequest,
-    VerifyEmailRequest,
     ResendEmailVerificationResponse,
+    ResetPasswordRequest,
+    VerifyEmailRequest,
 )
 from app.settings import AppSettings
 
@@ -85,6 +88,43 @@ async def register_with_password(
         name=payload.name,
     )
     return RegisterResponse(email=user.email)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=PasswordResetRequestedResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Request a password reset email",
+)
+async def request_password_reset(
+    payload: ForgotPasswordRequest,
+    response: Response,
+    auth_service: AuthServiceDependency,
+) -> PasswordResetRequestedResponse:
+    """Accept a password-reset request without revealing account existence."""
+
+    await auth_service.request_password_reset(payload.email)
+    _set_no_store_headers(response)
+    return PasswordResetRequestedResponse()
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Reset the account password",
+)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    response: Response,
+    auth_service: AuthServiceDependency,
+) -> None:
+    """Consume a password-reset token and replace the account password."""
+
+    await auth_service.reset_password(
+        token=payload.token,
+        new_password=payload.new_password,
+    )
+    _set_no_store_headers(response)
 
 
 @router.post(

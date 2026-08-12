@@ -31,6 +31,7 @@ MAXIMUM_NAME_LENGTH = 255
 MAXIMUM_PASSWORD_LENGTH = 128
 MAXIMUM_GOOGLE_ID_TOKEN_LENGTH = 16_384
 MAXIMUM_ACCESS_TOKEN_LENGTH = 16_384
+MAXIMUM_PASSWORD_RESET_TOKEN_LENGTH = 512
 
 NormalizedEmail: TypeAlias = Annotated[
     str,
@@ -99,6 +100,49 @@ class RegisterResponse(_AuthenticationSchema):
 
 class ResendEmailVerificationRequest(_EmailCredentialsRequest):
     """Request used to request another confirmation email."""
+
+
+class ForgotPasswordRequest(_EmailCredentialsRequest):
+    """Request used to start password recovery for an account email."""
+
+
+class PasswordResetRequestedResponse(_AuthenticationSchema):
+    """Neutral response for every accepted password-reset request."""
+
+    accepted: Literal[True] = Field(
+        default=True,
+        description=(
+            "Indicates that the request was accepted without revealing "
+            "whether the email belongs to an account."
+        ),
+    )
+
+
+class ResetPasswordRequest(_AuthenticationSchema):
+    """Request used to replace a password with a valid reset token."""
+
+    token: str = Field(
+        min_length=1,
+        max_length=MAXIMUM_PASSWORD_RESET_TOKEN_LENGTH,
+        repr=False,
+        description="Opaque token received in the password-reset email.",
+    )
+    new_password: str = Field(
+        min_length=DEFAULT_MIN_PASSWORD_LENGTH,
+        max_length=MAXIMUM_PASSWORD_LENGTH,
+        repr=False,
+        description="New password to hash and store for the account.",
+    )
+
+    @field_validator("token")
+    @classmethod
+    def reject_surrounding_token_whitespace(cls, value: str) -> str:
+        """Reject altered token input instead of silently normalizing it."""
+
+        if value != value.strip():
+            raise ValueError("token must not contain outer whitespace")
+
+        return value
 
 
 class PasswordLoginRequest(_EmailCredentialsRequest):
@@ -257,11 +301,14 @@ class ResendEmailVerificationResponse(_AuthenticationSchema):
 __all__ = [
     "AccessTokenResponse",
     "CurrentUserResponse",
+    "ForgotPasswordRequest",
     "GoogleLoginRequest",
     "PasswordLoginRequest",
     "RegisterRequest",
     "RegisterResponse",
     "ResendEmailVerificationRequest",
     "ResendEmailVerificationResponse",
+    "PasswordResetRequestedResponse",
+    "ResetPasswordRequest",
     "VerifyEmailRequest",
 ]
