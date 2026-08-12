@@ -274,6 +274,80 @@
         "generic": "Não foi possível concluir o login. Tente novamente."
       }
     },
+    "forgotPassword": {
+      "page": {
+        "eyebrow": "Recuperação de senha",
+        "title": "Redefina sua senha",
+        "description": "Informe seu email e enviaremos as instruções se houver uma conta correspondente.",
+        "rememberedPrompt": "Lembrou da sua senha?",
+        "login": "Entrar"
+      },
+      "fields": {
+        "email": "Email",
+        "emailPlaceholder": "voce@exemplo.com"
+      },
+      "actions": {
+        "submit": "Enviar email de recuperação",
+        "sending": "Enviando email...",
+        "tryAnotherEmail": "Usar outro email",
+        "returnToLogin": "Voltar para o login"
+      },
+      "validation": {
+        "emailRequired": "Informe seu email.",
+        "emailTooLong": "O email é muito longo.",
+        "emailInvalid": "Informe um endereço de email válido."
+      },
+      "success": {
+        "heading": "Verifique sua caixa de entrada",
+        "description": "Se houver uma conta correspondente a {{email}}, as instruções de recuperação estão a caminho. Verifique também a caixa de spam."
+      },
+      "errors": {
+        "heading": "Não foi possível enviar o email",
+        "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente novamente.",
+        "generic": "Não foi possível concluir a recuperação. Tente novamente.",
+        "invalidData": "Informe um endereço de email válido."
+      }
+    },
+    "resetPassword": {
+      "page": {
+        "eyebrow": "Recuperação de senha",
+        "title": "Escolha uma nova senha",
+        "description": "Crie uma nova senha para sua conta do Kyrg Studio.",
+        "login": "Entrar"
+      },
+      "fields": {
+        "newPassword": "Nova senha",
+        "confirmPassword": "Confirme sua nova senha",
+        "passwordHint": "Use pelo menos 8 caracteres."
+      },
+      "actions": {
+        "submit": "Salvar nova senha",
+        "saving": "Salvando senha...",
+        "tryAgain": "Tentar novamente",
+        "returnToLogin": "Continuar para o login",
+        "requestNewLink": "Solicitar um novo link"
+      },
+      "validation": {
+        "passwordMinimum": "A senha deve possuir pelo menos 8 caracteres.",
+        "passwordMaximum": "A senha deve possuir no máximo 128 caracteres.",
+        "passwordMismatch": "As senhas não coincidem."
+      },
+      "success": {
+        "heading": "Senha atualizada",
+        "description": "Sua senha foi alterada com sucesso. Agora você pode entrar usando a nova senha."
+      },
+      "missingToken": {
+        "description": "Este link de recuperação não contém as informações necessárias.",
+        "message": "O link está incompleto ou já foi usado. Solicite um novo link de recuperação para continuar."
+      },
+      "errors": {
+        "heading": "Não foi possível redefinir sua senha",
+        "invalidToken": "Este link de recuperação é inválido ou expirou. Solicite um novo link e tente novamente.",
+        "temporary": "O serviço está temporariamente indisponível. Verifique sua conexão e tente novamente.",
+        "generic": "Não foi possível alterar a senha. Tente novamente.",
+        "invalidData": "Revise sua senha e tente novamente."
+      }
+    },
     "session": {
       "restoring": "Restaurando sua sessão",
       "expiredTitle": "Sua sessão expirou",
@@ -613,7 +687,6 @@
       "scores": {
         "eyebrow": "Diagnóstico de persuasão",
         "title": "Efetividade geral por elemento",
-        "description": "Avaliações qualitativas encontradas pela análise. Elas não são notas numéricas de conversão.",
         "items": {
           "hook": "Força do gancho",
           "promiseClarity": "Clareza da promessa",

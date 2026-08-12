@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router'
 
 import { ApiError, type PasswordLoginRequest } from '@/shared/api'
 import { Alert } from '@/shared/ui/alert'
@@ -99,9 +100,12 @@ export function LoginForm({ onEmailVerificationRequired, onSuccess }: LoginFormP
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="login-password">{t('auth.login.fields.password')}</Label>
-          <span className="text-body-sm text-text-subtle">
+          <Link
+            className="text-body-sm text-action underline-offset-4 hover:underline"
+            to="/forgot-password"
+          >
             {t('auth.login.fields.forgotPassword')}
-          </span>
+          </Link>
         </div>
 
         <Input

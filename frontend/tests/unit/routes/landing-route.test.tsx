@@ -1,10 +1,15 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { LandingRoute } from '@/routes/landing-route'
+import { i18n } from '@/shared/i18n/i18n'
 
 describe('LandingRoute', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en')
+  })
+
   it('renders the landing page headline', () => {
     render(
       <MemoryRouter>
@@ -14,7 +19,7 @@ describe('LandingRoute', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: 'See the strategy inside any sales video. Then make it yours.',
+        name: 'Analyze Any Sales Video. Adapt the Strategy to Your Offer.',
       }),
     ).toBeInTheDocument()
   })

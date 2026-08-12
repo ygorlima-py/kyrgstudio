@@ -3,11 +3,14 @@ import {
   apiClient,
   type AccessTokenResponse,
   type CurrentUserResponse,
+  type ForgotPasswordRequest,
   type PasswordLoginRequest,
+  type PasswordResetRequestedResponse,
   type RegisterRequest,
   type RegisterResponse,
   type ResendEmailVerificationRequest,
   type ResendEmailVerificationResponse,
+  type ResetPasswordRequest,
 } from '@/shared/api'
 
 const CSRF_HEADER_NAME = 'X-CSRF-Token'
@@ -33,6 +36,30 @@ export async function resendEmailVerification(
   )
 
   return response.data
+}
+
+/**
+ * Requests a password-reset email without exposing whether the email exists.
+ *
+ * Errors are normalized by the shared Axios client before they reach the
+ * caller, just like the other authentication operations.
+ */
+export async function requestPasswordReset(
+  request: ForgotPasswordRequest,
+): Promise<PasswordResetRequestedResponse> {
+  const response = await apiClient.post<PasswordResetRequestedResponse>(
+    '/auth/forgot-password',
+    request,
+  )
+
+  return response.data
+}
+
+/**
+ * Replaces the account password using the opaque token from the email link.
+ */
+export async function resetPassword(request: ResetPasswordRequest): Promise<void> {
+  await apiClient.post<void>('/auth/reset-password', request)
 }
 
 /**

@@ -35,9 +35,6 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
           {t('analysisResult.persuasion.scores.title')}
         </h2>
 
-        <p className="mt-2 max-w-3xl text-body text-text-muted">
-          {t('analysisResult.persuasion.scores.description')}
-        </p>
       </div>
 
       <dl className="mt-6 divide-y divide-border border-y border-border">

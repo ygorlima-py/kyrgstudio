@@ -5,6 +5,7 @@ import { AppLayout } from '@/layouts/app-layout'
 import { AuthLayout } from '@/layouts/auth-layout'
 import { MarketingLayout } from '@/layouts/marketing-layout'
 import { DashboardRoute } from '@/routes/dashboard-route'
+import { ForgotPasswordRoute } from '@/routes/forgot-password-route'
 import { JobResultRoute } from '@/routes/job-result-route'
 import { JobsHistoryRoute } from '@/routes/jobs-history-route'
 import { JobStatusRoute } from '@/routes/job-status-route'
@@ -13,6 +14,7 @@ import { LoginRoute } from '@/routes/login-route'
 import { NewJobRoute } from '@/routes/new-job-route'
 import { NotFoundRoute } from '@/routes/not-found-route'
 import { RegisterRoute } from '@/routes/register-route'
+import { ResetPasswordRoute } from '@/routes/reset-password-route'
 import { VerifyEmailRoute } from '@/routes/verify-email-route'
 
 /** Shared route tree used by both the browser and the production prerenderer. */
@@ -57,6 +59,14 @@ export const applicationRoutes: RouteObject[] = [
       {
         path: '/login',
         Component: LoginRoute,
+      },
+      {
+        path: '/forgot-password',
+        Component: ForgotPasswordRoute,
+      },
+      {
+        path: '/reset-password',
+        Component: ResetPasswordRoute,
       },
       {
         path: '/verify-email',

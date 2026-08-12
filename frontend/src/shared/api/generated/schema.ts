@@ -4,997 +4,1141 @@
  */
 
 export interface paths {
-  '/health': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Check API liveness
-     * @description Confirm that the API process can receive and answer HTTP requests.
-     */
-    get: operations['health_check_health_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/register': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Register with email and password
-     * @description Create a password account and request email confirmation.
-     */
-    post: operations['register_with_password_v1_auth_register_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/login': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Log in with email and password
-     * @description Authenticate local credentials and establish a refresh session.
-     */
-    post: operations['login_with_password_v1_auth_login_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/google': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Log in with Google
-     * @description Verify a Google ID token and establish an application session.
-     */
-    post: operations['login_with_google_v1_auth_google_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/refresh': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Refresh the authentication session
-     * @description Rotate a protected refresh token and return a new access token.
-     */
-    post: operations['refresh_authentication_v1_auth_refresh_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/logout': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Log out of the current session
-     * @description Revoke the refresh-token family and remove browser credentials.
-     */
-    post: operations['logout_v1_auth_logout_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/me': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get the current authenticated user
-     * @description Return the safe public identity represented by a valid access token.
-     */
-    get: operations['get_current_authenticated_user_v1_auth_me_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/verify-email': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Verify account email
-     * @description Confirm an email verification token sent to the user's inbox.
-     */
-    post: operations['verify_email_v1_auth_verify_email_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/resend-verification-email': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Resend account email verification
-     * @description Request another email without revealing account existence.
-     */
-    post: operations['resend_verification_email_v1_auth_resend_verification_email_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/jobs': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List the current user's jobs
-     * @description Return an ordered page containing only the caller's public job data.
-     */
-    get: operations['list_jobs_v1_jobs_get']
-    put?: never
-    /**
-     * Submit a pipeline job
-     * @description Validate, persist, upload, and enqueue a job owned by the caller.
-     */
-    post: operations['submit_job_v1_jobs_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/jobs/{job_id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get a job status
-     * @description Return status only when the job belongs to the authenticated user.
-     */
-    get: operations['get_job_status_v1_jobs__job_id__get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/jobs/{job_id}/result': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get a completed job result
-     * @description Return persisted output only for an owned, completed job.
-     */
-    get: operations['get_job_result_v1_jobs__job_id__result_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check API liveness
+         * @description Confirm that the API process can receive and answer HTTP requests.
+         */
+        get: operations["health_check_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register with email and password
+         * @description Create a password account and request email confirmation.
+         */
+        post: operations["register_with_password_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a password reset email
+         * @description Accept a password-reset request without revealing account existence.
+         */
+        post: operations["request_password_reset_v1_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset the account password
+         * @description Consume a password-reset token and replace the account password.
+         */
+        post: operations["reset_password_v1_auth_reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log in with email and password
+         * @description Authenticate local credentials and establish a refresh session.
+         */
+        post: operations["login_with_password_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log in with Google
+         * @description Verify a Google ID token and establish an application session.
+         */
+        post: operations["login_with_google_v1_auth_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh the authentication session
+         * @description Rotate a protected refresh token and return a new access token.
+         */
+        post: operations["refresh_authentication_v1_auth_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log out of the current session
+         * @description Revoke the refresh-token family and remove browser credentials.
+         */
+        post: operations["logout_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current authenticated user
+         * @description Return the safe public identity represented by a valid access token.
+         */
+        get: operations["get_current_authenticated_user_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify account email
+         * @description Confirm an email verification token sent to the user's inbox.
+         */
+        post: operations["verify_email_v1_auth_verify_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/resend-verification-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend account email verification
+         * @description Request another email without revealing account existence.
+         */
+        post: operations["resend_verification_email_v1_auth_resend_verification_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the current user's jobs
+         * @description Return an ordered page containing only the caller's public job data.
+         */
+        get: operations["list_jobs_v1_jobs_get"];
+        put?: never;
+        /**
+         * Submit a pipeline job
+         * @description Validate, persist, upload, and enqueue a job owned by the caller.
+         */
+        post: operations["submit_job_v1_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a job status
+         * @description Return status only when the job belongs to the authenticated user.
+         */
+        get: operations["get_job_status_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a completed job result
+         * @description Return persisted output only for an owned, completed job.
+         */
+        get: operations["get_job_result_v1_jobs__job_id__result_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
-export type webhooks = Record<string, never>
+export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /**
-     * AccessTokenResponse
-     * @description Public access credential returned after successful authentication.
-     *
-     *     The corresponding refresh token is intentionally omitted and must be set
-     *     by the router as a protected HTTP-only cookie.
-     */
-    AccessTokenResponse: {
-      /**
-       * Access Token
-       * @description Short-lived JWT used in the Authorization header.
-       */
-      access_token: string
-      /**
-       * Token Type
-       * @description Authorization scheme used with the access token.
-       * @default bearer
-       * @constant
-       */
-      token_type: 'bearer'
-      /**
-       * Access Token Expires At
-       * Format: date-time
-       * @description Timezone-aware expiration timestamp for the access token.
-       */
-      access_token_expires_at: string
-    }
-    /**
-     * ApiErrorResponse
-     * @description Stable public error payload translated by the frontend.
-     */
-    ApiErrorResponse: {
-      /** Code */
-      code: string
-      /** Step */
-      step?: string | null
-      /** Details */
-      details?: {
-        [key: string]: unknown
-      }
-    }
-    /** Body_submit_job_v1_jobs_post */
-    Body_submit_job_v1_jobs_post: {
-      /**
-       * File
-       * @description Input video or audio file.
-       */
-      file: string
-      /**
-       * Request
-       * @description JSON metadata describing the requested pipeline.
-       */
-      request: string
-    }
-    /**
-     * CurrentUserResponse
-     * @description Public identity returned for the currently authenticated account.
-     */
-    CurrentUserResponse: {
-      /**
-       * User Id
-       * @description Internal identifier of the authenticated user.
-       */
-      user_id: number
-      /**
-       * Email
-       * @description Normalized email address of the authenticated user.
-       */
-      email: string
-      /**
-       * Name
-       * @description Optional display name of the authenticated user.
-       */
-      name?: string | null
-      /**
-       * Auth Provider
-       * @description Provider used to authenticate the account.
-       */
-      auth_provider: string
-      /**
-       * Email Verified
-       * @description Whether the account email has been verified.
-       */
-      email_verified: boolean
-    }
-    /**
-     * GoogleLoginRequest
-     * @description Request body carrying a Google-issued ID token for verification.
-     */
-    GoogleLoginRequest: {
-      /**
-       * Google Id Token
-       * @description Signed Google ID token issued to the frontend client.
-       */
-      google_id_token: string
-    }
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components['schemas']['ValidationError'][]
-    }
-    /**
-     * HealthResponse
-     * @description Response returned when the API process is alive.
-     */
-    HealthResponse: {
-      /**
-       * Status
-       * @default ok
-       * @constant
-       */
-      status: 'ok'
-    }
-    /**
-     * JobListResponse
-     * @description Paginated public statuses for jobs owned by one user.
-     */
-    JobListResponse: {
-      /** Items */
-      items: components['schemas']['JobStatusResponse'][]
-      /** Limit */
-      limit: number
-      /** Offset */
-      offset: number
-      /** Has More */
-      has_more: boolean
-    }
-    /**
-     * JobResultOutput
-     * @description Allowed fields inside a completed public pipeline result.
-     */
-    JobResultOutput: {
-      transcription?: components['schemas']['PublicTranscriptionOutput'] | null
-      /** Copy Analysis */
-      copy_analysis: {
-        [key: string]: unknown
-      }
-      adapted_script?: components['schemas']['PublicAdaptedScriptOutput']
-      /** Validation */
-      validation?: {
-        [key: string]: unknown
-      } | null
-      /** Missing Proofs */
-      missing_proofs?: string[]
-      /** Token Usage */
-      token_usage?: {
-        [key: string]: unknown
-      }
-      /** Execution Time Seconds */
-      execution_time_seconds?: number
-    }
-    /**
-     * JobResultResponse
-     * @description Completed pipeline output returned without internal job metadata.
-     */
-    JobResultResponse: {
-      /** Job Id */
-      job_id: number
-      /** Run Id */
-      run_id?: string | null
-      /**
-       * Pipeline Type
-       * @enum {string}
-       */
-      pipeline_type: 'copy_analysis' | 'copy_adaptation'
-      /**
-       * Status
-       * @constant
-       */
-      status: 'completed'
-      output: components['schemas']['JobResultOutput']
-    }
-    /**
-     * JobStatusResponse
-     * @description Safe persisted job status returned to its owner.
-     */
-    JobStatusResponse: {
-      /** Job Id */
-      job_id: number
-      /** Run Id */
-      run_id?: string | null
-      /**
-       * Pipeline Type
-       * @enum {string}
-       */
-      pipeline_type: 'copy_analysis' | 'copy_adaptation'
-      /** Status */
-      status: string
-      /** Current Step */
-      current_step?: string | null
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /** Started At */
-      started_at?: string | null
-      /** Finished At */
-      finished_at?: string | null
-      /** Execution Time Seconds */
-      execution_time_seconds?: number | null
-      error?: components['schemas']['ApiErrorResponse'] | null
-    }
-    /**
-     * JobSubmissionResponse
-     * @description Safe response returned after a job is uploaded and queued.
-     */
-    JobSubmissionResponse: {
-      /** Job Id */
-      job_id: number
-      /** Run Id */
-      run_id?: string | null
-      /** Status */
-      status: string
-      /** Current Step */
-      current_step?: string | null
-      /**
-       * Pipeline Type
-       * @enum {string}
-       */
-      pipeline_type: 'copy_analysis' | 'copy_adaptation'
-    }
-    /**
-     * PasswordLoginRequest
-     * @description Request body for authenticating an account with a password.
-     */
-    PasswordLoginRequest: {
-      /**
-       * Email
-       * @description Email address used to identify the account.
-       */
-      email: string
-      /**
-       * Password
-       * @description Plain password submitted for verification.
-       */
-      password: string
-    }
-    /**
-     * PublicAdaptedScriptOutput
-     * @description Editable script data exposed without duplicated result diagnostics.
-     */
-    PublicAdaptedScriptOutput: {
-      /** Script */
-      script?: string
-      /** Sections */
-      sections?: {
-        [key: string]: unknown
-      }[]
-      /** Hooks */
-      hooks?: string[]
-      /** Cta */
-      cta?: string | null
-      /** Estimated Duration Seconds */
-      estimated_duration_seconds?: number | null
-      /** Word Count */
-      word_count?: number
-      /** Voice Ready Text */
-      voice_ready_text?: string
-      /** Adaptation Notes */
-      adaptation_notes?: string | null
-    }
-    /**
-     * PublicTranscriptionOutput
-     * @description User-facing transcription without provider or filesystem metadata.
-     */
-    PublicTranscriptionOutput: {
-      /** Language */
-      language: string | null
-      /** Text */
-      text: string
-    }
-    /**
-     * RegisterRequest
-     * @description Request body for creating a password-authenticated account.
-     */
-    RegisterRequest: {
-      /**
-       * Email
-       * @description Email address used to identify the account.
-       */
-      email: string
-      /**
-       * Password
-       * @description Plain password to hash during account registration.
-       */
-      password: string
-      /**
-       * Name
-       * @description Display name for the new account.
-       */
-      name: string
-    }
-    /**
-     * RegisterResponse
-     * @description Response returned while an account waits for email confirmation.
-     */
-    RegisterResponse: {
-      /**
-       * Email
-       * @description Email address that received the confirmation link.
-       */
-      email: string
-      /**
-       * Email Verification Required
-       * @default true
-       * @constant
-       */
-      email_verification_required: true
-    }
-    /**
-     * ResendEmailVerificationRequest
-     * @description Request used to request another confirmation email.
-     */
-    ResendEmailVerificationRequest: {
-      /**
-       * Email
-       * @description Email address used to identify the account.
-       */
-      email: string
-    }
-    /**
-     * ResendEmailVerificationResponse
-     * @description Response returned after requesting a new verification email.
-     */
-    ResendEmailVerificationResponse: {
-      /**
-       * Sent
-       * @default true
-       * @constant
-       */
-      sent: true
-    }
-    /** ValidationError */
-    ValidationError: {
-      /** Location */
-      loc: (string | number)[]
-      /** Message */
-      msg: string
-      /** Error Type */
-      type: string
-      /** Input */
-      input?: unknown
-      /** Context */
-      ctx?: Record<string, never>
-    }
-    /**
-     * VerifyEmailRequest
-     * @description Request used to confirm an email verification token.
-     */
-    VerifyEmailRequest: {
-      /** Token */
-      token: string
-    }
-  }
-  responses: never
-  parameters: never
-  requestBodies: never
-  headers: never
-  pathItems: never
+    schemas: {
+        /**
+         * AccessTokenResponse
+         * @description Public access credential returned after successful authentication.
+         *
+         *     The corresponding refresh token is intentionally omitted and must be set
+         *     by the router as a protected HTTP-only cookie.
+         */
+        AccessTokenResponse: {
+            /**
+             * Access Token
+             * @description Short-lived JWT used in the Authorization header.
+             */
+            access_token: string;
+            /**
+             * Token Type
+             * @description Authorization scheme used with the access token.
+             * @default bearer
+             * @constant
+             */
+            token_type: "bearer";
+            /**
+             * Access Token Expires At
+             * Format: date-time
+             * @description Timezone-aware expiration timestamp for the access token.
+             */
+            access_token_expires_at: string;
+        };
+        /**
+         * ApiErrorResponse
+         * @description Stable public error payload translated by the frontend.
+         */
+        ApiErrorResponse: {
+            /** Code */
+            code: string;
+            /** Step */
+            step?: string | null;
+            /** Details */
+            details?: {
+                [key: string]: unknown;
+            };
+        };
+        /** Body_submit_job_v1_jobs_post */
+        Body_submit_job_v1_jobs_post: {
+            /**
+             * File
+             * @description Input video or audio file.
+             */
+            file: string;
+            /**
+             * Request
+             * @description JSON metadata describing the requested pipeline.
+             */
+            request: string;
+        };
+        /**
+         * CurrentUserResponse
+         * @description Public identity returned for the currently authenticated account.
+         */
+        CurrentUserResponse: {
+            /**
+             * User Id
+             * @description Internal identifier of the authenticated user.
+             */
+            user_id: number;
+            /**
+             * Email
+             * @description Normalized email address of the authenticated user.
+             */
+            email: string;
+            /**
+             * Name
+             * @description Optional display name of the authenticated user.
+             */
+            name?: string | null;
+            /**
+             * Auth Provider
+             * @description Provider used to authenticate the account.
+             */
+            auth_provider: string;
+            /**
+             * Email Verified
+             * @description Whether the account email has been verified.
+             */
+            email_verified: boolean;
+        };
+        /**
+         * ForgotPasswordRequest
+         * @description Request used to start password recovery for an account email.
+         */
+        ForgotPasswordRequest: {
+            /**
+             * Email
+             * @description Email address used to identify the account.
+             */
+            email: string;
+        };
+        /**
+         * GoogleLoginRequest
+         * @description Request body carrying a Google-issued ID token for verification.
+         */
+        GoogleLoginRequest: {
+            /**
+             * Google Id Token
+             * @description Signed Google ID token issued to the frontend client.
+             */
+            google_id_token: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * HealthResponse
+         * @description Response returned when the API process is alive.
+         */
+        HealthResponse: {
+            /**
+             * Status
+             * @default ok
+             * @constant
+             */
+            status: "ok";
+        };
+        /**
+         * JobListResponse
+         * @description Paginated public statuses for jobs owned by one user.
+         */
+        JobListResponse: {
+            /** Items */
+            items: components["schemas"]["JobStatusResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has More */
+            has_more: boolean;
+        };
+        /**
+         * JobResultOutput
+         * @description Allowed fields inside a completed public pipeline result.
+         */
+        JobResultOutput: {
+            transcription?: components["schemas"]["PublicTranscriptionOutput"] | null;
+            /** Copy Analysis */
+            copy_analysis: {
+                [key: string]: unknown;
+            };
+            adapted_script?: components["schemas"]["PublicAdaptedScriptOutput"];
+            /** Validation */
+            validation?: {
+                [key: string]: unknown;
+            } | null;
+            /** Missing Proofs */
+            missing_proofs?: string[];
+            /** Token Usage */
+            token_usage?: {
+                [key: string]: unknown;
+            };
+            /** Execution Time Seconds */
+            execution_time_seconds?: number;
+        };
+        /**
+         * JobResultResponse
+         * @description Completed pipeline output returned without internal job metadata.
+         */
+        JobResultResponse: {
+            /** Job Id */
+            job_id: number;
+            /** Run Id */
+            run_id?: string | null;
+            /**
+             * Pipeline Type
+             * @enum {string}
+             */
+            pipeline_type: "copy_analysis" | "copy_adaptation";
+            /**
+             * Status
+             * @constant
+             */
+            status: "completed";
+            output: components["schemas"]["JobResultOutput"];
+        };
+        /**
+         * JobStatusResponse
+         * @description Safe persisted job status returned to its owner.
+         */
+        JobStatusResponse: {
+            /** Job Id */
+            job_id: number;
+            /** Run Id */
+            run_id?: string | null;
+            /**
+             * Pipeline Type
+             * @enum {string}
+             */
+            pipeline_type: "copy_analysis" | "copy_adaptation";
+            /** Status */
+            status: string;
+            /** Current Step */
+            current_step?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Started At */
+            started_at?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Execution Time Seconds */
+            execution_time_seconds?: number | null;
+            error?: components["schemas"]["ApiErrorResponse"] | null;
+        };
+        /**
+         * JobSubmissionResponse
+         * @description Safe response returned after a job is uploaded and queued.
+         */
+        JobSubmissionResponse: {
+            /** Job Id */
+            job_id: number;
+            /** Run Id */
+            run_id?: string | null;
+            /** Status */
+            status: string;
+            /** Current Step */
+            current_step?: string | null;
+            /**
+             * Pipeline Type
+             * @enum {string}
+             */
+            pipeline_type: "copy_analysis" | "copy_adaptation";
+        };
+        /**
+         * PasswordLoginRequest
+         * @description Request body for authenticating an account with a password.
+         */
+        PasswordLoginRequest: {
+            /**
+             * Email
+             * @description Email address used to identify the account.
+             */
+            email: string;
+            /**
+             * Password
+             * @description Plain password submitted for verification.
+             */
+            password: string;
+        };
+        /**
+         * PasswordResetRequestedResponse
+         * @description Neutral response for every accepted password-reset request.
+         */
+        PasswordResetRequestedResponse: {
+            /**
+             * Accepted
+             * @description Indicates that the request was accepted without revealing whether the email belongs to an account.
+             * @default true
+             * @constant
+             */
+            accepted: true;
+        };
+        /**
+         * PublicAdaptedScriptOutput
+         * @description Editable script data exposed without duplicated result diagnostics.
+         */
+        PublicAdaptedScriptOutput: {
+            /** Script */
+            script?: string;
+            /** Sections */
+            sections?: {
+                [key: string]: unknown;
+            }[];
+            /** Hooks */
+            hooks?: string[];
+            /** Cta */
+            cta?: string | null;
+            /** Estimated Duration Seconds */
+            estimated_duration_seconds?: number | null;
+            /** Word Count */
+            word_count?: number;
+            /** Voice Ready Text */
+            voice_ready_text?: string;
+            /** Adaptation Notes */
+            adaptation_notes?: string | null;
+        };
+        /**
+         * PublicTranscriptionOutput
+         * @description User-facing transcription without provider or filesystem metadata.
+         */
+        PublicTranscriptionOutput: {
+            /** Language */
+            language: string | null;
+            /** Text */
+            text: string;
+        };
+        /**
+         * RegisterRequest
+         * @description Request body for creating a password-authenticated account.
+         */
+        RegisterRequest: {
+            /**
+             * Email
+             * @description Email address used to identify the account.
+             */
+            email: string;
+            /**
+             * Password
+             * @description Plain password to hash during account registration.
+             */
+            password: string;
+            /**
+             * Name
+             * @description Display name for the new account.
+             */
+            name: string;
+        };
+        /**
+         * RegisterResponse
+         * @description Response returned while an account waits for email confirmation.
+         */
+        RegisterResponse: {
+            /**
+             * Email
+             * @description Email address that received the confirmation link.
+             */
+            email: string;
+            /**
+             * Email Verification Required
+             * @default true
+             * @constant
+             */
+            email_verification_required: true;
+        };
+        /**
+         * ResendEmailVerificationRequest
+         * @description Request used to request another confirmation email.
+         */
+        ResendEmailVerificationRequest: {
+            /**
+             * Email
+             * @description Email address used to identify the account.
+             */
+            email: string;
+        };
+        /**
+         * ResendEmailVerificationResponse
+         * @description Response returned after requesting a new verification email.
+         */
+        ResendEmailVerificationResponse: {
+            /**
+             * Sent
+             * @default true
+             * @constant
+             */
+            sent: true;
+        };
+        /**
+         * ResetPasswordRequest
+         * @description Request used to replace a password with a valid reset token.
+         */
+        ResetPasswordRequest: {
+            /**
+             * Token
+             * @description Opaque token received in the password-reset email.
+             */
+            token: string;
+            /**
+             * New Password
+             * @description New password to hash and store for the account.
+             */
+            new_password: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+        /**
+         * VerifyEmailRequest
+         * @description Request used to confirm an email verification token.
+         */
+        VerifyEmailRequest: {
+            /** Token */
+            token: string;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-export type $defs = Record<string, never>
+export type $defs = Record<string, never>;
 export interface operations {
-  health_check_health_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HealthResponse']
-        }
-      }
-    }
-  }
-  register_with_password_v1_auth_register_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RegisterRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['RegisterResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  login_with_password_v1_auth_login_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['PasswordLoginRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AccessTokenResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  login_with_google_v1_auth_google_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['GoogleLoginRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AccessTokenResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  refresh_authentication_v1_auth_refresh_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AccessTokenResponse']
-        }
-      }
-    }
-  }
-  logout_v1_auth_logout_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-    }
-  }
-  get_current_authenticated_user_v1_auth_me_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['CurrentUserResponse']
-        }
-      }
-    }
-  }
-  verify_email_v1_auth_verify_email_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VerifyEmailRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AccessTokenResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  resend_verification_email_v1_auth_resend_verification_email_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ResendEmailVerificationRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ResendEmailVerificationResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  list_jobs_v1_jobs_get: {
-    parameters: {
-      query?: {
-        /** @description Return only the job with this identifier. */
-        job_id?: number | null
-        /** @description Return only jobs with this lifecycle status. */
-        status?: ('pending' | 'uploaded' | 'running' | 'completed' | 'failed') | null
-        /** @description Return only jobs from this pipeline type. */
-        pipeline_type?: ('copy_analysis' | 'copy_adaptation') | null
-        /** @description Maximum number of jobs returned. */
-        limit?: number
-        /** @description Number of newer jobs to skip. */
-        offset?: number
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['JobListResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  submit_job_v1_jobs_post: {
-    parameters: {
-      query?: never
-      header?: {
-        'Idempotency-Key'?: string | null
-      }
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'multipart/form-data': components['schemas']['Body_submit_job_v1_jobs_post']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['JobSubmissionResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  get_job_status_v1_jobs__job_id__get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description Internal job identifier. */
-        job_id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['JobStatusResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  get_job_result_v1_jobs__job_id__result_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description Internal job identifier. */
-        job_id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['JobResultResponse']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
+    health_check_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    register_with_password_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisterResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_password_reset_v1_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordResetRequestedResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_password_v1_auth_reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_with_password_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_with_google_v1_auth_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_authentication_v1_auth_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessTokenResponse"];
+                };
+            };
+        };
+    };
+    logout_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_current_authenticated_user_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+        };
+    };
+    verify_email_v1_auth_verify_email_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_verification_email_v1_auth_resend_verification_email_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendEmailVerificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResendEmailVerificationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_jobs_v1_jobs_get: {
+        parameters: {
+            query?: {
+                /** @description Return only the job with this identifier. */
+                job_id?: number | null;
+                /** @description Return only jobs with this lifecycle status. */
+                status?: ("pending" | "uploaded" | "running" | "completed" | "failed") | null;
+                /** @description Return only jobs from this pipeline type. */
+                pipeline_type?: ("copy_analysis" | "copy_adaptation") | null;
+                /** @description Maximum number of jobs returned. */
+                limit?: number;
+                /** @description Number of newer jobs to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_job_v1_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_submit_job_v1_jobs_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSubmissionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_status_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Internal job identifier. */
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_result_v1_jobs__job_id__result_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Internal job identifier. */
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
 }

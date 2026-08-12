@@ -19,7 +19,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          'bg-action text-white-inverse shadow-sm',
+          'bg-action text-text-inverse shadow-sm',
           'hover:bg-action-hover active:bg-action-active',
         ],
         secondary: [

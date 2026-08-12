@@ -274,6 +274,80 @@
         "generic": "Login could not be completed. Please try again."
       }
     },
+    "forgotPassword": {
+      "page": {
+        "eyebrow": "Password recovery",
+        "title": "Reset your password",
+        "description": "Enter your email and we will send instructions if an account matches it.",
+        "rememberedPrompt": "Remembered your password?",
+        "login": "Log in"
+      },
+      "fields": {
+        "email": "Email",
+        "emailPlaceholder": "you@example.com"
+      },
+      "actions": {
+        "submit": "Send recovery email",
+        "sending": "Sending email...",
+        "tryAnotherEmail": "Use another email",
+        "returnToLogin": "Return to login"
+      },
+      "validation": {
+        "emailRequired": "Email is required.",
+        "emailTooLong": "Email is too long.",
+        "emailInvalid": "Enter a valid email address."
+      },
+      "success": {
+        "heading": "Check your inbox",
+        "description": "If an account matches {{email}}, recovery instructions are on the way. Check your spam folder too."
+      },
+      "errors": {
+        "heading": "We could not send the email",
+        "network": "We could not reach the server. Check your connection and try again.",
+        "generic": "The recovery request could not be completed. Please try again.",
+        "invalidData": "Please enter a valid email address."
+      }
+    },
+    "resetPassword": {
+      "page": {
+        "eyebrow": "Password recovery",
+        "title": "Choose a new password",
+        "description": "Create a new password for your Kyrg Studio account.",
+        "login": "Log in"
+      },
+      "fields": {
+        "newPassword": "New password",
+        "confirmPassword": "Confirm your new password",
+        "passwordHint": "Use at least 8 characters."
+      },
+      "actions": {
+        "submit": "Save new password",
+        "saving": "Saving password...",
+        "tryAgain": "Try again",
+        "returnToLogin": "Continue to login",
+        "requestNewLink": "Request a new link"
+      },
+      "validation": {
+        "passwordMinimum": "Password must contain at least 8 characters.",
+        "passwordMaximum": "Password must contain at most 128 characters.",
+        "passwordMismatch": "Passwords do not match."
+      },
+      "success": {
+        "heading": "Password updated",
+        "description": "Your password was changed successfully. You can now log in with the new password."
+      },
+      "missingToken": {
+        "description": "This recovery link is missing the required information.",
+        "message": "The link is incomplete or has already been used. Request a new recovery link to continue."
+      },
+      "errors": {
+        "heading": "We could not reset your password",
+        "invalidToken": "This recovery link is invalid or has expired. Request a new link and try again.",
+        "temporary": "The service is temporarily unavailable. Check your connection and try again.",
+        "generic": "The password could not be changed. Please try again.",
+        "invalidData": "Please review your password and try again."
+      }
+    },
     "session": {
       "restoring": "Restoring your session",
       "expiredTitle": "Your session expired",
@@ -613,7 +687,6 @@
       "scores": {
         "eyebrow": "Persuasion diagnosis",
         "title": "Overall effectiveness by element",
-        "description": "Qualitative ratings found by the analysis. These are not numerical conversion scores.",
         "items": {
           "hook": "Hook effectiveness",
           "promiseClarity": "Promise clarity",

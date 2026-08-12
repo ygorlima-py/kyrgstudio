@@ -1,12 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { JobsHistoryList } from '@/features/jobs/components/jobs-history-list'
 import type { JobStatusResponse } from '@/shared/api'
+import { i18n } from '@/shared/i18n/i18n'
 
 describe('JobsHistoryList', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('en')
+  })
+
   it('distinguishes an empty history from a filtered search without results', () => {
     const { rerender } = renderHistoryList()
 

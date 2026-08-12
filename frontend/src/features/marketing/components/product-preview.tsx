@@ -14,15 +14,15 @@ interface ProductScreenshotProps {
 /**
  * Presents real product screenshots without exposing job or customer data.
  *
- * Until the matching file is added to `public/screenshots`, the frame displays
- * a neutral placeholder instead of a broken image.
+ * If the configured public asset cannot be loaded, the frame displays a
+ * neutral placeholder instead of a broken image.
  */
 function ProductScreenshot({ alt, label, src }: ProductScreenshotProps) {
   const [imageUnavailable, setImageUnavailable] = useState(false)
 
   return (
     <figure className="overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
-      <div className="relative aspect-[16/10] bg-surface-muted">
+      <div className="bg-surface-muted">
         {imageUnavailable ? (
           <div
             aria-label={alt}
@@ -59,7 +59,7 @@ function ProductScreenshot({ alt, label, src }: ProductScreenshotProps) {
         ) : (
           <img
             alt={alt}
-            className="absolute inset-0 size-full object-cover object-top"
+            className="block h-auto w-full"
             decoding="async"
             loading="lazy"
             onError={() => setImageUnavailable(true)}
@@ -72,16 +72,15 @@ function ProductScreenshot({ alt, label, src }: ProductScreenshotProps) {
 }
 
 /**
- * Shows localized screenshots of the analysis and adaptation results.
+ * Shows public screenshots of the analysis and adaptation results.
  *
  * Screenshot files are selected from the active interface language and remain
  * static public assets; this section never loads private job data.
  */
 export function ProductPreview() {
-  const { i18n, t } = useTranslation()
-  const screenshotLanguage = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'pt'
-  const analysisScreenshot = `/screenshots/analysis-result-${screenshotLanguage}.webp`
-  const adaptationScreenshot = `/screenshots/adaptation-result-${screenshotLanguage}.webp`
+  const { t } = useTranslation()
+  const analysisScreenshot = '/analysis_copy.png'
+  const adaptationScreenshot = '/copy_adapted.png'
 
   return (
     <section
