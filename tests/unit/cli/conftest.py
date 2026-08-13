@@ -1,0 +1,11 @@
+"""Make the source tree importable for isolated CLI unit tests."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+SOURCE_DIRECTORY = Path(__file__).resolve().parents[3] / "src"
+
+if str(SOURCE_DIRECTORY) not in sys.path:
+    sys.path.insert(0, str(SOURCE_DIRECTORY))
