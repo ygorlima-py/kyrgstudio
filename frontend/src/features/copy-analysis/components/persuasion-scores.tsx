@@ -78,12 +78,6 @@ function StrengthRow({
 
           <Badge variant={strengthBadgeVariant(level)}>{formatStrength(level, t)}</Badge>
         </div>
-
-        {value.explanation ? (
-          <p className="mt-2 max-w-full break-words text-body-sm text-text-muted sm:text-right">
-            {value.explanation}
-          </p>
-        ) : null}
       </dd>
     </div>
   )
