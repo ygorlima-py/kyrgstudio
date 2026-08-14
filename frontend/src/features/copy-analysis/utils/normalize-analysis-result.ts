@@ -52,7 +52,7 @@ export interface NormalizedPersuasionSignal {
   readonly name: string
   readonly description: string
   readonly evidence: string | null
-  readonly strength: string
+  readonly strength: NormalizedPersuasionStrength
 }
 
 export interface NormalizedPersuasionWeakness {
@@ -61,12 +61,19 @@ export interface NormalizedPersuasionWeakness {
   readonly evidence: string | null
 }
 
+export type PersuasionStrengthLevel = 'low' | 'medium' | 'high' | 'unknown'
+
+export interface NormalizedPersuasionStrength {
+  readonly level: PersuasionStrengthLevel
+  readonly explanation: string | null
+}
+
 export interface NormalizedPersuasionStrengths {
-  readonly hook: string | null
-  readonly promiseClarity: string | null
-  readonly proof: string | null
-  readonly urgency: string | null
-  readonly callToAction: string | null
+  readonly hook: NormalizedPersuasionStrength
+  readonly promiseClarity: NormalizedPersuasionStrength
+  readonly proof: NormalizedPersuasionStrength
+  readonly urgency: NormalizedPersuasionStrength
+  readonly callToAction: NormalizedPersuasionStrength
 }
 
 export interface NormalizedPersuasionAnalysis {
@@ -132,6 +139,40 @@ export function normalizePublicTranscription(value: unknown): NormalizedTranscri
   return parsedTranscription.data
 }
 
+/**
+ * Keep qualitative levels separate from explanations accidentally returned in
+ * the same LLM field, such as "Medium. The proof is limited...".
+ */
+export function normalizePersuasionStrength(value: string | null): NormalizedPersuasionStrength {
+  if (!value) {
+    return { level: 'unknown', explanation: null }
+  }
+
+  const trimmedValue = value.trim()
+
+  if (!trimmedValue) {
+    return { level: 'unknown', explanation: null }
+  }
+
+  const firstWord = trimmedValue.split(/\s+/, 1)[0] ?? ''
+  const normalizedLabel = normalizeStrengthLabel(firstWord)
+  const level = STRENGTH_LABELS[normalizedLabel] ?? 'unknown'
+
+  if (level === 'unknown') {
+    return { level, explanation: trimmedValue }
+  }
+
+  const explanation = trimmedValue
+    .slice(firstWord.length)
+    .replace(/^\s*[-:;.|]+\s*/, '')
+    .trim()
+
+  return {
+    level,
+    explanation: explanation || null,
+  }
+}
+
 function buildNormalizedResult(result: AnalysisResultData): NormalizedAnalysisResult {
   return {
     language: result.language,
@@ -174,17 +215,17 @@ function buildNormalizedResult(result: AnalysisResultData): NormalizedAnalysisRe
       dominantEmotion: result.persuasion_analysis.dominant_emotion,
       pattern: result.persuasion_analysis.persuasion_pattern,
       strengths: {
-        hook: result.persuasion_analysis.hook_strength,
-        promiseClarity: result.persuasion_analysis.promise_clarity,
-        proof: result.persuasion_analysis.proof_strength,
-        urgency: result.persuasion_analysis.urgency_strength,
-        callToAction: result.persuasion_analysis.cta_strength,
+        hook: normalizePersuasionStrength(result.persuasion_analysis.hook_strength),
+        promiseClarity: normalizePersuasionStrength(result.persuasion_analysis.promise_clarity),
+        proof: normalizePersuasionStrength(result.persuasion_analysis.proof_strength),
+        urgency: normalizePersuasionStrength(result.persuasion_analysis.urgency_strength),
+        callToAction: normalizePersuasionStrength(result.persuasion_analysis.cta_strength),
       },
       signals: result.persuasion_analysis.persuasion_signals.map((signal) => ({
         name: signal.name,
         description: signal.description,
         evidence: signal.evidence,
-        strength: signal.strength,
+        strength: normalizePersuasionStrength(signal.strength),
       })),
       weaknesses: result.persuasion_analysis.weaknesses.map((weakness) => ({
         issue: weakness.issue,
@@ -204,4 +245,32 @@ function normalizeOfferElements(
     description: element.description,
     evidence: element.evidence,
   }))
+}
+
+const STRENGTH_LABELS: Readonly<Record<string, PersuasionStrengthLevel>> = {
+  high: 'high',
+  alto: 'high',
+  alta: 'high',
+  strong: 'high',
+  forte: 'high',
+  medium: 'medium',
+  medio: 'medium',
+  media: 'medium',
+  moderate: 'medium',
+  moderado: 'medium',
+  moderada: 'medium',
+  low: 'low',
+  baixo: 'low',
+  baixa: 'low',
+  weak: 'low',
+  fraco: 'low',
+  fraca: 'low',
+}
+
+function normalizeStrengthLabel(value: string): string {
+  return value
+    .replace(/^[()[\]{}"'`]+|[.,:;!?()[\]{}"'`]+$/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
 }

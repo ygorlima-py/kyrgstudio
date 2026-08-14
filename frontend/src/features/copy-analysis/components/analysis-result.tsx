@@ -26,7 +26,7 @@ export function AnalysisResult({ result }: AnalysisResultProps) {
 
       <OfferSummary offer={analysis.offer} />
 
-      <div className="grid gap-14 border-t border-border pt-14 sm:gap-16 sm:pt-16 xl:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1.3fr)] xl:gap-16">
+      <div className="grid min-w-0 gap-14 border-t border-border pt-14 sm:gap-16 sm:pt-16 xl:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1.3fr)] xl:gap-16">
         <PersuasionScores strengths={analysis.persuasion.strengths} />
         <PersuasionSignals signals={analysis.persuasion.signals} />
       </div>

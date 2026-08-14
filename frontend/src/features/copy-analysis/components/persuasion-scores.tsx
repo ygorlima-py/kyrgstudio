@@ -4,7 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/utils/class-names'
 
-import type { NormalizedPersuasionStrengths } from '../utils/normalize-analysis-result'
+import type {
+  NormalizedPersuasionStrength,
+  NormalizedPersuasionStrengths,
+  PersuasionStrengthLevel,
+} from '../utils/normalize-analysis-result'
 
 const STRENGTH_ITEMS = [
   ['analysisResult.persuasion.scores.items.hook', 'hook'],
@@ -13,8 +17,6 @@ const STRENGTH_ITEMS = [
   ['analysisResult.persuasion.scores.items.urgency', 'urgency'],
   ['analysisResult.persuasion.scores.items.callToAction', 'callToAction'],
 ] as const satisfies readonly (readonly [string, keyof NormalizedPersuasionStrengths])[]
-
-type StrengthLevel = 'low' | 'medium' | 'high' | 'unknown'
 
 export interface PersuasionScoresProps {
   readonly strengths: NormalizedPersuasionStrengths
@@ -25,7 +27,7 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
   const { t } = useTranslation()
 
   return (
-    <section aria-labelledby="persuasion-scores-heading">
+    <section aria-labelledby="persuasion-scores-heading" className="min-w-0">
       <div>
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
           {t('analysisResult.persuasion.scores.eyebrow')}
@@ -34,7 +36,6 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
         <h2 className="mt-2 font-heading text-heading-3 text-text" id="persuasion-scores-heading">
           {t('analysisResult.persuasion.scores.title')}
         </h2>
-
       </div>
 
       <dl className="mt-6 divide-y divide-border border-y border-border">
@@ -46,64 +47,67 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
   )
 }
 
-function StrengthRow({ label, value }: { readonly label: string; readonly value: string | null }) {
+function StrengthRow({
+  label,
+  value,
+}: {
+  readonly label: string
+  readonly value: NormalizedPersuasionStrength
+}) {
   const { t } = useTranslation()
-  const level = normalizeStrength(value)
+  const { level } = value
 
   return (
-    <div className="flex items-center justify-between gap-6 py-4">
-      <dt className="text-body text-text">{label}</dt>
-      <dd className="flex items-center gap-3">
-        <span aria-hidden="true" className="flex gap-1">
-          {[1, 2, 3].map((segment) => (
-            <span
-              className={cn(
-                'h-1.5 w-5 rounded-pill bg-surface-muted',
-                isFilledSegment(level, segment) && level === 'low' && 'bg-danger',
-                isFilledSegment(level, segment) && level === 'medium' && 'bg-warning',
-                isFilledSegment(level, segment) && level === 'high' && 'bg-success',
-              )}
-              key={segment}
-            />
-          ))}
-        </span>
+    <div className="grid min-w-0 gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,auto)] sm:items-start sm:gap-6">
+      <dt className="min-w-0 text-body text-text">{label}</dt>
+      <dd className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-3 sm:justify-end">
+          <span aria-hidden="true" className="flex shrink-0 gap-1">
+            {[1, 2, 3].map((segment) => (
+              <span
+                className={cn(
+                  'h-1.5 w-5 rounded-pill bg-surface-muted',
+                  isFilledSegment(level, segment) && level === 'low' && 'bg-danger',
+                  isFilledSegment(level, segment) && level === 'medium' && 'bg-warning',
+                  isFilledSegment(level, segment) && level === 'high' && 'bg-success',
+                )}
+                key={segment}
+              />
+            ))}
+          </span>
 
-        <Badge variant={strengthBadgeVariant(level)}>{formatStrength(value, t)}</Badge>
+          <Badge variant={strengthBadgeVariant(level)}>{formatStrength(level, t)}</Badge>
+        </div>
+
+        {value.explanation ? (
+          <p className="mt-2 max-w-full break-words text-body-sm text-text-muted sm:text-right">
+            {value.explanation}
+          </p>
+        ) : null}
       </dd>
     </div>
   )
 }
 
-function normalizeStrength(value: string | null): StrengthLevel {
-  const normalizedValue = value?.trim().toLowerCase()
-
-  return normalizedValue === 'low' || normalizedValue === 'medium' || normalizedValue === 'high'
-    ? normalizedValue
-    : 'unknown'
-}
-
-function isFilledSegment(level: StrengthLevel, segment: number): boolean {
+function isFilledSegment(level: PersuasionStrengthLevel, segment: number): boolean {
   const filledSegments = level === 'high' ? 3 : level === 'medium' ? 2 : level === 'low' ? 1 : 0
 
   return segment <= filledSegments
 }
 
-function strengthBadgeVariant(level: StrengthLevel): 'danger' | 'warning' | 'success' | 'neutral' {
+function strengthBadgeVariant(
+  level: PersuasionStrengthLevel,
+): 'danger' | 'warning' | 'success' | 'neutral' {
   if (level === 'high') return 'success'
   if (level === 'medium') return 'warning'
   if (level === 'low') return 'danger'
   return 'neutral'
 }
 
-function formatStrength(value: string | null, t: TFunction): string {
-  if (!value) return t('analysisResult.persuasion.strength.notRated')
-
-  const level = normalizeStrength(value)
-
+function formatStrength(level: PersuasionStrengthLevel, t: TFunction): string {
   if (level !== 'unknown') {
     return t(`analysisResult.persuasion.strength.${level}`)
   }
 
-  const normalizedValue = value.trim().replaceAll(/[_-]+/g, ' ')
-  return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
+  return t('analysisResult.persuasion.strength.notRated')
 }

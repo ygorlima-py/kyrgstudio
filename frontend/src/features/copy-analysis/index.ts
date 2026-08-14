@@ -11,6 +11,7 @@ export { WeaknessList } from './components/weakness-list'
 export {
   AnalysisResultValidationError,
   normalizeAnalysisResult,
+  normalizePersuasionStrength,
   normalizePublicTranscription,
 } from './utils/normalize-analysis-result'
 
@@ -31,9 +32,11 @@ export type {
   NormalizedOfferAnalysis,
   NormalizedOfferElement,
   NormalizedPersuasionAnalysis,
+  NormalizedPersuasionStrength,
   NormalizedPersuasionSignal,
   NormalizedPersuasionStrengths,
   NormalizedPersuasionWeakness,
+  PersuasionStrengthLevel,
   NormalizedSectionGap,
   NormalizedTranscription,
 } from './utils/normalize-analysis-result'
