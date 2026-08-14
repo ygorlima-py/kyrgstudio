@@ -1,0 +1,127 @@
+# Copy this file to .env and replace every placeholder before starting the
+# application. Never commit the real .env file.
+
+# -----------------------------------------------------------------------------
+# Application and storage
+# -----------------------------------------------------------------------------
+APP_ENV=development
+APP_STORAGE_DIR=.storage
+APP_SQLITE_PATH=.storage/app.sqlite
+
+# -----------------------------------------------------------------------------
+# Database
+# -----------------------------------------------------------------------------
+# Compose replaces DATABASE_URL for the API, worker, and migration services
+# with the PostgreSQL URL below. The SQLite URL is useful only outside Compose.
+DATABASE_URL=sqlite+aiosqlite:///./.storage/app.sqlite
+DATABASE_ECHO=false
+DATABASE_POOL_SIZE=5
+DATABASE_MAX_OVERFLOW=10
+DATABASE_POOL_PRE_PING=true
+
+# Compose PostgreSQL settings.
+POSTGRES_DB=kyrgstudio
+POSTGRES_USER=kyrgstudio
+
+# SECRET: use a strong unique password for PostgreSQL in every deployed
+# environment. Do not reuse the development placeholder in production.
+POSTGRES_PASSWORD=replace-with-a-strong-postgres-password
+POSTGRES_PORT=5432
+
+# -----------------------------------------------------------------------------
+# RabbitMQ and worker
+# -----------------------------------------------------------------------------
+RABBITMQ_USER=kyrgstudio
+
+# SECRET: use a strong unique RabbitMQ password in every deployed environment.
+RABBITMQ_PASSWORD=replace-with-a-strong-rabbitmq-password
+RABBITMQ_MANAGEMENT_PORT=15672
+CELERY_QUEUE_NAME=pipeline
+CELERY_WORKER_CONCURRENCY=1
+CELERY_TASK_SOFT_TIME_LIMIT_SECONDS=1800
+CELERY_TASK_TIME_LIMIT_SECONDS=1860
+
+# Compose builds this URL internally from the RabbitMQ credentials above.
+# Keep this fallback for running the worker outside Compose.
+CELERY_BROKER_URL=amqp://kyrgstudio:replace-with-a-strong-rabbitmq-password@rabbitmq:5672//
+
+# -----------------------------------------------------------------------------
+# AI providers
+# -----------------------------------------------------------------------------
+APP_DEFAULT_LLM_PROVIDER=openrouter
+APP_DEFAULT_ANALYSIS_MODEL=deepseek/deepseek-v4-flash
+APP_DEFAULT_ADAPTATION_MODEL=deepseek/deepseek-v4-flash
+
+# Transcription is remote through OpenRouter. The worker does not load a local
+# Faster Whisper model when this provider is selected.
+APP_DEFAULT_TRANSCRIBER_PROVIDER=openrouter
+APP_DEFAULT_TRANSCRIBER_MODEL=openai/whisper-large-v3
+
+# SECRET: OpenRouter key used for LLM and remote transcription requests.
+OPENROUTER_API_KEY=replace-with-your-openrouter-api-key
+
+# SECRET: optional provider keys. Leave blank when the provider is disabled.
+OPENAI_API_KEY=
+GEMINI_API_KEY=
+
+# -----------------------------------------------------------------------------
+# Processing and uploads
+# -----------------------------------------------------------------------------
+APP_MAX_DURATION_SECONDS=600
+APP_REQUEST_TIMEOUT_SECONDS=300
+APP_MAX_UPLOAD_BYTES=2147483648
+APP_API_UPLOAD_TIMEOUT_SECONDS=1800
+APP_ACCEPTED_INPUT_MEDIA_TYPES=video/mp4,video/quicktime,video/webm,video/x-msvideo,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/x-wav,audio/webm
+
+# -----------------------------------------------------------------------------
+# API and browser access
+# -----------------------------------------------------------------------------
+APP_API_HOST=127.0.0.1
+APP_API_PORT=8000
+APP_PUBLIC_WEB_URL=http://localhost:8080
+APP_API_CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+
+# -----------------------------------------------------------------------------
+# Authentication
+# -----------------------------------------------------------------------------
+# SECRET: minimum 32 bytes. Generate a unique value for each environment and
+# never expose it in logs, source control, screenshots, or support messages.
+AUTH_JWT_SECRET=replace-with-at-least-32-random-characters
+AUTH_JWT_ALGORITHM=HS256
+AUTH_ISSUER=kyrgstudio
+AUTH_AUDIENCE=kyrgstudio-api
+AUTH_ACCESS_TOKEN_TTL_SECONDS=900
+AUTH_REFRESH_TOKEN_TTL_SECONDS=2592000
+AUTH_PASSWORD_RESET_TOKEN_TTL_SECONDS=1800
+AUTH_ALLOWED_CLOCK_SKEW_SECONDS=30
+
+# Secure cookies require HTTPS. Keep false only for local HTTP development.
+AUTH_REFRESH_COOKIE_SECURE=false
+AUTH_REFRESH_COOKIE_SAMESITE=lax
+AUTH_REFRESH_COOKIE_NAME=kyrg_refresh_token
+AUTH_CSRF_COOKIE_NAME=kyrg_csrf_token
+
+# Optional Google OAuth client IDs. Leave blank until Google login is enabled.
+GOOGLE_CLIENT_IDS=
+
+# -----------------------------------------------------------------------------
+# Email delivery
+# -----------------------------------------------------------------------------
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=465
+EMAIL_USERNAME=your-sender@gmail.com
+
+# SECRET: Gmail app password or SMTP provider password. Never use your normal
+# Gmail account password and never commit this value.
+EMAIL_PASSWORD=replace-with-your-smtp-app-password
+EMAIL_FROM=your-sender@gmail.com
+EMAIL_FROM_NAME=Kyrg Studio
+
+# -----------------------------------------------------------------------------
+# Compose and reverse proxy
+# -----------------------------------------------------------------------------
+API_PORT=8000
+FRONTEND_PORT=8080
+NGINX_MAX_REQUEST_BODY_SIZE=2100m
+
+# Frontend-only VITE_* values are documented in frontend/.env.example.

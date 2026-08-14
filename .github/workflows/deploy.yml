@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+
+          install -m 700 -d "$HOME/.ssh"
+
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/kyrgstudio_deploy"
+
+          chmod 600 "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/kyrgstudio_deploy"
+
+          ssh \
+            -i "$HOME/.ssh/kyrgstudio_deploy" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=30 \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "set -Eeuo pipefail
+             cd '$DEPLOY_PATH'
+             git fetch origin main
+             git reset --hard origin/main
+             docker compose config --quiet
+             docker compose build
+             docker compose run --rm migrate
+             docker compose up -d --remove-orphans
+             docker compose ps"
