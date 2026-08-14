@@ -14,7 +14,7 @@ export function PersuasionSignals({ signals }: PersuasionSignalsProps) {
   const { t } = useTranslation()
 
   return (
-    <section aria-labelledby="persuasion-signals-heading">
+    <section aria-labelledby="persuasion-signals-heading" className="min-w-0">
       <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
           {t('analysisResult.persuasion.signals.eyebrow')}
@@ -31,15 +31,17 @@ export function PersuasionSignals({ signals }: PersuasionSignalsProps) {
             <li className="py-6" key={`${signal.name}-${index}`}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-body-lg font-semibold text-text">{signal.name}</h3>
-                <Badge variant={strengthVariant(signal.strength)}>
-                  {formatStrengthLabel(signal.strength, t)}
+                <Badge variant={strengthVariant(signal.strength.level)}>
+                  {formatStrengthLabel(signal.strength.level, t)}
                 </Badge>
               </div>
 
-              <p className="mt-2 max-w-3xl text-body text-text-muted">{signal.description}</p>
+              <p className="mt-2 max-w-3xl break-words text-body text-text-muted">
+                {signal.description}
+              </p>
 
               {signal.evidence ? (
-                <blockquote className="mt-4 max-w-3xl border-l-2 border-action pl-4 text-body-sm text-text">
+                <blockquote className="mt-4 max-w-3xl break-words border-l-2 border-action pl-4 text-body-sm text-text">
                   {signal.evidence}
                 </blockquote>
               ) : null}
@@ -55,22 +57,22 @@ export function PersuasionSignals({ signals }: PersuasionSignalsProps) {
   )
 }
 
-function strengthVariant(value: string): 'danger' | 'warning' | 'success' | 'neutral' {
-  const strength = value.trim().toLowerCase()
-
+function strengthVariant(
+  strength: 'low' | 'medium' | 'high' | 'unknown',
+): 'danger' | 'warning' | 'success' | 'neutral' {
   if (strength === 'high') return 'success'
   if (strength === 'medium') return 'warning'
   if (strength === 'low') return 'danger'
   return 'neutral'
 }
 
-function formatStrengthLabel(value: string, t: TFunction): string {
-  const strength = value.trim().toLowerCase()
-
-  if (strength === 'high' || strength === 'medium' || strength === 'low') {
+function formatStrengthLabel(
+  strength: 'low' | 'medium' | 'high' | 'unknown',
+  t: TFunction,
+): string {
+  if (strength !== 'unknown') {
     return t(`analysisResult.persuasion.strength.${strength}`)
   }
 
-  const normalizedValue = value.trim().replaceAll(/[_-]+/g, ' ')
-  return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
+  return t('analysisResult.persuasion.strength.notRated')
 }
