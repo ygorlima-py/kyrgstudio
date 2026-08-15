@@ -1,8 +1,6 @@
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/shared/ui/badge'
-
 import type {
   NormalizedPersuasionWeakness,
   NormalizedSectionGap,
@@ -39,7 +37,9 @@ export function WeaknessList({ gaps, weaknesses }: WeaknessListProps) {
           {gaps.map((gap, index) => (
             <article className="py-6" key={`gap-${gap.sectionType}-${index}`}>
               <div className="flex flex-wrap items-center gap-3">
-                <Badge variant={gapVariant(gap.gapType)}>{formatGapType(gap.gapType, t)}</Badge>
+                <span className="font-mono text-meta uppercase tracking-[0.08em] text-action">
+                  {formatGapType(gap.gapType, t)}
+                </span>
                 <p className="font-mono text-meta uppercase tracking-[0.08em] text-text-subtle">
                   {t('analysisResult.weaknesses.sectionLabel', {
                     section: formatSectionLabel(gap.sectionType, t),
@@ -50,7 +50,9 @@ export function WeaknessList({ gaps, weaknesses }: WeaknessListProps) {
               <h3 className="mt-3 text-body-lg font-semibold text-text">
                 {t('analysisResult.weaknesses.structuralGap')}
               </h3>
-              <p className="mt-1 max-w-3xl text-body text-text-muted">{gap.reason}</p>
+              <p className="mt-1 max-w-3xl text-body text-text-muted [overflow-wrap:anywhere]">
+                {gap.reason}
+              </p>
             </article>
           ))}
 
@@ -72,21 +74,23 @@ function WeaknessItem({ weakness }: { readonly weakness: NormalizedPersuasionWea
 
   return (
     <article className="py-6">
-      <Badge variant="warning">{t('analysisResult.weaknesses.persuasionIssue')}</Badge>
-      <h3 className="mt-3 text-body-lg font-semibold text-text">{weakness.issue}</h3>
-      <p className="mt-1 max-w-3xl text-body text-text-muted">{weakness.impact}</p>
+      <p className="font-mono text-meta uppercase tracking-[0.08em] text-action">
+        {t('analysisResult.weaknesses.persuasionIssue')}
+      </p>
+      <h3 className="mt-3 text-body-lg font-semibold text-text [overflow-wrap:anywhere]">
+        {weakness.issue}
+      </h3>
+      <p className="mt-1 max-w-3xl text-body text-text-muted [overflow-wrap:anywhere]">
+        {weakness.impact}
+      </p>
 
       {weakness.evidence ? (
-        <blockquote className="mt-4 max-w-3xl border-l-2 border-warning pl-4 text-body-sm text-text">
+        <blockquote className="mt-4 max-w-3xl border-l-2 border-warning pl-4 text-body-sm text-text [overflow-wrap:anywhere]">
           {weakness.evidence}
         </blockquote>
       ) : null}
     </article>
   )
-}
-
-function gapVariant(value: NormalizedSectionGap['gapType']): 'danger' | 'warning' {
-  return value === 'missing' ? 'danger' : 'warning'
 }
 
 function formatGapType(value: NormalizedSectionGap['gapType'], t: TFunction): string {

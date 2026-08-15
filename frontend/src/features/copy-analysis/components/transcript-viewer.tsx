@@ -11,7 +11,7 @@ export function TranscriptViewer({ transcription }: TranscriptViewerProps) {
   const { t } = useTranslation()
 
   return (
-    <section aria-labelledby="transcript-heading">
+    <section aria-labelledby="transcript-heading" className="min-w-0">
       <div>
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
           {t('analysisResult.transcription.eyebrow')}
@@ -40,8 +40,8 @@ export function TranscriptViewer({ transcription }: TranscriptViewerProps) {
             </span>
           </summary>
 
-          <div className="max-h-[32rem] overflow-y-auto border-t border-border py-6 pr-3">
-            <p className="max-w-4xl whitespace-pre-wrap text-body text-text">
+          <div className="max-h-[32rem] min-w-0 overflow-y-auto border-t border-border py-6 pr-3">
+            <p className="max-w-4xl whitespace-pre-wrap text-body text-text [overflow-wrap:anywhere]">
               {transcription.text}
             </p>
           </div>

@@ -15,7 +15,7 @@ export function StructureTimeline({ structure }: StructureTimelineProps) {
   const { t } = useTranslation()
 
   return (
-    <section aria-labelledby="copy-structure-heading">
+    <section aria-labelledby="copy-structure-heading" className="min-w-0">
       <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
           {t('analysisResult.structure.eyebrow')}
@@ -31,7 +31,7 @@ export function StructureTimeline({ structure }: StructureTimelineProps) {
       </div>
 
       {structure.sections.length > 0 ? (
-        <ol className="divide-y divide-border border-b border-border">
+        <ol className="min-w-0 divide-y divide-border border-y border-border">
           {structure.sections.map((section, index) => (
             <StructureStep index={index} key={`${section.type}-${index}`} section={section} />
           ))}
@@ -55,21 +55,27 @@ function StructureStep({ index, section }: StructureStepProps) {
   const timeRange = formatTimeRange(section.startSeconds, section.endSeconds, t)
 
   return (
-    <li className="grid gap-4 py-6 sm:grid-cols-[3rem_minmax(9rem,0.35fr)_minmax(0,1fr)] sm:gap-6 sm:py-7">
+    <li className="grid min-w-0 gap-4 py-6 sm:grid-cols-[2.5rem_minmax(10rem,0.35fr)_minmax(0,1fr)] sm:gap-6 sm:py-7">
       <span className="font-mono text-meta text-text-subtle">
         {String(index + 1).padStart(2, '0')}
       </span>
 
-      <div>
-        <h3 className="text-label text-text">{formatSectionLabel(section.type, t)}</h3>
-        <p className="mt-1 text-body-sm text-text-muted">{section.purpose}</p>
+      <div className="min-w-0">
+        <h3 className="text-label text-text [overflow-wrap:anywhere]">
+          {formatSectionLabel(section.type, t)}
+        </h3>
+        <p className="mt-1 text-body-sm text-text-muted [overflow-wrap:anywhere]">
+          {section.purpose}
+        </p>
 
         {timeRange ? (
           <p className="mt-3 font-mono text-meta text-text-subtle">{timeRange}</p>
         ) : null}
       </div>
 
-      <blockquote className="text-body text-text">{section.text}</blockquote>
+      <blockquote className="min-w-0 text-body text-text [overflow-wrap:anywhere]">
+        {section.text}
+      </blockquote>
     </li>
   )
 }

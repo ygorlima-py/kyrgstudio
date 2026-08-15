@@ -1,7 +1,6 @@
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/utils/class-names'
 
 import type {
@@ -28,7 +27,7 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
 
   return (
     <section aria-labelledby="persuasion-scores-heading" className="min-w-0">
-      <div>
+      <div className="border-b border-border pb-5">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
           {t('analysisResult.persuasion.scores.eyebrow')}
         </p>
@@ -38,11 +37,13 @@ export function PersuasionScores({ strengths }: PersuasionScoresProps) {
         </h2>
       </div>
 
-      <dl className="mt-6 divide-y divide-border border-y border-border">
-        {STRENGTH_ITEMS.map(([labelKey, key]) => (
-          <StrengthRow key={key} label={t(labelKey)} value={strengths[key]} />
-        ))}
-      </dl>
+      <table className="w-full table-fixed border-b border-border">
+        <tbody className="divide-y divide-border">
+          {STRENGTH_ITEMS.map(([labelKey, key]) => (
+            <StrengthRow key={key} label={t(labelKey)} value={strengths[key]} />
+          ))}
+        </tbody>
+      </table>
     </section>
   )
 }
@@ -58,28 +59,32 @@ function StrengthRow({
   const { level } = value
 
   return (
-    <div className="grid min-w-0 gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,auto)] sm:items-start sm:gap-6">
-      <dt className="min-w-0 text-body text-text">{label}</dt>
-      <dd className="min-w-0">
-        <div className="flex min-w-0 flex-wrap items-center gap-3 sm:justify-end">
-          <span aria-hidden="true" className="flex shrink-0 gap-1">
-            {[1, 2, 3].map((segment) => (
-              <span
-                className={cn(
-                  'h-1.5 w-5 rounded-pill bg-surface-muted',
-                  isFilledSegment(level, segment) && level === 'low' && 'bg-danger',
-                  isFilledSegment(level, segment) && level === 'medium' && 'bg-warning',
-                  isFilledSegment(level, segment) && level === 'high' && 'bg-success',
-                )}
-                key={segment}
-              />
-            ))}
-          </span>
-
-          <Badge variant={strengthBadgeVariant(level)}>{formatStrength(level, t)}</Badge>
-        </div>
-      </dd>
-    </div>
+    <tr>
+      <th
+        className="min-w-0 py-4 pr-3 text-left text-body font-normal text-text [overflow-wrap:anywhere] sm:pr-6"
+        scope="row"
+      >
+        {label}
+      </th>
+      <td className="w-20 py-4 text-right sm:w-24">
+        <span aria-hidden="true" className="inline-flex w-[4.25rem] justify-end gap-1">
+          {[1, 2, 3].map((segment) => (
+            <span
+              className={cn(
+                'h-1.5 w-5 rounded-pill bg-surface-muted',
+                isFilledSegment(level, segment) && level === 'low' && 'bg-danger',
+                isFilledSegment(level, segment) && level === 'medium' && 'bg-warning',
+                isFilledSegment(level, segment) && level === 'high' && 'bg-success',
+              )}
+              key={segment}
+            />
+          ))}
+        </span>
+      </td>
+      <td className="w-20 py-4 pl-3 text-right text-label font-medium text-text sm:w-24 sm:pl-4">
+        {formatStrength(level, t)}
+      </td>
+    </tr>
   )
 }
 
@@ -87,15 +92,6 @@ function isFilledSegment(level: PersuasionStrengthLevel, segment: number): boole
   const filledSegments = level === 'high' ? 3 : level === 'medium' ? 2 : level === 'low' ? 1 : 0
 
   return segment <= filledSegments
-}
-
-function strengthBadgeVariant(
-  level: PersuasionStrengthLevel,
-): 'danger' | 'warning' | 'success' | 'neutral' {
-  if (level === 'high') return 'success'
-  if (level === 'medium') return 'warning'
-  if (level === 'low') return 'danger'
-  return 'neutral'
 }
 
 function formatStrength(level: PersuasionStrengthLevel, t: TFunction): string {
