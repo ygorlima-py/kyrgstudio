@@ -1,6 +1,5 @@
 import type { NormalizedCopyAnalysisJobResult } from '../hooks/use-job-result'
 import { AnalysisOverview } from './analysis-overview'
-import { NarrativeFlow } from './narrative-flow'
 import { OfferSummary } from './offer-summary'
 import { PersuasionScores } from './persuasion-scores'
 import { PersuasionSignals } from './persuasion-signals'
@@ -17,16 +16,14 @@ export function AnalysisResult({ result }: AnalysisResultProps) {
   const { analysis, transcription } = result
 
   return (
-    <article className="space-y-14 sm:space-y-16 lg:space-y-20">
+    <article className="min-w-0 space-y-16 sm:space-y-20">
       <AnalysisOverview analysis={analysis} />
 
       <StructureTimeline structure={analysis.structure} />
 
-      <NarrativeFlow steps={analysis.structure.narrativeFlow} />
-
       <OfferSummary offer={analysis.offer} />
 
-      <div className="grid min-w-0 gap-14 border-t border-border pt-14 sm:gap-16 sm:pt-16 xl:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1.3fr)] xl:gap-16">
+      <div className="min-w-0 space-y-12 border-t border-border pt-12 sm:space-y-16 sm:pt-16">
         <PersuasionScores strengths={analysis.persuasion.strengths} />
         <PersuasionSignals signals={analysis.persuasion.signals} />
       </div>

@@ -9,15 +9,13 @@ export interface AnalysisOverviewProps {
 
 /** Present the strategic reading of a copy without exposing its raw payload. */
 export function AnalysisOverview({ analysis }: AnalysisOverviewProps) {
-  const { t } = useTranslation()
-  const { persuasion, structure } = analysis
+  const { i18n, t } = useTranslation()
+  const { structure } = analysis
+  const language = analysis.language ?? structure.language
 
   return (
-    <section
-      aria-labelledby="analysis-overview-heading"
-      className="overflow-hidden rounded-lg border border-border bg-surface"
-    >
-      <div className="border-b border-border px-5 py-6 sm:px-8 sm:py-8">
+    <section aria-labelledby="analysis-overview-heading" className="min-w-0 border-y border-border">
+      <div className="border-b border-border py-8 sm:py-10">
         <p className="font-mono text-meta uppercase tracking-[0.14em] text-action">
           {t('analysisResult.overview.eyebrow')}
         </p>
@@ -26,17 +24,19 @@ export function AnalysisOverview({ analysis }: AnalysisOverviewProps) {
           {t('analysisResult.overview.title')}
         </h2>
 
-        <p className="mt-3 max-w-3xl text-body text-text-muted">{structure.summary}</p>
+        <p className="mt-4 max-w-3xl break-words text-body-lg leading-relaxed text-text-muted">
+          {structure.summary}
+        </p>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1.5fr)_minmax(17rem,0.75fr)]">
-        <div className="px-5 py-6 sm:px-8 sm:py-8">
+      <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,0.4fr)]">
+        <div className="min-w-0 border-b border-border py-7 lg:border-b-0 lg:border-r lg:py-8 lg:pr-10">
           <p className="font-mono text-meta uppercase tracking-[0.1em] text-text-subtle">
             {t('analysisResult.overview.mainHook')}
           </p>
 
           {structure.mainHook ? (
-            <blockquote className="mt-4 border-l-2 border-action pl-5 font-heading text-heading-3 text-text">
+            <blockquote className="mt-4 max-w-3xl border-l-2 border-action pl-5 text-body-lg font-medium leading-relaxed text-text [overflow-wrap:anywhere]">
               {structure.mainHook}
             </blockquote>
           ) : (
@@ -46,24 +46,14 @@ export function AnalysisOverview({ analysis }: AnalysisOverviewProps) {
           )}
         </div>
 
-        <dl className="grid grid-cols-2 border-t border-border lg:grid-cols-1 lg:border-t-0 lg:border-l">
+        <dl className="grid min-w-0 grid-cols-2 lg:grid-cols-1">
           <OverviewDetail
             label={t('analysisResult.overview.details.contentType')}
             value={formatDescriptor(structure.contentType, t)}
           />
           <OverviewDetail
             label={t('analysisResult.overview.details.language')}
-            value={
-              analysis.language ?? structure.language ?? t('analysisResult.common.notIdentified')
-            }
-          />
-          <OverviewDetail
-            label={t('analysisResult.overview.details.dominantEmotion')}
-            value={persuasion.dominantEmotion ?? t('analysisResult.common.notIdentified')}
-          />
-          <OverviewDetail
-            label={t('analysisResult.overview.details.persuasionPattern')}
-            value={persuasion.pattern ?? t('analysisResult.common.notIdentified')}
+            value={formatLanguage(language, i18n.resolvedLanguage, t)}
           />
         </dl>
       </div>
@@ -73,9 +63,11 @@ export function AnalysisOverview({ analysis }: AnalysisOverviewProps) {
 
 function OverviewDetail({ label, value }: { readonly label: string; readonly value: string }) {
   return (
-    <div className="border-b border-border px-5 py-4 last:border-b-0 odd:border-r sm:px-6 lg:odd:border-r-0">
+    <div className="min-w-0 max-w-full border-b border-border py-5 last:border-b-0 odd:border-r lg:odd:border-r-0 lg:py-6">
       <dt className="font-mono text-meta uppercase tracking-[0.1em] text-text-subtle">{label}</dt>
-      <dd className="mt-1 text-body-sm font-medium text-text">{value}</dd>
+      <dd className="mt-1 min-w-0 max-w-full text-body-sm font-medium text-text [overflow-wrap:anywhere]">
+        {value}
+      </dd>
     </div>
   )
 }
@@ -93,4 +85,22 @@ function formatDescriptor(value: string, t: TFunction): string {
   }
 
   return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
+}
+
+function formatLanguage(value: string | null, locale: string | undefined, t: TFunction): string {
+  if (!value) {
+    return t('analysisResult.common.notIdentified')
+  }
+
+  const languageCode = value.trim().toLowerCase().split(/[-_]/, 1)[0]
+
+  if (!languageCode || languageCode.length > 3) {
+    return value
+  }
+
+  try {
+    return new Intl.DisplayNames([locale ?? 'en'], { type: 'language' }).of(languageCode) ?? value
+  } catch {
+    return value
+  }
 }
