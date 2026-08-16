@@ -67,12 +67,13 @@ class AppSettings:
     celery_task_soft_time_limit_seconds: int
     celery_task_time_limit_seconds: int
     
-    #Storage
-    storage_backend: str
-    r2_account_id: str | None
-    r2_bucket: str | None
-    r2_access_key: str | None
-    r2_secret_key: str | None
+    # Storage defaults keep direct ``AppSettings(...)`` test fixtures on the
+    # local backend; production values are still loaded from the environment.
+    storage_backend: str = "local"
+    r2_account_id: str | None = None
+    r2_bucket: str | None = None
+    r2_access_key: str | None = None
+    r2_secret_key: str | None = None
 
     # HTTP API configuration.
     api_host: str = "127.0.0.1"
