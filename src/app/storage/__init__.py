@@ -5,17 +5,27 @@ SDKs, and importing this package should not require boto3 or google-cloud-storag
 when the active backend is local.
 """
 
-from app.storage.base import StorageBase, StoredFile
+from app.storage.base import (
+    MAX_PRESIGNED_UPLOAD_TTL_SECONDS,
+    ObjectMetadataStorage,
+    PresignedUploadStorage,
+    StorageBase,
+    StoredFile,
+    StoredObjectMetadata,
+)
 from app.storage.factory import StorageBackend, create_storage
 from app.storage.local import LocalStorage
 from app.storage.paths import job_audio_key, job_input_key, job_prefix
 
-
 __all__ = [
+    "MAX_PRESIGNED_UPLOAD_TTL_SECONDS",
     "LocalStorage",
+    "ObjectMetadataStorage",
+    "PresignedUploadStorage",
     "StorageBackend",
     "StorageBase",
     "StoredFile",
+    "StoredObjectMetadata",
     "create_storage",
     "job_audio_key",
     "job_input_key",

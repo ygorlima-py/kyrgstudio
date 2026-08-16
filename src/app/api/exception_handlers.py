@@ -19,6 +19,7 @@ from app.errors import (
     AuthenticationRequiredError,
     CsrfValidationError,
     EmailVerificationRequiredError,
+    IdempotencyConflictError,
     InvalidCredentialsError,
     InvalidInputError,
     InvalidTokenError,
@@ -32,7 +33,6 @@ from app.errors import (
     UnsupportedMediaTypeError,
     UploadTooLargeError,
 )
-
 
 _UNAUTHORIZED_ERRORS = (
     AuthenticationRequiredError,
@@ -196,6 +196,9 @@ def _status_for_app_error(error: AppError) -> int:
 
     if isinstance(error, JobNotFoundError):
         return status.HTTP_404_NOT_FOUND
+
+    if isinstance(error, IdempotencyConflictError):
+        return status.HTTP_409_CONFLICT
 
     if isinstance(error, JobResultNotReadyError):
         return status.HTTP_409_CONFLICT

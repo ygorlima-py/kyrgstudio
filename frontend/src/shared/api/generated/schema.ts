@@ -224,6 +224,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/jobs/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prepare a direct job upload
+         * @description Create a pending owned job and return a temporary upload URL.
+         */
+        post: operations["prepare_upload_v1_jobs_upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}/upload/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a direct job upload
+         * @description Verify the stored object and move the owned job to uploaded.
+         */
+        post: operations["confirm_upload_v1_jobs__job_id__upload_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/jobs": {
         parameters: {
             query?: never;
@@ -345,6 +385,83 @@ export interface components {
              * @description JSON metadata describing the requested pipeline.
              */
             request: string;
+        };
+        /**
+         * CreateCopyAdaptationJobRequest
+         * @description Public request for copy analysis followed by offer adaptation.
+         */
+        CreateCopyAdaptationJobRequest: {
+            /**
+             * Source Type
+             * @enum {string}
+             */
+            source_type: "video" | "audio";
+            /** Run Id */
+            run_id?: string | null;
+            /** Language */
+            language?: string | null;
+            /**
+             * Need Correction
+             * @default false
+             */
+            need_correction: boolean;
+            /** Transcriber Provider */
+            transcriber_provider?: string | null;
+            /** Transcriber Model */
+            transcriber_model?: string | null;
+            /** Llm Provider */
+            llm_provider?: string | null;
+            /** Analysis Model */
+            analysis_model?: string | null;
+            /** Max Duration Seconds */
+            max_duration_seconds?: number | null;
+            /** Output Formats */
+            output_formats?: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            pipeline_type: "copy_adaptation";
+            user_profile: components["schemas"]["UserProfileOutput"];
+            /** Adaptation Model */
+            adaptation_model?: string | null;
+        };
+        /**
+         * CreateCopyAnalysisJobRequest
+         * @description Public request for transcription and copy analysis.
+         */
+        CreateCopyAnalysisJobRequest: {
+            /**
+             * Source Type
+             * @enum {string}
+             */
+            source_type: "video" | "audio";
+            /** Run Id */
+            run_id?: string | null;
+            /** Language */
+            language?: string | null;
+            /**
+             * Need Correction
+             * @default false
+             */
+            need_correction: boolean;
+            /** Transcriber Provider */
+            transcriber_provider?: string | null;
+            /** Transcriber Model */
+            transcriber_model?: string | null;
+            /** Llm Provider */
+            llm_provider?: string | null;
+            /** Analysis Model */
+            analysis_model?: string | null;
+            /** Max Duration Seconds */
+            max_duration_seconds?: number | null;
+            /** Output Formats */
+            output_formats?: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            pipeline_type: "copy_analysis";
         };
         /**
          * CurrentUserResponse
@@ -555,6 +672,37 @@ export interface components {
             accepted: true;
         };
         /**
+         * PresignedUploadRequest
+         * @description Public metadata required to prepare a direct job upload.
+         */
+        PresignedUploadRequest: {
+            /** Pipeline */
+            pipeline: components["schemas"]["CreateCopyAnalysisJobRequest"] | components["schemas"]["CreateCopyAdaptationJobRequest"];
+            /** Filename */
+            filename: string;
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /**
+         * PresignedUploadResponse
+         * @description Public data needed to upload one job file directly to storage.
+         */
+        PresignedUploadResponse: {
+            /** Job Id */
+            job_id: number;
+            /** Object Key */
+            object_key: string;
+            /**
+             * Upload Url
+             * Format: uri
+             */
+            upload_url: string;
+            /** Expires In */
+            expires_in: number;
+        };
+        /**
          * PublicAdaptedScriptOutput
          * @description Editable script data exposed without duplicated result diagnostics.
          */
@@ -664,6 +812,92 @@ export interface components {
              * @description New password to hash and store for the account.
              */
             new_password: string;
+        };
+        /**
+         * UserProfileOutput
+         * @description User offer profile used as the source of truth for adaptation.
+         */
+        UserProfileOutput: {
+            /**
+             * Product Or Solution
+             * @description Product, service, method, opportunity, or solution being promoted.
+             */
+            product_or_solution: string;
+            /**
+             * Target Audience
+             * @description Audience the adapted script should speak to.
+             */
+            target_audience: string;
+            /**
+             * Core Problem
+             * @description Main problem, pain, frustration, or obstacle the audience has.
+             */
+            core_problem: string;
+            /**
+             * Core Desire
+             * @description Main desired outcome, aspiration, or transformation.
+             */
+            core_desire: string;
+            /**
+             * Main Promise
+             * @description Main promise the adapted script is allowed to make.
+             */
+            main_promise: string;
+            /**
+             * Unique Mechanism
+             * @description Mechanism, method, angle, or explanation that makes the offer credible and different.
+             */
+            unique_mechanism?: string | null;
+            /**
+             * Benefits
+             * @description Benefits that can be used in the adapted script.
+             */
+            benefits?: string[];
+            /**
+             * Objections
+             * @description Objections, doubts, fears, or barriers the script should address.
+             */
+            objections?: string[];
+            /**
+             * Proof Assets
+             * @description Real proof available for the script, such as testimonials, data, cases, demonstrations, or credentials.
+             */
+            proof_assets?: string[];
+            /**
+             * Offer Details
+             * @description Commercial details such as price, guarantee, bonuses, deadline, or payment terms.
+             */
+            offer_details?: string | null;
+            /**
+             * Call To Action
+             * @description Action the viewer should take after watching the script.
+             */
+            call_to_action: string;
+            /**
+             * Tone
+             * @description Desired tone of voice for the adapted script.
+             */
+            tone?: string | null;
+            /**
+             * Target Language
+             * @description Language the adapted script should be written in.
+             */
+            target_language?: string | null;
+            /**
+             * Platform
+             * @description Distribution platform or placement for the adapted script.
+             */
+            platform?: string | null;
+            /**
+             * Desired Duration
+             * @description Desired script duration in minutes.
+             */
+            desired_duration: number;
+            /**
+             * Restrictions
+             * @description Claims, words, promises, or angles that must not be used.
+             */
+            restrictions?: string[];
         };
         /** ValidationError */
         ValidationError: {
@@ -989,6 +1223,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResendEmailVerificationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_upload_v1_jobs_upload_url_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PresignedUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresignedUploadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_upload_v1_jobs__job_id__upload_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Internal job identifier. */
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSubmissionResponse"];
                 };
             };
             /** @description Validation Error */

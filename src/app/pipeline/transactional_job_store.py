@@ -22,6 +22,11 @@ class PipelineJobStoreBase(Protocol):
 
         ...
 
+    async def get_job(self, job_id: int) -> Job | None:
+        """Return one job for ownership and lifecycle checks."""
+
+        ...
+
     async def mark_uploaded(self, job_id: int, payload: dict[str, Any]) -> Job:
         """Persist storage references and the uploaded state."""
 
@@ -51,6 +56,12 @@ class PipelineJobStore:
 
         async with async_transaction_scope(self.session_factory) as session:
             return await SQLAlchemyJobStore(session).create_job(payload)
+
+    async def get_job(self, job_id: int) -> Job | None:
+        """Read one job without changing its lifecycle state."""
+
+        async with async_transaction_scope(self.session_factory) as session:
+            return await SQLAlchemyJobStore(session).get_job(job_id)
 
     async def mark_uploaded(self, job_id: int, payload: dict[str, Any]) -> Job:
         """Commit uploaded storage references before queue scheduling."""

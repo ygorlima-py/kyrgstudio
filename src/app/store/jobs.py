@@ -14,11 +14,10 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.errors import JobStoreError
+from app.errors import IdempotencyConflictError, JobStoreError
 from app.store.base import JobListPage, JobStoreBase
 from app.store.database import async_savepoint_scope
 from app.store.models import Job, JobEvent
-
 
 DEFAULT_PAGE_LIMIT = 20
 MAX_PAGE_LIMIT = 100
@@ -100,14 +99,12 @@ class SQLAlchemyJobStore(JobStoreBase):
 
             if existing_job is not None:
                 if existing_job.user_id != user_id:
-                    raise JobStoreError(
+                    raise IdempotencyConflictError(
                         technical_message=(
                             "Job run_id is already owned by another user."
                         ),
                         details={
-                            "operation": operation,
-                            "run_id": run_id,
-                            "user_id": user_id,
+                            "field": "Idempotency-Key",
                         },
                     )
 

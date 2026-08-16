@@ -1,0 +1,17 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://kyrgstudio-beta.globalhost.app.br"
+    ],
+    "AllowedMethods": [
+      "PUT"
+    ],
+    "AllowedHeaders": [
+      "Content-Type"
+    ],
+    "ExposeHeaders": [
+      "ETag"
+    ],
+    "MaxAgeSeconds": 900
+  }
+]

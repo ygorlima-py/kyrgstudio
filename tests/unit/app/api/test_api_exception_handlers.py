@@ -18,6 +18,7 @@ from app.errors import (
     AuthenticationRequiredError,
     CsrfValidationError,
     EmailVerificationRequiredError,
+    IdempotencyConflictError,
     InvalidCredentialsError,
     InvalidInputError,
     InvalidTokenError,
@@ -240,6 +241,28 @@ def test_job_result_not_ready_returns_409() -> None:
 
     assert response.status_code == 409
     assert _response_payload(response)["code"] == "job_result_not_ready"
+
+
+def test_idempotency_conflict_returns_409_without_private_details() -> None:
+    """Reject changed reuse of a key without exposing request internals."""
+
+    response = _handle_controlled_error(
+        IdempotencyConflictError(
+            technical_message="request fingerprint mismatch",
+            details={
+                "field": "Idempotency-Key",
+                "run_id": "private-run-id",
+            },
+        )
+    )
+
+    assert response.status_code == 409
+    assert _response_payload(response) == {
+        "code": "idempotency_conflict",
+        "step": "validating_idempotency",
+        "details": {"field": "Idempotency-Key"},
+    }
+    assert "private-run-id" not in response.body.decode()
 
 
 @pytest.mark.parametrize(

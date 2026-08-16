@@ -5,7 +5,12 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 from app.errors import StorageError
-from app.storage.base import StorageBase, StoredFile
+from app.storage.base import (
+    MAX_PRESIGNED_UPLOAD_TTL_SECONDS,
+    StorageBase,
+    StoredFile,
+    StoredObjectMetadata,
+)
 
 
 class S3Storage(StorageBase):
@@ -106,6 +111,68 @@ class S3Storage(StorageBase):
 
         return self._stored_file(key)
 
+    def create_presigned_upload_url(
+        self,
+        *,
+        destination_key: str,
+        content_type: str,
+        expires_in: int,
+    ) -> str:
+        """Create a temporary URL for a direct browser upload.
+
+        The signed request includes the content type, so the browser must send
+        the same value with its ``PUT`` request. Credentials never leave the
+        server; only the short-lived signed URL is returned to the caller.
+        """
+
+        key = self._validate_key(destination_key)
+
+        if not content_type.strip():
+            raise StorageError(
+                technical_message="Presigned upload content type is required.",
+                details={"destination_key": key},
+            )
+
+        if (
+            isinstance(expires_in, bool)
+            or not isinstance(expires_in, int)
+            or expires_in <= 0
+            or expires_in > MAX_PRESIGNED_UPLOAD_TTL_SECONDS
+        ):
+            raise StorageError(
+                technical_message=(
+                    "Presigned upload expiry must be between one second and "
+                    f"{MAX_PRESIGNED_UPLOAD_TTL_SECONDS} seconds."
+                ),
+                details={
+                    "expires_in": expires_in,
+                    "max_expires_in": MAX_PRESIGNED_UPLOAD_TTL_SECONDS,
+                },
+            )
+
+        try:
+            return self.client.generate_presigned_url(
+                ClientMethod="put_object",
+                Params={
+                    "Bucket": self.bucket,
+                    "Key": key,
+                    "ContentType": content_type,
+                },
+                ExpiresIn=expires_in,
+                HttpMethod="PUT",
+            )
+        except self._storage_errors() as error:
+            raise StorageError(
+                technical_message=(
+                    "Failed to create presigned S3 upload URL."
+                ),
+                details={
+                    "backend": self.backend,
+                    "bucket": self.bucket,
+                    "destination_key": key,
+                },
+            ) from error
+
     def download_file(self, key: str, destination_path: Path) -> Path:
         """Download an S3-compatible object atomically to local storage."""
 
@@ -173,6 +240,51 @@ class S3Storage(StorageBase):
             ) from error
 
         return True
+
+    def get_object_metadata(self, key: str) -> StoredObjectMetadata | None:
+        """Inspect one object without downloading its contents."""
+
+        resolved_key = self._validate_key(key)
+
+        try:
+            response = self.client.head_object(
+                Bucket=self.bucket,
+                Key=resolved_key,
+            )
+        except self._client_error as error:
+            if self._is_not_found_error(error):
+                return None
+
+            raise StorageError(
+                technical_message="Failed to inspect S3 object metadata.",
+                details={"bucket": self.bucket, "key": resolved_key},
+            ) from error
+        except self._boto_core_error as error:
+            raise StorageError(
+                technical_message="Failed to inspect S3 object metadata.",
+                details={"bucket": self.bucket, "key": resolved_key},
+            ) from error
+
+        size_bytes = response.get("ContentLength")
+
+        if isinstance(size_bytes, bool) or not isinstance(size_bytes, int):
+            raise StorageError(
+                technical_message="Stored object metadata has no valid size.",
+                details={"bucket": self.bucket, "key": resolved_key},
+            )
+
+        content_type = response.get("ContentType")
+        normalized_content_type = (
+            str(content_type).partition(";")[0].strip().lower()
+            if content_type is not None
+            else None
+        )
+
+        return StoredObjectMetadata(
+            key=resolved_key,
+            size_bytes=size_bytes,
+            content_type=normalized_content_type or None,
+        )
 
     def delete(self, key: str) -> None:
         resolved_key = self._validate_key(key)
@@ -289,8 +401,11 @@ class S3Storage(StorageBase):
 
     def _load_boto3(self) -> tuple[Any, type[Exception], type[Exception]]:
         try:
-            import boto3 #type: ignore
-            from botocore.exceptions import BotoCoreError, ClientError #type: ignore
+            import boto3  # type: ignore
+            from botocore.exceptions import (  # type: ignore
+                BotoCoreError,
+                ClientError,
+            )
         except ImportError as error:
             raise StorageError(
                 technical_message=(
