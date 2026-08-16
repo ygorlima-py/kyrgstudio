@@ -18,6 +18,7 @@ async def create_pipeline_job(
     job_store: PipelineJobStoreBase,
     user_id: int,
     pipeline_input: PipelineInput,
+    upload_metadata: Mapping[str, Any] | None = None,
 ) -> Any:
     """Create a pending job from a normalized pipeline input."""
 
@@ -25,6 +26,9 @@ async def create_pipeline_job(
         user_id=user_id,
         pipeline_input=pipeline_input,
     )
+    if upload_metadata is not None:
+        payload["input_json"]["_direct_upload"] = dict(upload_metadata)
+
     return await job_store.create_job(payload)
 
 

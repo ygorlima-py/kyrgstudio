@@ -12,7 +12,12 @@ from fastapi import UploadFile
 from starlette.datastructures import Headers
 
 import app.api.uploads as uploads_module
-from app.api.uploads import ValidatedUpload, validate_upload
+from app.api.uploads import (
+    ValidatedUpload,
+    ValidatedUploadMetadata,
+    validate_upload,
+    validate_upload_metadata,
+)
 from app.errors import (
     InvalidInputError,
     ProviderConfigError,
@@ -20,7 +25,6 @@ from app.errors import (
     UploadTooLargeError,
 )
 from app.settings import AppSettings
-
 
 ResultT = TypeVar("ResultT")
 
@@ -71,6 +75,11 @@ def _settings() -> AppSettings:
         celery_queue_name="pipeline",
         celery_task_soft_time_limit_seconds=60,
         celery_task_time_limit_seconds=90,
+        storage_backend="local",
+        r2_account_id=None,
+        r2_bucket=None,
+        r2_access_key=None,
+        r2_secret_key=None,
         max_upload_bytes=1024,
         accepted_input_media_types=("video/mp4", "audio/mpeg"),
     )
@@ -137,6 +146,56 @@ def test_validate_upload_normalizes_content_type() -> None:
     result = _run(validate_upload(upload, settings=_settings()))
 
     assert result.content_type == "video/mp4"
+
+
+def test_validate_upload_metadata_accepts_direct_upload_metadata() -> None:
+    """Validate the client metadata before issuing a presigned URL."""
+
+    result = validate_upload_metadata(
+        filename="  campaign.mp4  ",
+        content_type=" Video/MP4; charset=binary ",
+        size_bytes=42,
+        settings=_settings(),
+    )
+
+    assert isinstance(result, ValidatedUploadMetadata)
+    assert result.filename == "campaign.mp4"
+    assert result.content_type == "video/mp4"
+    assert result.size_bytes == 42
+
+
+@pytest.mark.parametrize("filename", [None, "", "campaign"])
+def test_validate_upload_metadata_rejects_missing_or_extensionless_filename(
+    filename: str | None,
+) -> None:
+    """Direct uploads require a filename with an extension."""
+
+    with pytest.raises(InvalidInputError):
+        validate_upload_metadata(
+            filename=filename,
+            content_type="video/mp4",
+            size_bytes=42,
+            settings=_settings(),
+        )
+
+
+def test_validate_upload_metadata_rejects_size_above_limit() -> None:
+    """Reject a direct upload before creating a pending job."""
+
+    settings = replace(_settings(), max_upload_bytes=10)
+
+    with pytest.raises(UploadTooLargeError) as captured:
+        validate_upload_metadata(
+            filename="campaign.mp4",
+            content_type="video/mp4",
+            size_bytes=11,
+            settings=settings,
+        )
+
+    assert captured.value.details == {
+        "size_bytes": 11,
+        "max_upload_bytes": 10,
+    }
 
 
 def test_validate_upload_rewinds_stream() -> None:

@@ -1,7 +1,5 @@
-import type {
-  AxiosProgressEvent,
-  AxiosRequestConfig,
-} from 'axios'
+import axios from 'axios'
+import type { AxiosProgressEvent, AxiosRequestConfig } from 'axios'
 
 import type { UserProfileData } from '@/features/user-profile/schemas/user-profile-schema'
 import {
@@ -11,13 +9,13 @@ import {
   type JobResultResponse,
   type JobStatusResponse,
   type JobSubmissionResponse,
+  type PresignedUploadRequest,
+  type PresignedUploadResponse,
   type UploadProgress,
   type UploadRequestOptions,
 } from '@/shared/api'
 
-import type {
-  SourceType,
-} from '../schemas/job-creation-schema'
+import type { SourceType } from '../schemas/job-creation-schema'
 
 interface BaseJobRequestMetadata {
   readonly source_type: SourceType
@@ -25,20 +23,16 @@ interface BaseJobRequestMetadata {
   readonly need_correction: boolean
 }
 
-export interface CopyAnalysisJobRequestMetadata
-  extends BaseJobRequestMetadata {
+export interface CopyAnalysisJobRequestMetadata extends BaseJobRequestMetadata {
   readonly pipeline_type: 'copy_analysis'
 }
 
-export interface CopyAdaptationJobRequestMetadata
-  extends BaseJobRequestMetadata {
+export interface CopyAdaptationJobRequestMetadata extends BaseJobRequestMetadata {
   readonly pipeline_type: 'copy_adaptation'
   readonly user_profile: UserProfileData
 }
 
-export type JobRequestMetadata =
-  | CopyAnalysisJobRequestMetadata
-  | CopyAdaptationJobRequestMetadata
+export type JobRequestMetadata = CopyAnalysisJobRequestMetadata | CopyAdaptationJobRequestMetadata
 
 export interface SubmitJobRequest {
   readonly file: File
@@ -67,7 +61,11 @@ export const DEFAULT_USER_JOBS_OFFSET = 0
 const MAX_USER_JOBS_LIMIT = 100
 
 /**
- * Uploads a media file and its pipeline configuration as multipart data.
+ * Prepares, uploads, and confirms a media file through object storage.
+ *
+ * Authentication is intentionally limited to the API calls. The signed PUT
+ * uses the standalone Axios transport so browser cookies and bearer headers
+ * are never sent to the storage provider.
  */
 export async function submitJob(
   request: SubmitJobRequest,
@@ -79,34 +77,111 @@ export async function submitJob(
     throw new TypeError('Job idempotency key is required.')
   }
 
-  const formData = new FormData()
-
-  formData.append('file', request.file, request.file.name)
-  formData.append('request', JSON.stringify(request.metadata))
-
-  const requestConfig: AxiosRequestConfig<FormData> = {
+  const prepareRequestConfig: AxiosRequestConfig = {
     headers: {
       'Idempotency-Key': idempotencyKey,
     },
   }
 
   if (options.signal !== undefined) {
-    requestConfig.signal = options.signal
+    prepareRequestConfig.signal = options.signal
+  }
+
+  const uploadRequest: PresignedUploadRequest = {
+    pipeline: toPresignedPipeline(request.metadata),
+    filename: request.file.name,
+    content_type: request.file.type,
+    size_bytes: request.file.size,
+  }
+
+  const prepareResponse = await apiClient.post<PresignedUploadResponse>(
+    '/jobs/upload-url',
+    uploadRequest,
+    prepareRequestConfig,
+  )
+
+  const uploadConfig: AxiosRequestConfig<File> = {
+    headers: {
+      'Content-Type': request.file.type,
+    },
+    withCredentials: false,
+  }
+
+  if (options.signal !== undefined) {
+    uploadConfig.signal = options.signal
   }
 
   if (options.onUploadProgress !== undefined) {
-    requestConfig.onUploadProgress = (event) => {
+    uploadConfig.onUploadProgress = (event) => {
       options.onUploadProgress?.(normalizeUploadProgress(event))
     }
   }
 
-  const response = await apiClient.post<JobSubmissionResponse>(
-    '/jobs',
-    formData,
-    requestConfig,
+  await axios.put(prepareResponse.data.upload_url, request.file, uploadConfig)
+
+  options.onUploadProgress?.({
+    loadedBytes: request.file.size,
+    totalBytes: request.file.size,
+    percentage: 100,
+  })
+
+  const confirmRequestConfig: AxiosRequestConfig = {}
+
+  if (options.signal !== undefined) {
+    confirmRequestConfig.signal = options.signal
+  }
+
+  const confirmResponse = await apiClient.post<JobSubmissionResponse>(
+    `/jobs/${prepareResponse.data.job_id}/upload/complete`,
+    undefined,
+    confirmRequestConfig,
   )
 
-  return response.data
+  return confirmResponse.data
+}
+
+function toPresignedPipeline(metadata: JobRequestMetadata): PresignedUploadRequest['pipeline'] {
+  const commonMetadata = {
+    source_type: metadata.source_type,
+    need_correction: metadata.need_correction,
+    ...(metadata.language !== undefined ? { language: metadata.language } : {}),
+  }
+
+  if (metadata.pipeline_type === 'copy_analysis') {
+    return {
+      ...commonMetadata,
+      pipeline_type: 'copy_analysis',
+    }
+  }
+
+  const profile = metadata.user_profile
+
+  return {
+    ...commonMetadata,
+    pipeline_type: 'copy_adaptation',
+    user_profile: {
+      product_or_solution: profile.product_or_solution,
+      target_audience: profile.target_audience,
+      core_problem: profile.core_problem,
+      core_desire: profile.core_desire,
+      main_promise: profile.main_promise,
+      call_to_action: profile.call_to_action,
+      desired_duration: profile.desired_duration,
+      ...(profile.unique_mechanism !== undefined
+        ? { unique_mechanism: profile.unique_mechanism }
+        : {}),
+      ...(profile.benefits.length > 0 ? { benefits: [...profile.benefits] } : {}),
+      ...(profile.objections.length > 0 ? { objections: [...profile.objections] } : {}),
+      ...(profile.proof_assets.length > 0 ? { proof_assets: [...profile.proof_assets] } : {}),
+      ...(profile.offer_details !== undefined ? { offer_details: profile.offer_details } : {}),
+      ...(profile.tone !== undefined ? { tone: profile.tone } : {}),
+      ...(profile.target_language !== undefined
+        ? { target_language: profile.target_language }
+        : {}),
+      ...(profile.platform !== undefined ? { platform: profile.platform } : {}),
+      ...(profile.restrictions.length > 0 ? { restrictions: [...profile.restrictions] } : {}),
+    },
+  }
 }
 
 /** Fetch the latest public state of one job owned by the current user. */
@@ -124,10 +199,7 @@ export async function getJobStatus(
     requestConfig.signal = options.signal
   }
 
-  const response = await apiClient.get<JobStatusResponse>(
-    `/jobs/${jobId}`,
-    requestConfig,
-  )
+  const response = await apiClient.get<JobStatusResponse>(`/jobs/${jobId}`, requestConfig)
 
   return response.data
 }
@@ -147,10 +219,7 @@ export async function getJobResult(
     requestConfig.signal = options.signal
   }
 
-  const response = await apiClient.get<JobResultResponse>(
-    `/jobs/${jobId}/result`,
-    requestConfig,
-  )
+  const response = await apiClient.get<JobResultResponse>(`/jobs/${jobId}/result`, requestConfig)
 
   return response.data
 }
@@ -202,23 +271,14 @@ function validateUserJobsPagination(limit: number, offset: number): void {
   }
 }
 
-function normalizeUploadProgress(
-  event: AxiosProgressEvent,
-): UploadProgress {
+function normalizeUploadProgress(event: AxiosProgressEvent): UploadProgress {
   const totalBytes =
-    typeof event.total === 'number' &&
-    Number.isFinite(event.total) &&
-    event.total > 0
+    typeof event.total === 'number' && Number.isFinite(event.total) && event.total > 0
       ? event.total
       : null
 
   const percentage =
-    totalBytes === null
-      ? null
-      : Math.min(
-          100,
-          Math.round((event.loaded / totalBytes) * 100),
-        )
+    totalBytes === null ? null : Math.min(100, Math.round((event.loaded / totalBytes) * 100))
 
   return {
     loadedBytes: event.loaded,

@@ -66,6 +66,13 @@ class AppSettings:
     celery_queue_name: str
     celery_task_soft_time_limit_seconds: int
     celery_task_time_limit_seconds: int
+    
+    #Storage
+    storage_backend: str
+    r2_account_id: str | None
+    r2_bucket: str | None
+    r2_access_key: str | None
+    r2_secret_key: str | None
 
     # HTTP API configuration.
     api_host: str = "127.0.0.1"
@@ -100,6 +107,8 @@ class AppSettings:
     email_password: str | None = field(default=None, repr=False)
     email_from: str | None = None
     email_from_name: str = "Kyrg Studio"
+    
+    
 
     def require_auth_jwt_secret(self) -> str:
         """Return the configured JWT secret or reject incomplete auth setup.
@@ -296,6 +305,11 @@ def load_settings() -> AppSettings:
             "EMAIL_FROM_NAME",
             default="Kyrg Studio",
         ),
+        storage_backend=os.getenv("APP_STORAGE_BACKEND", "local"),
+        r2_account_id=os.getenv("R2_ACCOUNT_ID"),
+        r2_bucket=os.getenv("R2_BUCKET"),
+        r2_access_key=os.getenv("R2_ACCESS_KEY"),
+        r2_secret_key=os.getenv("R2_SECRET_KEY"),
     )
 
 

@@ -14,7 +14,6 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     VerifyEmailRequest,
 )
-
 from app.schemas.jobs import (
     ApiErrorResponse,
     CreateCopyAdaptationJobRequest,
@@ -23,6 +22,8 @@ from app.schemas.jobs import (
     JobResultResponse,
     JobStatusResponse,
     JobSubmissionResponse,
+    PresignedUploadRequest,
+    PresignedUploadResponse,
     build_job_result_response,
     build_job_status_response,
     build_job_submission_response,
@@ -46,7 +47,6 @@ from app.schemas.workflow import (
     WorkflowExecutionResult,
 )
 
-
 __all__ = [
     "AccessTokenResponse",
     "ApiErrorResponse",
@@ -69,6 +69,8 @@ __all__ = [
     "PipelineInputFile",
     "PipelineStartResult",
     "PipelineType",
+    "PresignedUploadRequest",
+    "PresignedUploadResponse",
     "RegisterRequest",
     "RegisterResponse",
     "ResendEmailVerificationRequest",

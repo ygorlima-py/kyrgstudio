@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Coroutine
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
+import httpx
 import pytest
 from fastapi import UploadFile, status
 from fastapi.routing import APIRoute
@@ -17,14 +19,20 @@ from starlette.datastructures import Headers
 
 import app.api.routers.jobs as jobs_module
 import app.api.uploads as uploads_module
+from app.api.main import create_app
 from app.api.uploads import ValidatedUpload
+from app.auth.dependencies import get_current_user
 from app.auth.principal import AuthenticatedPrincipal
 from app.errors import (
+    AuthenticationRequiredError,
     InvalidInputError,
     JobNotFoundError,
     JobResultNotReadyError,
+    ProviderConfigError,
+    UnsupportedMediaTypeError,
+    UploadTooLargeError,
 )
-from app.pipeline.service import PipelineService
+from app.pipeline.service import PipelineService, PresignedUploadStartResult
 from app.schemas.pipeline import (
     CopyAdaptationPipelineInput,
     CopyAnalysisPipelineInput,
@@ -32,8 +40,9 @@ from app.schemas.pipeline import (
     PipelineType,
 )
 from app.settings import AppSettings
+from app.storage.base import StorageBase
+from app.storage.local import LocalStorage
 from app.store.base import JobListPage, JobStoreBase
-
 
 ResultT = TypeVar("ResultT")
 NOW = datetime(2026, 7, 23, 12, 0, tzinfo=timezone.utc)
@@ -69,6 +78,11 @@ def _settings() -> AppSettings:
         celery_queue_name="pipeline-test",
         celery_task_soft_time_limit_seconds=1800,
         celery_task_time_limit_seconds=1860,
+        storage_backend="local",
+        r2_account_id=None,
+        r2_bucket=None,
+        r2_access_key=None,
+        r2_secret_key=None,
         accepted_input_media_types=("video/mp4", "audio/mpeg"),
         max_upload_bytes=1024 * 1024,
     )
@@ -160,12 +174,46 @@ class _PipelineServiceStub:
     def __init__(self, result: PipelineStartResult | None = None) -> None:
         self.result = result or _start_result()
         self.calls: list[dict[str, Any]] = []
+        self.presigned_calls: list[dict[str, Any]] = []
+        self.confirmation_calls: list[dict[str, Any]] = []
         self.stream_positions: list[int] = []
 
     async def start_from_upload(self, **kwargs: Any) -> PipelineStartResult:
         self.calls.append(kwargs)
         self.stream_positions.append(kwargs["file"].tell())
         return self.result
+
+    async def prepare_presigned_upload(
+        self,
+        **kwargs: Any,
+    ) -> PresignedUploadStartResult:
+        self.presigned_calls.append(kwargs)
+        return PresignedUploadStartResult(
+            job_id=41,
+            object_key="jobs/41/input/source.mp4",
+            upload_url="https://r2.example.test/signed-upload",
+            expires_in=900,
+        )
+
+    async def confirm_presigned_upload(self, **kwargs: Any) -> PipelineStartResult:
+        self.confirmation_calls.append(kwargs)
+        return self.result
+
+
+class _PresignedStorageStub:
+    """Storage-shaped fake used to exercise the direct-upload route."""
+
+    backend = "r2"
+
+    def create_presigned_upload_url(
+        self,
+        *,
+        destination_key: str,
+        content_type: str,
+        expires_in: int,
+    ) -> str:
+        del destination_key, content_type, expires_in
+        return "https://r2.example.test/signed-upload"
 
 
 class _JobStoreStub:
@@ -315,6 +363,194 @@ def test_submit_job_parses_analysis_request_and_validates_upload(
     assert pipeline_input.language == "pt-BR"
     assert pipeline_input.need_correction is True
     assert validation_calls == [(upload, settings)]
+
+
+def test_prepare_upload_validates_metadata_and_returns_public_url_response() -> None:
+    """Prepare direct upload should create no queue work and expose safe fields."""
+
+    service = _PipelineServiceStub()
+    request = jobs_module.PresignedUploadRequest(
+        pipeline={
+            "pipeline_type": "copy_analysis",
+            "source_type": "video",
+        },
+        filename="source.mp4",
+        content_type="video/mp4",
+        size_bytes=13,
+    )
+
+    response = _run(
+        jobs_module.prepare_upload(
+            upload_request=request,
+            current_user=_principal(),
+            pipeline_service=cast(PipelineService, service),
+            settings=_settings(),
+            storage=cast(StorageBase, _PresignedStorageStub()),
+            idempotency_key="submission-key-41",
+        )
+    )
+
+    assert response.model_dump(mode="json") == {
+        "job_id": 41,
+        "object_key": "jobs/41/input/source.mp4",
+        "upload_url": "https://r2.example.test/signed-upload",
+        "expires_in": 900,
+    }
+    assert service.presigned_calls[0]["user_id"] == 7
+    assert service.presigned_calls[0]["filename"] == "source.mp4"
+    assert service.presigned_calls[0]["content_type"] == "video/mp4"
+    assert service.presigned_calls[0]["expires_in"] == 900
+    assert service.presigned_calls[0]["pipeline_input"].run_id == (
+        "submission-key-41"
+    )
+
+
+def test_confirm_upload_returns_only_public_uploaded_job_fields() -> None:
+    """Confirm direct upload should delegate ownership to the service layer."""
+
+    service = _PipelineServiceStub()
+
+    response = _run(
+        jobs_module.confirm_upload(
+            41,
+            _principal(user_id=73),
+            cast(PipelineService, service),
+        )
+    )
+
+    assert service.confirmation_calls == [{"user_id": 73, "job_id": 41}]
+    assert response.model_dump() == {
+        "job_id": 41,
+        "run_id": "run-41",
+        "status": "uploaded",
+        "current_step": "queued",
+        "pipeline_type": "copy_analysis",
+    }
+
+
+def test_prepare_upload_rejects_unauthenticated_user() -> None:
+    """Protect direct upload preparation with the authenticated route boundary."""
+
+    application = create_app(_settings())
+
+    async def unauthenticated_user() -> AuthenticatedPrincipal:
+        raise AuthenticationRequiredError(
+            technical_message="Bearer authentication is required.",
+        )
+
+    application.dependency_overrides[get_current_user] = unauthenticated_user
+
+    async def scenario() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(
+                app=application,
+                raise_app_exceptions=False,
+            ),
+            base_url="https://api.example.com",
+        ) as client:
+            return await client.post(
+                "/v1/jobs/upload-url",
+                json={
+                    "pipeline": {
+                        "pipeline_type": "copy_analysis",
+                        "source_type": "video",
+                    },
+                    "filename": "source.mp4",
+                    "content_type": "video/mp4",
+                    "size_bytes": 13,
+                },
+            )
+
+    response = _run(scenario())
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["code"] == "authentication_required"
+
+
+def test_prepare_upload_rejects_invalid_mime_before_creating_job() -> None:
+    """Reject an unaccepted MIME type before storage or persistence work."""
+
+    service = _PipelineServiceStub()
+    request = jobs_module.PresignedUploadRequest(
+        pipeline={
+            "pipeline_type": "copy_analysis",
+            "source_type": "video",
+        },
+        filename="source.mp4",
+        content_type="text/plain",
+        size_bytes=13,
+    )
+
+    with pytest.raises(UnsupportedMediaTypeError):
+        _run(
+            jobs_module.prepare_upload(
+                upload_request=request,
+                current_user=_principal(),
+                pipeline_service=cast(PipelineService, service),
+                settings=_settings(),
+                storage=cast(StorageBase, _PresignedStorageStub()),
+            )
+        )
+
+    assert service.presigned_calls == []
+
+
+def test_prepare_upload_rejects_large_file_before_creating_job() -> None:
+    """Reject metadata above the configured limit before creating a job."""
+
+    service = _PipelineServiceStub()
+    request = jobs_module.PresignedUploadRequest(
+        pipeline={
+            "pipeline_type": "copy_analysis",
+            "source_type": "video",
+        },
+        filename="source.mp4",
+        content_type="video/mp4",
+        size_bytes=11,
+    )
+
+    with pytest.raises(UploadTooLargeError):
+        _run(
+            jobs_module.prepare_upload(
+                upload_request=request,
+                current_user=_principal(),
+                pipeline_service=cast(PipelineService, service),
+                settings=replace(_settings(), max_upload_bytes=10),
+                storage=cast(StorageBase, _PresignedStorageStub()),
+            )
+        )
+
+    assert service.presigned_calls == []
+
+
+def test_prepare_upload_rejects_local_storage_backend(
+    tmp_path: Path,
+) -> None:
+    """Keep direct-to-R2 URLs unavailable when local storage is configured."""
+
+    service = _PipelineServiceStub()
+    request = jobs_module.PresignedUploadRequest(
+        pipeline={
+            "pipeline_type": "copy_analysis",
+            "source_type": "video",
+        },
+        filename="source.mp4",
+        content_type="video/mp4",
+        size_bytes=13,
+    )
+
+    with pytest.raises(ProviderConfigError):
+        _run(
+            jobs_module.prepare_upload(
+                upload_request=request,
+                current_user=_principal(),
+                pipeline_service=cast(PipelineService, service),
+                settings=_settings(),
+                storage=LocalStorage(tmp_path / "storage"),
+            )
+        )
+
+    assert service.presigned_calls == []
 
 
 def test_submit_job_parses_adaptation_request_and_user_profile(

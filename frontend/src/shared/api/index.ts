@@ -31,6 +31,8 @@ export type {
   JobSubmissionResponse,
   PasswordLoginRequest,
   PasswordResetRequestedResponse,
+  PresignedUploadRequest,
+  PresignedUploadResponse,
   PublicAdaptedScriptOutput,
   PublicTranscriptionOutput,
   RegisterRequest,

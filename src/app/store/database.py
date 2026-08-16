@@ -77,7 +77,7 @@ class DatabaseConfig:
         return url.get_backend_name() == "sqlite"
 
 
-SessionFactory = async_sessionmaker[AsyncSession]
+type SessionFactory = async_sessionmaker[AsyncSession]
 
 
 def create_async_engine_from_settings(settings: object) -> AsyncEngine:

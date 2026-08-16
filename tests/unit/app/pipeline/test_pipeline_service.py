@@ -13,7 +13,8 @@ from typing import Any, BinaryIO
 
 import pytest
 
-from app.pipeline.service import PipelineService
+from app.errors import IdempotencyConflictError
+from app.pipeline.service import PipelineService, PresignedUploadStartResult
 from app.queue.base import QueueBase
 from app.schemas.pipeline import CopyAnalysisPipelineInput, PipelineStartResult
 from app.storage.base import StorageBase, StoredFile
@@ -57,6 +58,96 @@ def test_start_from_upload_creates_job_saves_file_marks_uploaded_and_enqueues() 
         }
     ]
     assert queue.enqueue_calls == [10]
+
+
+def test_prepare_presigned_upload_creates_pending_job_without_queueing() -> None:
+    """Direct upload preparation must stop before uploaded or queued states."""
+
+    events: list[str] = []
+    storage = StorageFake(events)
+    service = PipelineService(
+        job_store=JobStoreFake(events),
+        storage=storage,
+        queue=QueueFake(events),
+    )
+
+    result = _run_async(
+        service.prepare_presigned_upload(
+            user_id=7,
+            pipeline_input=_copy_analysis_input(),
+            filename="video.mp4",
+            content_type="video/mp4",
+            size_bytes=11,
+            expires_in=900,
+        )
+    )
+
+    assert isinstance(result, PresignedUploadStartResult)
+    assert result.job_id == 10
+    assert result.object_key == "jobs/10/input.mp4"
+    assert result.upload_url == "https://fake.example/upload"
+    assert result.expires_in == 900
+    assert events == ["create_job", "presign"]
+    assert storage.presigned_calls == [
+        {
+            "destination_key": "jobs/10/input.mp4",
+            "content_type": "video/mp4",
+            "expires_in": 900,
+        }
+    ]
+
+
+def test_prepare_presigned_upload_rejects_changed_request_for_same_key() -> None:
+    """One idempotency key cannot be reused with changed upload metadata."""
+
+    events: list[str] = []
+    first_service = PipelineService(
+        job_store=JobStoreFake(events),
+        storage=StorageFake(events),
+        queue=QueueFake(events),
+    )
+    first_result = _run_async(
+        first_service.prepare_presigned_upload(
+            user_id=7,
+            pipeline_input=_copy_analysis_input(run_id="same-key"),
+            filename="video.mp4",
+            content_type="video/mp4",
+            size_bytes=11,
+            expires_in=900,
+        )
+    )
+    existing_job = first_service.job_store.create_job_calls[0]
+
+    second_store = JobStoreFake(
+        events,
+        existing_job={
+            "id": first_result.job_id,
+            "run_id": "same-key",
+            "status": "pending",
+            "current_step": "created",
+            "input_json": existing_job["input_json"],
+        },
+    )
+    second_service = PipelineService(
+        job_store=second_store,
+        storage=StorageFake(events),
+        queue=QueueFake(events),
+    )
+
+    with pytest.raises(IdempotencyConflictError) as error:
+        _run_async(
+            second_service.prepare_presigned_upload(
+                user_id=7,
+                pipeline_input=_copy_analysis_input(run_id="same-key"),
+                filename="different-video.mp4",
+                content_type="video/mp4",
+                size_bytes=11,
+                expires_in=900,
+            )
+        )
+
+    assert error.value.code == "idempotency_conflict"
+    assert second_service.storage.presigned_calls == []
 
 
 def test_start_from_file_creates_job_saves_file_marks_uploaded_and_enqueues() -> None:
@@ -236,9 +327,11 @@ class JobStoreFake(JobStoreBase):
         events: list[str],
         *,
         mark_uploaded_error: Exception | None = None,
+        existing_job: dict[str, Any] | None = None,
     ) -> None:
         self.events = events
         self.mark_uploaded_error = mark_uploaded_error
+        self.existing_job = existing_job
         self.create_job_calls: list[dict[str, Any]] = []
         self.mark_uploaded_calls: list[dict[str, Any]] = []
         self.mark_failed_calls: list[dict[str, Any]] = []
@@ -248,11 +341,14 @@ class JobStoreFake(JobStoreBase):
         self.events.append("create_job")
         self.create_job_calls.append(payload)
         self.run_id = payload.get("run_id")
+        if self.existing_job is not None:
+            return self.existing_job
         return {
             "id": 10,
             "run_id": self.run_id,
             "status": "pending",
             "current_step": "created",
+            "input_json": payload["input_json"],
         }
 
     async def mark_uploaded(
@@ -343,6 +439,24 @@ class StorageFake(StorageBase):
         self.upload_calls: list[dict[str, object]] = []
         self.file_calls: list[dict[str, object]] = []
         self.download_calls: list[dict[str, object]] = []
+        self.presigned_calls: list[dict[str, object]] = []
+
+    def create_presigned_upload_url(
+        self,
+        *,
+        destination_key: str,
+        content_type: str,
+        expires_in: int,
+    ) -> str:
+        self.events.append("presign")
+        self.presigned_calls.append(
+            {
+                "destination_key": destination_key,
+                "content_type": content_type,
+                "expires_in": expires_in,
+            }
+        )
+        return "https://fake.example/upload"
 
     def save_file(self, source_path: Path, destination_key: str) -> StoredFile:
         self.events.append("save_file")

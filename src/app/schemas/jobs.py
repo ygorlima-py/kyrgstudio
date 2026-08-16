@@ -23,6 +23,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    HttpUrl,
     StringConstraints,
     TypeAdapter,
 )
@@ -107,6 +108,31 @@ class JobSubmissionResponse(BaseModel):
     status: str
     current_step: str | None = None
     pipeline_type: PipelineType
+
+
+class PresignedUploadRequest(BaseModel):
+    """Public metadata required to prepare a direct job upload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    pipeline: CreateJobRequest
+    filename: NonBlankText
+    content_type: NonBlankText
+    size_bytes: int = Field(gt=0)
+
+
+class PresignedUploadResponse(BaseModel):
+    """Public data needed to upload one job file directly to storage."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: int = Field(gt=0)
+    object_key: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=1024),
+    ]
+    upload_url: HttpUrl
+    expires_in: int = Field(gt=0)
 
 
 class ApiErrorResponse(BaseModel):
@@ -598,6 +624,8 @@ __all__ = [
     "JobResultResponse",
     "JobStatusResponse",
     "JobSubmissionResponse",
+    "PresignedUploadRequest",
+    "PresignedUploadResponse",
     "PublicAdaptedScriptOutput",
     "PublicTranscriptionOutput",
     "build_job_list_response",

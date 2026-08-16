@@ -180,6 +180,13 @@ class JobStoreError(StoreError):
     default_step = "job_store"
 
 
+class IdempotencyConflictError(JobStoreError):
+    """Raised when one idempotency key is reused for another request."""
+
+    code = "idempotency_conflict"
+    default_step = "validating_idempotency"
+
+
 class JobNotFoundError(AppError):
     code = "job_not_found"
     default_step = "loading_job"
@@ -221,8 +228,9 @@ __all__ = [
     "EmailVerificationRequiredError",
     "ExportError",
     "FileNotFoundAppError",
-    "InvalidInputError",
+    "IdempotencyConflictError",
     "InvalidCredentialsError",
+    "InvalidInputError",
     "InvalidTokenError",
     "JobNotFoundError",
     "JobResultNotReadyError",

@@ -3,7 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, ClassVar, Protocol, runtime_checkable
+
+MAX_PRESIGNED_UPLOAD_TTL_SECONDS = 15 * 60
 
 
 @dataclass(frozen=True)
@@ -15,6 +17,15 @@ class StoredFile:
     backend: str
 
 
+@dataclass(frozen=True)
+class StoredObjectMetadata:
+    """Metadata returned after inspecting one complete stored object."""
+
+    key: str
+    size_bytes: int
+    content_type: str | None
+
+
 class StorageBase(ABC):
     """Base contract for application file storage.
 
@@ -22,6 +33,8 @@ class StorageBase(ABC):
     missing keys are treated as absent, delete operations on missing keys are
     no-ops, and invalid keys may raise a storage-level error.
     """
+
+    backend: ClassVar[str]
 
     @abstractmethod
     def save_file(self, source_path: Path, destination_key: str) -> StoredFile:
@@ -61,5 +74,34 @@ class StorageBase(ABC):
     @abstractmethod
     def delete_prefix(self, prefix: str) -> None:
         """Delete every stored file under a prefix; missing prefixes are no-op."""
+
+        ...
+
+
+@runtime_checkable
+class PresignedUploadStorage(Protocol):
+    """Optional contract for storages that support direct browser uploads."""
+
+    def create_presigned_upload_url(
+        self,
+        *,
+        destination_key: str,
+        content_type: str,
+        expires_in: int,
+    ) -> str:
+        """Create a temporary URL for a browser ``PUT`` upload."""
+
+        ...
+
+
+@runtime_checkable
+class ObjectMetadataStorage(Protocol):
+    """Optional contract for confirming direct browser uploads."""
+
+    def get_object_metadata(
+        self,
+        key: str,
+    ) -> StoredObjectMetadata | None:
+        """Return metadata for a complete object, or ``None`` when absent."""
 
         ...

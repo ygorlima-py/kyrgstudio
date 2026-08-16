@@ -29,23 +29,27 @@ from app.api.dependencies import (
     get_job_store,
     get_pipeline_service,
     get_settings,
+    get_storage,
 )
-from app.api.uploads import validate_upload
+from app.api.uploads import validate_upload, validate_upload_metadata
 from app.auth.principal import AuthenticatedPrincipal
 from app.errors import (
     InvalidInputError,
     JobNotFoundError,
     JobResultNotReadyError,
+    ProviderConfigError,
 )
 from app.pipeline.input import PipelineInput
 from app.pipeline.service import PipelineService
 from app.schemas.jobs import (
     CreateJobRequest,
     JobListResponse,
-    JobStatus,
     JobResultResponse,
+    JobStatus,
     JobStatusResponse,
     JobSubmissionResponse,
+    PresignedUploadRequest,
+    PresignedUploadResponse,
     build_job_list_response,
     build_job_result_response,
     build_job_status_response,
@@ -55,8 +59,12 @@ from app.schemas.jobs import (
 )
 from app.schemas.pipeline import PipelineType
 from app.settings import AppSettings
+from app.storage.base import (
+    MAX_PRESIGNED_UPLOAD_TTL_SECONDS,
+    PresignedUploadStorage,
+    StorageBase,
+)
 from app.store.base import JobStoreBase
-
 
 CurrentUserDependency = Annotated[
     AuthenticatedPrincipal,
@@ -66,6 +74,10 @@ JobStoreDependency = Annotated[JobStoreBase, Depends(get_job_store)]
 PipelineServiceDependency = Annotated[
     PipelineService,
     Depends(get_pipeline_service),
+]
+StorageDependency = Annotated[
+    StorageBase,
+    Depends(get_storage),
 ]
 SettingsDependency = Annotated[AppSettings, Depends(get_settings)]
 JobIdPath = Annotated[int, Path(gt=0, description="Internal job identifier.")]
@@ -108,6 +120,86 @@ router = APIRouter(
     prefix="/v1/jobs",
     tags=["jobs"],
 )
+
+PRESIGNED_UPLOAD_URL_TTL_SECONDS = MAX_PRESIGNED_UPLOAD_TTL_SECONDS
+
+
+@router.post(
+    "/upload-url",
+    response_model=PresignedUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Prepare a direct job upload",
+)
+async def prepare_upload(
+    upload_request: PresignedUploadRequest,
+    current_user: CurrentUserDependency,
+    pipeline_service: PipelineServiceDependency,
+    settings: SettingsDependency,
+    storage: StorageDependency,
+    idempotency_key: Annotated[
+        str | None,
+        Header(alias="Idempotency-Key", min_length=1, max_length=255),
+    ] = None,
+) -> PresignedUploadResponse:
+    """Create a pending owned job and return a temporary upload URL."""
+
+    if not isinstance(storage, PresignedUploadStorage):
+        raise ProviderConfigError(
+            technical_message=(
+                "Direct uploads require an S3-compatible storage backend."
+            ),
+            step="configuring_storage",
+            details={"storage_backend": storage.backend},
+        )
+
+    metadata = validate_upload_metadata(
+        filename=upload_request.filename,
+        content_type=upload_request.content_type,
+        size_bytes=upload_request.size_bytes,
+        settings=settings,
+    )
+    pipeline_input = _build_pipeline_input(
+        upload_request.pipeline,
+        settings=settings,
+        idempotency_key=idempotency_key,
+    )
+    result = await pipeline_service.prepare_presigned_upload(
+        user_id=current_user.user_id,
+        pipeline_input=pipeline_input,
+        filename=metadata.filename,
+        content_type=metadata.content_type,
+        size_bytes=metadata.size_bytes,
+        expires_in=PRESIGNED_UPLOAD_URL_TTL_SECONDS,
+    )
+
+    return PresignedUploadResponse.model_validate(
+        {
+            "job_id": result.job_id,
+            "object_key": result.object_key,
+            "upload_url": result.upload_url,
+            "expires_in": result.expires_in,
+        }
+    )
+
+
+@router.post(
+    "/{job_id}/upload/complete",
+    response_model=JobSubmissionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Confirm a direct job upload",
+)
+async def confirm_upload(
+    job_id: JobIdPath,
+    current_user: CurrentUserDependency,
+    pipeline_service: PipelineServiceDependency,
+) -> JobSubmissionResponse:
+    """Verify the stored object and move the owned job to uploaded."""
+
+    result = await pipeline_service.confirm_presigned_upload(
+        user_id=current_user.user_id,
+        job_id=job_id,
+    )
+    return build_job_submission_response(result)
 
 
 @router.post(
