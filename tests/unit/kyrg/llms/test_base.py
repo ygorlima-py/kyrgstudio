@@ -16,6 +16,10 @@ from kyrg.llms.error import (
 )
 
 
+SYSTEM_PROMPT = "Follow the structured-output contract."
+PROMPT_CACHE_KEY = "test:structured-output"
+
+
 class SimpleOutput(BaseModel):
     """Small schema used to validate structured output handling."""
 
@@ -35,6 +39,8 @@ class QueueLLM(LLMBase):
         self._outcomes = list(outcomes)
         self.structured_prompts: list[str] = []
         self.astructured_prompts: list[str] = []
+        self.system_prompts: list[str] = []
+        self.prompt_cache_keys: list[str] = []
 
     def invoke(self, prompt: str) -> str:
         """Return the prompt for synchronous plain invocation tests."""
@@ -55,19 +61,27 @@ class QueueLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[SimpleOutput],
     ) -> SimpleOutput:
         """Record the prompt and return the next queued sync outcome."""
         self.structured_prompts.append(prompt)
+        self.system_prompts.append(system_prompt)
+        self.prompt_cache_keys.append(prompt_cache_key)
         return self._next_outcome()
 
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[SimpleOutput],
     ) -> SimpleOutput:
         """Record the prompt and return the next queued async outcome."""
         self.astructured_prompts.append(prompt)
+        self.system_prompts.append(system_prompt)
+        self.prompt_cache_keys.append(prompt_cache_key)
         return self._next_outcome()
 
 
@@ -84,10 +98,17 @@ def test_structured_returns_first_valid_result() -> None:
     expected = SimpleOutput(value="ok")
     llm = QueueLLM([expected], max_attempts=3)
 
-    result = llm.structured("original prompt", SimpleOutput)
+    result = llm.structured(
+        "original prompt",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    )
 
     assert result is expected
     assert llm.structured_prompts == ["original prompt"]
+    assert llm.system_prompts == [SYSTEM_PROMPT]
+    assert llm.prompt_cache_keys == [PROMPT_CACHE_KEY]
 
 
 def test_structured_retries_validation_error_with_retry_prompt() -> None:
@@ -95,13 +116,20 @@ def test_structured_retries_validation_error_with_retry_prompt() -> None:
     expected = SimpleOutput(value="fixed")
     llm = QueueLLM([_validation_error(), expected], max_attempts=2)
 
-    result = llm.structured("extract value", SimpleOutput)
+    result = llm.structured(
+        "extract value",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    )
 
     assert result is expected
     assert llm.structured_prompts[0] == "extract value"
     assert "<schema_validation_retry>" in llm.structured_prompts[1]
     assert "extract value" in llm.structured_prompts[1]
     assert "Field required" in llm.structured_prompts[1]
+    assert llm.system_prompts == [SYSTEM_PROMPT, SYSTEM_PROMPT]
+    assert llm.prompt_cache_keys == [PROMPT_CACHE_KEY, PROMPT_CACHE_KEY]
 
 
 def test_structured_retries_parsing_error_with_retry_prompt() -> None:
@@ -112,7 +140,12 @@ def test_structured_retries_parsing_error_with_retry_prompt() -> None:
         max_attempts=2,
     )
 
-    result = llm.structured("extract value", SimpleOutput)
+    result = llm.structured(
+        "extract value",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    )
 
     assert result is expected
     assert "parsing_error" in llm.structured_prompts[1]
@@ -125,7 +158,12 @@ def test_structured_raises_after_retry_exhaustion_and_preserves_cause() -> None:
     llm = QueueLLM([_validation_error(), last_error], max_attempts=2)
 
     with pytest.raises(StructuredOutputError) as exc_info:
-        llm.structured("extract value", SimpleOutput)
+        llm.structured(
+            "extract value",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
     assert "SimpleOutput remained invalid after 2 attempts" in str(exc_info.value)
     assert exc_info.value.__cause__ is last_error
@@ -137,7 +175,12 @@ def test_structured_with_one_attempt_does_not_build_retry_prompt() -> None:
     llm = QueueLLM([StructuredOutputParsingError("invalid")], max_attempts=1)
 
     with pytest.raises(StructuredOutputError):
-        llm.structured("original only", SimpleOutput)
+        llm.structured(
+            "original only",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
     assert llm.structured_prompts == ["original only"]
 
@@ -147,7 +190,14 @@ def test_astructured_mirrors_sync_retry_behavior() -> None:
     expected = SimpleOutput(value="async-fixed")
     llm = QueueLLM([_validation_error(), expected], max_attempts=2)
 
-    result = asyncio.run(llm.astructured("async prompt", SimpleOutput))
+    result = asyncio.run(
+        llm.astructured(
+            "async prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
+    )
 
     assert result is expected
     assert llm.astructured_prompts[0] == "async prompt"
@@ -160,7 +210,14 @@ def test_astructured_raises_after_retry_exhaustion() -> None:
     llm = QueueLLM([_validation_error(), last_error], max_attempts=2)
 
     with pytest.raises(StructuredOutputError) as exc_info:
-        asyncio.run(llm.astructured("async prompt", SimpleOutput))
+        asyncio.run(
+            llm.astructured(
+                "async prompt",
+                SYSTEM_PROMPT,
+                PROMPT_CACHE_KEY,
+                SimpleOutput,
+            )
+        )
 
     assert exc_info.value.__cause__ is last_error
     assert len(llm.astructured_prompts) == 2

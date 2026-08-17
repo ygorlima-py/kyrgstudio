@@ -92,6 +92,8 @@ class LLMBase(ABC):
     def structured(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Generate and validate structured output.
@@ -120,6 +122,8 @@ class LLMBase(ABC):
             try:
                 return self._structured_once(
                     current_prompt,
+                    system_prompt,
+                    prompt_cache_key,
                     output_schema,
                 )
             except (ValidationError, StructuredOutputParsingError) as error:
@@ -141,6 +145,8 @@ class LLMBase(ABC):
     async def astructured(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Asynchronously generate and validate structured output.
@@ -167,6 +173,8 @@ class LLMBase(ABC):
             try:
                 return await self._astructured_once(
                     current_prompt,
+                    system_prompt,
+                    prompt_cache_key,
                     output_schema,
                 )
             except (ValidationError, StructuredOutputParsingError) as error:
@@ -190,6 +198,8 @@ class LLMBase(ABC):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Execute one provider-specific structured-output attempt.
@@ -215,6 +225,8 @@ class LLMBase(ABC):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Execute one asynchronous provider-specific structured attempt.

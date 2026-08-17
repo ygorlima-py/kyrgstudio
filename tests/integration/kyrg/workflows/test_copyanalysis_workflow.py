@@ -88,6 +88,8 @@ class WorkflowLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._next("sync", prompt, output_schema)
@@ -95,6 +97,8 @@ class WorkflowLLM(LLMBase):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._next("async", prompt, output_schema)

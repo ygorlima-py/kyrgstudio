@@ -18,7 +18,7 @@ from kyrg.workflows.transcriber.schemas import (
     CorrectedTranscriptionOutput,
     DomainContextOutput,
 )
-
+from kyrg.workflows.transcriber.system_prompt import TranscriptionSystemPrompts
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
@@ -28,6 +28,8 @@ class StructuredCall:
     """Record one structured-output request."""
 
     prompt: str
+    system_prompt: str
+    prompt_cache_key: str
     output_schema: type[BaseModel]
 
 
@@ -57,10 +59,14 @@ class RecordingLLM(LLMBase):
     def structured(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Record and answer a synchronous structured request."""
-        self.structured_calls.append(StructuredCall(prompt, output_schema))
+        self.structured_calls.append(
+            StructuredCall(prompt, system_prompt, prompt_cache_key, output_schema)
+        )
         if self.error is not None:
             raise self.error
         return cast(OutputT, self.response)
@@ -68,10 +74,14 @@ class RecordingLLM(LLMBase):
     async def astructured(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Record and answer an asynchronous structured request."""
-        self.astructured_calls.append(StructuredCall(prompt, output_schema))
+        self.astructured_calls.append(
+            StructuredCall(prompt, system_prompt, prompt_cache_key, output_schema)
+        )
         if self.error is not None:
             raise self.error
         return cast(OutputT, self.response)
@@ -79,6 +89,8 @@ class RecordingLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Reject the unused base implementation hook."""
@@ -89,6 +101,8 @@ class RecordingLLM(LLMBase):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Reject the unused asynchronous base implementation hook."""
@@ -178,6 +192,11 @@ def test_extract_domain_context_execute_uses_structured_contract() -> None:
     assert llm.astructured_calls == []
     call = llm.structured_calls[0]
     assert call.output_schema is DomainContextOutput
+    assert (
+        call.system_prompt
+        == TranscriptionSystemPrompts.SYSTEM_PROMPT_EXTRACT_DOMAIN_CONTEXT
+    )
+    assert call.prompt_cache_key == "transcription:domain-context"
     assert result.model_dump_json(indent=2) in call.prompt
     assert "Raw transcription:" in call.prompt
     assert "{raw_transcription}" not in call.prompt
@@ -196,6 +215,11 @@ def test_extract_domain_context_aexecute_uses_astructured_contract() -> None:
     assert len(llm.astructured_calls) == 1
     call = llm.astructured_calls[0]
     assert call.output_schema is DomainContextOutput
+    assert (
+        call.system_prompt
+        == TranscriptionSystemPrompts.SYSTEM_PROMPT_EXTRACT_DOMAIN_CONTEXT
+    )
+    assert call.prompt_cache_key == "transcription:domain-context"
     assert result.model_dump_json(indent=2) in call.prompt
     assert "Raw transcription:" in call.prompt
     assert "{raw_transcription}" not in call.prompt
@@ -255,6 +279,11 @@ def test_correct_transcription_execute_uses_structured_contract() -> None:
     assert llm.astructured_calls == []
     call = llm.structured_calls[0]
     assert call.output_schema is CorrectedTranscriptionOutput
+    assert (
+        call.system_prompt
+        == TranscriptionSystemPrompts.SYSTEM_PROMPT_CORRECT_TRANSCRIPTION
+    )
+    assert call.prompt_cache_key == "transcription:correction"
     assert context.model_dump_json(indent=2) in call.prompt
     assert result.model_dump_json(indent=2) in call.prompt
     assert "Domain context:" in call.prompt
@@ -277,6 +306,11 @@ def test_correct_transcription_aexecute_uses_astructured_contract() -> None:
     assert len(llm.astructured_calls) == 1
     call = llm.astructured_calls[0]
     assert call.output_schema is CorrectedTranscriptionOutput
+    assert (
+        call.system_prompt
+        == TranscriptionSystemPrompts.SYSTEM_PROMPT_CORRECT_TRANSCRIPTION
+    )
+    assert call.prompt_cache_key == "transcription:correction"
     assert context.model_dump_json(indent=2) in call.prompt
     assert result.model_dump_json(indent=2) in call.prompt
     assert "Domain context:" in call.prompt

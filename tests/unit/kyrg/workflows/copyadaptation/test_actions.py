@@ -34,6 +34,7 @@ from kyrg.workflows.copyadaptation.schemas import (
     ValidateScriptOutput,
     WriteScriptSectionsOutput,
 )
+from kyrg.workflows.copyadaptation.system_prompt import CopyAdaptationSystemPrompts
 from kyrg.workflows.copyanalysis.schemas import (
     CopyAnalysisOutput,
     CopySection,
@@ -53,6 +54,8 @@ class StructuredCall:
 
     mode: Literal["sync", "async"]
     prompt: str
+    system_prompt: str
+    prompt_cache_key: str
     output_schema: type[BaseModel]
 
 
@@ -73,21 +76,39 @@ class RecordingLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
-        return self._record_structured_call("sync", prompt, output_schema)
+        return self._record_structured_call(
+            "sync",
+            prompt,
+            system_prompt,
+            prompt_cache_key,
+            output_schema,
+        )
 
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
-        return self._record_structured_call("async", prompt, output_schema)
+        return self._record_structured_call(
+            "async",
+            prompt,
+            system_prompt,
+            prompt_cache_key,
+            output_schema,
+        )
 
     def _record_structured_call(
         self,
         mode: Literal["sync", "async"],
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         response = _response_for(output_schema)
@@ -95,6 +116,8 @@ class RecordingLLM(LLMBase):
             StructuredCall(
                 mode=mode,
                 prompt=prompt,
+                system_prompt=system_prompt,
+                prompt_cache_key=prompt_cache_key,
                 output_schema=output_schema,
             )
         )
@@ -104,6 +127,42 @@ class RecordingLLM(LLMBase):
 
 
 ActionFactory = Callable[[RecordingLLM], AIActionBase]
+
+
+EXPECTED_LLM_CONTEXT: dict[type[AIActionBase], tuple[str, str]] = {
+    BuildCopyStrategy: (
+        CopyAdaptationSystemPrompts.SYSTEM_PROMPT_BUILD_COPY_STRATEGY,
+        "copy-adaptation:strategy",
+    ),
+    WriteScriptSection: (
+        CopyAdaptationSystemPrompts.SYSTEM_PROMPT_WRITE_SCRIPT_SECTIONS,
+        "copy-adaptation:write-sections",
+    ),
+    CorrectScriptSections: (
+        CopyAdaptationSystemPrompts.SYSTEM_PROMPT_CORRECT_SCRIPT_SECTIONS,
+        "copy-adaptation:correct-sections",
+    ),
+    CorrectValidatedScript: (
+        CopyAdaptationSystemPrompts.SYSTEM_PROMPT_CORRECT_VALIDATED_SCRIPT,
+        "copy-adaptation:correct-validated-script",
+    ),
+    ReviewAction: (
+        CopyAdaptationSystemPrompts.SYSTEM_PROMPT_REVIEW_SECTION_FLOW,
+        "copy-adaptation:review-flow",
+    ),
+    ValidateScriptAction: (
+        CopyAdaptationSystemPrompts.SYSTEM_PROMPT_VALIDATE_SCRIPT,
+        "copy-adaptation:validate-script",
+    ),
+}
+
+
+def _assert_llm_context(action: AIActionBase, call: StructuredCall) -> None:
+    """Assert that an action sends its stable system prompt and cache key."""
+
+    expected_system_prompt, expected_cache_key = EXPECTED_LLM_CONTEXT[type(action)]
+    assert call.system_prompt == expected_system_prompt
+    assert call.prompt_cache_key == expected_cache_key
 
 
 def _user_profile() -> UserProfileOutput:
@@ -440,6 +499,7 @@ def test_execute_uses_the_expected_structured_output_schema(
     assert len(llm.calls) == 1
     assert llm.calls[0].mode == "sync"
     assert llm.calls[0].output_schema is expected_schema
+    _assert_llm_context(action, llm.calls[0])
 
 
 @pytest.mark.parametrize(("action_factory", "expected_schema"), ACTION_CASES)
@@ -459,6 +519,7 @@ def test_aexecute_uses_the_expected_structured_output_schema(
     assert len(llm.calls) == 1
     assert llm.calls[0].mode == "async"
     assert llm.calls[0].output_schema is expected_schema
+    _assert_llm_context(action, llm.calls[0])
 
 
 @pytest.mark.parametrize(("action_factory", "expected_schema"), ACTION_CASES)

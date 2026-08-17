@@ -423,6 +423,8 @@ def test_live_copyanalysis_quality(
     judge_started = time.perf_counter()
     evaluation = models.judge.structured(
         prompt=_judge_prompt(fixture, analysis),
+        system_prompt="Evaluate the copy analysis strictly against the rubric.",
+        prompt_cache_key="eval:copy-analysis-quality",
         output_schema=CopyAnalysisQualityEvaluation,
     )
     judge_duration = time.perf_counter() - judge_started

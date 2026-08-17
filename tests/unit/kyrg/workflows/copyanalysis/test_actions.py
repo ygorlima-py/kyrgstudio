@@ -28,6 +28,7 @@ from kyrg.workflows.copyanalysis.schemas import (
     PersuasionAnalysisOutput,
     StructuredTranscript,
 )
+from kyrg.workflows.copyanalysis.system_prompt import CopyAnalysisSystemPrompts
 
 
 INPUT_TOKENS = 19
@@ -40,6 +41,8 @@ class StructuredCall:
 
     mode: Literal["sync", "async"]
     prompt: str
+    system_prompt: str
+    prompt_cache_key: str
     output_schema: type[BaseModel]
 
 
@@ -61,21 +64,39 @@ class RecordingLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
-        return self._record_call("sync", prompt, output_schema)
+        return self._record_call(
+            "sync",
+            prompt,
+            system_prompt,
+            prompt_cache_key,
+            output_schema,
+        )
 
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
-        return self._record_call("async", prompt, output_schema)
+        return self._record_call(
+            "async",
+            prompt,
+            system_prompt,
+            prompt_cache_key,
+            output_schema,
+        )
 
     def _record_call(
         self,
         mode: Literal["sync", "async"],
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Capture one call and either raise the configured failure or respond."""
@@ -84,6 +105,8 @@ class RecordingLLM(LLMBase):
             StructuredCall(
                 mode=mode,
                 prompt=prompt,
+                system_prompt=system_prompt,
+                prompt_cache_key=prompt_cache_key,
                 output_schema=output_schema,
             )
         )
@@ -98,6 +121,30 @@ class RecordingLLM(LLMBase):
 
 
 ActionFactory = Callable[[RecordingLLM], AIActionBase]
+
+
+EXPECTED_LLM_CONTEXT: dict[type[AIActionBase], tuple[str, str]] = {
+    ExtractCopyStructure: (
+        CopyAnalysisSystemPrompts.EXTRACT_COPY_STRUCTURE_SYSTEM_PROMPT,
+        "copy-analysis:structure",
+    ),
+    ExtractOfferElements: (
+        CopyAnalysisSystemPrompts.EXTRACT_OFFER_ELEMENTS_SYSTEM_PROMPT,
+        "copy-analysis:offer",
+    ),
+    AnalysePersuasion: (
+        CopyAnalysisSystemPrompts.ANALYSE_PERSUASION_SYSTEM_PROMPT,
+        "copy-analysis:persuasion",
+    ),
+}
+
+
+def _assert_llm_context(action: AIActionBase, call: StructuredCall) -> None:
+    """Assert that an action sends its stable system prompt and cache key."""
+
+    expected_system_prompt, expected_cache_key = EXPECTED_LLM_CONTEXT[type(action)]
+    assert call.system_prompt == expected_system_prompt
+    assert call.prompt_cache_key == expected_cache_key
 
 
 def _copy_structure() -> CopyStructureOutput:
@@ -283,6 +330,7 @@ def test_execute_uses_declared_structured_output_schema(
     assert len(llm.calls) == 1
     assert llm.calls[0].mode == "sync"
     assert llm.calls[0].output_schema is expected_schema
+    _assert_llm_context(action, llm.calls[0])
 
 
 @pytest.mark.parametrize(("action_factory", "expected_schema"), ACTION_CASES)
@@ -302,6 +350,7 @@ def test_aexecute_uses_declared_structured_output_schema(
     assert len(llm.calls) == 1
     assert llm.calls[0].mode == "async"
     assert llm.calls[0].output_schema is expected_schema
+    _assert_llm_context(action, llm.calls[0])
 
 
 @pytest.mark.parametrize(("action_factory", "expected_schema"), ACTION_CASES)
@@ -340,6 +389,8 @@ def test_sync_and_async_actions_render_equivalent_prompts(
     asyncio.run(action_factory(async_llm).aexecute())
 
     assert sync_llm.calls[0].prompt == async_llm.calls[0].prompt
+    assert sync_llm.calls[0].system_prompt == async_llm.calls[0].system_prompt
+    assert sync_llm.calls[0].prompt_cache_key == async_llm.calls[0].prompt_cache_key
     assert sync_llm.calls[0].output_schema is expected_schema
     assert async_llm.calls[0].output_schema is expected_schema
 
@@ -425,4 +476,3 @@ def test_analyse_persuasion_preserves_unicode_json() -> None:
     assert "educación financiera" in prompt
     assert "aspiración" in prompt
     assert "\\u00f3" not in prompt
-

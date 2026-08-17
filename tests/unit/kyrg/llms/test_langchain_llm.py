@@ -13,6 +13,10 @@ from kyrg.llms.error import StructuredOutputParsingError
 from kyrg.llms.langchain_llm import LangChainLLM
 
 
+SYSTEM_PROMPT = "Follow the structured-output contract."
+PROMPT_CACHE_KEY = "test:langchain-structured"
+
+
 class SimpleOutput(BaseModel):
     """Small schema used by LangChain structured-output tests."""
 
@@ -39,15 +43,15 @@ class StructuredRunnable:
 
     def __init__(self, response: dict[str, Any]) -> None:
         self.response = response
-        self.invoke_calls: list[str] = []
-        self.ainvoke_calls: list[str] = []
+        self.invoke_calls: list[Any] = []
+        self.ainvoke_calls: list[Any] = []
 
-    def invoke(self, prompt: str) -> dict[str, Any]:
+    def invoke(self, prompt: Any) -> dict[str, Any]:
         """Record sync invocation and return the structured response."""
         self.invoke_calls.append(prompt)
         return self.response
 
-    async def ainvoke(self, prompt: str) -> dict[str, Any]:
+    async def ainvoke(self, prompt: Any) -> dict[str, Any]:
         """Record async invocation and return the structured response."""
         self.ainvoke_calls.append(prompt)
         return self.response
@@ -157,13 +161,21 @@ def test_structured_once_uses_structured_runnable_and_returns_instance() -> None
     model = FakeChatModel(structured=structured)
     llm = LangChainLLM(model)  # type: ignore[arg-type]
 
-    result = llm._structured_once("structured prompt", SimpleOutput)
+    result = llm._structured_once(
+        "structured prompt",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    )
 
     assert result is parsed
     assert model.with_structured_output_calls == [
         {"output_schema": SimpleOutput, "include_raw": True}
     ]
-    assert structured.invoke_calls == ["structured prompt"]
+    assert [message.content for message in structured.invoke_calls[0]] == [
+        SYSTEM_PROMPT,
+        "structured prompt",
+    ]
     assert llm.token_usage()["total_tokens"] == 9
 
 
@@ -180,9 +192,12 @@ def test_structured_once_validates_dict_and_rejects_parser_or_invalid_output() -
             )
         )
     )
-    assert dict_llm._structured_once("prompt", SimpleOutput) == SimpleOutput(
-        value="from dict"
-    )
+    assert dict_llm._structured_once(
+        "prompt",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    ) == SimpleOutput(value="from dict")
 
     parser_error = OutputParserException("bad structured parse")
     parsing_llm = LangChainLLM(  # type: ignore[arg-type]
@@ -197,7 +212,12 @@ def test_structured_once_validates_dict_and_rejects_parser_or_invalid_output() -
         )
     )
     with pytest.raises(StructuredOutputParsingError):
-        parsing_llm._structured_once("prompt", SimpleOutput)
+        parsing_llm._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
     invalid_llm = LangChainLLM(  # type: ignore[arg-type]
         FakeChatModel(
@@ -211,7 +231,12 @@ def test_structured_once_validates_dict_and_rejects_parser_or_invalid_output() -
         )
     )
     with pytest.raises(StructuredOutputParsingError, match="invalid format"):
-        invalid_llm._structured_once("prompt", SimpleOutput)
+        invalid_llm._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
 
 def test_structured_once_wraps_malformed_response_as_runtime_error() -> None:
@@ -221,7 +246,12 @@ def test_structured_once_wraps_malformed_response_as_runtime_error() -> None:
     )
 
     with pytest.raises(RuntimeError, match="Error calling LangChain LLM provider"):
-        llm._structured_once("prompt", SimpleOutput)
+        llm._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
 
 def test_async_methods_mirror_sync_behavior() -> None:
@@ -243,12 +273,22 @@ def test_async_methods_mirror_sync_behavior() -> None:
     llm = LangChainLLM(model)  # type: ignore[arg-type]
 
     text = asyncio.run(llm.ainvoke("plain async"))
-    parsed = asyncio.run(llm._astructured_once("structured async", SimpleOutput))
+    parsed = asyncio.run(
+        llm._astructured_once(
+            "structured async",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
+    )
 
     assert text == "async text"
     assert parsed == SimpleOutput(value="async structured")
     assert model.ainvoke_calls == ["plain async"]
-    assert structured.ainvoke_calls == ["structured async"]
+    assert [message.content for message in structured.ainvoke_calls[0]] == [
+        SYSTEM_PROMPT,
+        "structured async",
+    ]
     assert llm.token_usage() == {
         "input_tokens": 8,
         "output_tokens": 1,
