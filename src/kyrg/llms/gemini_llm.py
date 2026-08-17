@@ -89,7 +89,13 @@ class GoogleLLM(LLMBase):
         logger.info(f"Google LLM provider succeeded: model={self.model}, method=invoke")
         return response.text
 
-    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(
+        self,
+        prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
+        output_schema: type[OutputT],
+    ) -> OutputT:
         """Execute one structured-output attempt with Gemini JSON mode.
 
         Args:
@@ -110,6 +116,9 @@ class GoogleLLM(LLMBase):
             f"Calling Google LLM provider: model={self.model}, method=structured"
         )
 
+        # Google requires a cached-content resource name, not OpenAI's cache key.
+        _ = prompt_cache_key
+
         try:
             response = self.client.models.generate_content(
                 model=self.model,
@@ -117,6 +126,7 @@ class GoogleLLM(LLMBase):
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=output_schema,
+                    system_instruction=system_prompt,
                     temperature=self.temperature,
                 ),
             )
@@ -178,6 +188,7 @@ class GoogleLLM(LLMBase):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=self.temperature,
+                    system_instruction=self.system_prompt,
                 )
             )
         except errors.APIError as error:
@@ -200,6 +211,8 @@ class GoogleLLM(LLMBase):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Execute one asynchronous structured-output attempt.
@@ -222,6 +235,9 @@ class GoogleLLM(LLMBase):
             f"Calling Google LLM provider: model={self.model}, method=astructured"
         )
 
+        # Google requires a cached-content resource name, not OpenAI's cache key.
+        _ = prompt_cache_key
+
         try:
             response = await self.client.aio.models.generate_content(
                 model=self.model,
@@ -229,6 +245,7 @@ class GoogleLLM(LLMBase):
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=output_schema,
+                    system_instruction=system_prompt,
                     temperature=self.temperature,
                 ),
             )

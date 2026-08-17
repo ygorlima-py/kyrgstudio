@@ -248,6 +248,8 @@ def test_live_copy_quality(
     result = workflow.start()
     evaluation = llm.structured(
         prompt=_judge_prompt(analysis, profile, result),
+        system_prompt="Evaluate the adapted script strictly against the rubric.",
+        prompt_cache_key="eval:copy-adaptation-quality",
         output_schema=CopyQualityEvaluation,
     )
 
@@ -266,4 +268,3 @@ def test_live_copy_quality(
     assert evaluation.target_language_correct is True
     assert evaluation.transitions_coherent is True
     assert evaluation.correction_improved_or_not_required is True
-

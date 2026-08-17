@@ -73,19 +73,23 @@ class FixedOutputLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Return the configured model for a structured request."""
-        del prompt, output_schema
+        del prompt, system_prompt, prompt_cache_key, output_schema
         return cast(OutputT, self.response)
 
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Return the configured model for an async structured request."""
-        del prompt, output_schema
+        del prompt, system_prompt, prompt_cache_key, output_schema
         return cast(OutputT, self.response)
 
 

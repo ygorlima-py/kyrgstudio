@@ -2,15 +2,17 @@
 
 import json
 
-from kyrg.workflows.base import AIActionBase
-from kyrg.workflows.copyanalysis.schemas import StructuredTranscript
 from kyrg.llms.base import LLMBase
-from kyrg.workflows.copyanalysis.schemas import (
-                                                CopyStructureOutput,
-                                                OfferAnalysisOutput,
-                                                PersuasionAnalysisOutput,
-)
+from kyrg.workflows.base import AIActionBase
 from kyrg.workflows.copyanalysis.prompts import CopyAnalysisPrompts
+from kyrg.workflows.copyanalysis.schemas import (
+    CopyStructureOutput,
+    OfferAnalysisOutput,
+    PersuasionAnalysisOutput,
+    StructuredTranscript,
+)
+from kyrg.workflows.copyanalysis.system_prompt import CopyAnalysisSystemPrompts
+
 
 class ExtractCopyStructure(AIActionBase):
     """Extract the persuasive structure and section sequence from a transcript."""
@@ -32,6 +34,8 @@ class ExtractCopyStructure(AIActionBase):
         """Run the copy structure extraction synchronously."""
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAnalysisSystemPrompts.EXTRACT_COPY_STRUCTURE_SYSTEM_PROMPT,
+            prompt_cache_key="copy-analysis:structure",
             output_schema=CopyStructureOutput,
         )
         
@@ -39,6 +43,8 @@ class ExtractCopyStructure(AIActionBase):
         """Run the copy structure extraction asynchronously."""
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAnalysisSystemPrompts.EXTRACT_COPY_STRUCTURE_SYSTEM_PROMPT,
+            prompt_cache_key="copy-analysis:structure",
             output_schema=CopyStructureOutput
         )
         
@@ -76,6 +82,8 @@ class ExtractOfferElements(AIActionBase):
         """Run the offer element extraction synchronously."""
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAnalysisSystemPrompts.EXTRACT_OFFER_ELEMENTS_SYSTEM_PROMPT,
+            prompt_cache_key="copy-analysis:offer",
             output_schema=OfferAnalysisOutput,
         )
         
@@ -83,6 +91,8 @@ class ExtractOfferElements(AIActionBase):
         """Run the offer element extraction asynchronously."""
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAnalysisSystemPrompts.EXTRACT_OFFER_ELEMENTS_SYSTEM_PROMPT,
+            prompt_cache_key="copy-analysis:offer",
             output_schema=OfferAnalysisOutput
         )
         
@@ -113,6 +123,8 @@ class AnalysePersuasion(AIActionBase):
         """Run the persuasion analysis synchronously."""
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAnalysisSystemPrompts.ANALYSE_PERSUASION_SYSTEM_PROMPT,
+            prompt_cache_key="copy-analysis:persuasion",
             output_schema=PersuasionAnalysisOutput,
         )
         
@@ -120,6 +132,8 @@ class AnalysePersuasion(AIActionBase):
         """Run the persuasion analysis asynchronously."""
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAnalysisSystemPrompts.ANALYSE_PERSUASION_SYSTEM_PROMPT,
+            prompt_cache_key="copy-analysis:persuasion",
             output_schema=PersuasionAnalysisOutput,
         )
         

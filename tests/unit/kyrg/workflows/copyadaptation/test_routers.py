@@ -20,12 +20,20 @@ class UnusedLLM(LLMBase):
     async def ainvoke(self, prompt: str) -> str:
         raise AssertionError("Routers must not call an LLM.")
 
-    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(
+        self,
+        prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
+        output_schema: type[OutputT],
+    ) -> OutputT:
         raise AssertionError("Routers must not call an LLM.")
 
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         raise AssertionError("Routers must not call an LLM.")

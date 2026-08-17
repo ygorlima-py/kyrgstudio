@@ -62,6 +62,8 @@ class SequenceLLM(LLMBase, Generic[ResponseT]):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._next(output_schema)
@@ -69,6 +71,8 @@ class SequenceLLM(LLMBase, Generic[ResponseT]):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         return self._next(output_schema)

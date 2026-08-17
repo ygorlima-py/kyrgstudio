@@ -15,6 +15,10 @@ from kyrg.llms.error import StructuredOutputParsingError
 from kyrg.llms.openai_llm import OpenAILLM
 
 
+SYSTEM_PROMPT = "Follow the structured-output contract."
+PROMPT_CACHE_KEY = "test:openai-structured"
+
+
 class SimpleOutput(BaseModel):
     """Small structured response schema used by OpenAI adapter tests."""
 
@@ -180,13 +184,20 @@ def test_structured_once_calls_parse_and_returns_parsed_object() -> None:
     )
     llm = _llm(client=Client(responses), temperature=0.2)
 
-    result = llm._structured_once("prompt", SimpleOutput)
+    result = llm._structured_once(
+        "prompt",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    )
 
     assert result is parsed
     assert responses.parse_calls == [
         {
             "model": "gpt-test",
             "input": "prompt",
+            "instructions": SYSTEM_PROMPT,
+            "prompt_cache_key": PROMPT_CACHE_KEY,
             "text_format": SimpleOutput,
             "temperature": 0.2,
         }
@@ -200,7 +211,12 @@ def test_structured_once_rejects_missing_parsed_output() -> None:
     llm = _llm(client=Client(responses))
 
     with pytest.raises(StructuredOutputParsingError):
-        llm._structured_once("prompt", SimpleOutput)
+        llm._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
 
 def test_ainvoke_and_astructured_once_use_async_client() -> None:
@@ -218,11 +234,20 @@ def test_ainvoke_and_astructured_once_use_async_client() -> None:
     llm = _llm(async_client=Client(responses), temperature=0.0)
 
     text = asyncio.run(llm.ainvoke("hello async"))
-    parsed = asyncio.run(llm._astructured_once("structured async", SimpleOutput))
+    parsed = asyncio.run(
+        llm._astructured_once(
+            "structured async",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
+    )
 
     assert text == "async text"
     assert parsed == SimpleOutput(value="async parsed")
     assert responses.create_calls[0]["temperature"] == 0.0
+    assert responses.parse_calls[0]["instructions"] == SYSTEM_PROMPT
+    assert responses.parse_calls[0]["prompt_cache_key"] == PROMPT_CACHE_KEY
     assert responses.parse_calls[0]["text_format"] is SimpleOutput
     assert llm.token_usage() == {
         "input_tokens": 5,

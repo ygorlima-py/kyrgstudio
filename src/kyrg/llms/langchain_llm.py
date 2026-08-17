@@ -6,10 +6,12 @@ when callers want LangChain model configuration, routing, tracing, or provider
 abstraction while keeping the rest of the project provider-neutral.
 """
 
-from loguru import logger
+from typing import Any, cast
+
 from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.chat_models import BaseChatModel
-from typing import Any, cast
+from langchain_core.messages import HumanMessage, SystemMessage
+from loguru import logger
 
 from kyrg.llms.base import LLMBase, OutputT
 from kyrg.llms.error import StructuredOutputParsingError
@@ -72,7 +74,13 @@ class LangChainLLM(LLMBase):
 
         return str(content)
 
-    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(
+        self,
+        prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
+        output_schema: type[OutputT],
+    ) -> OutputT:
         """Execute one structured-output attempt through LangChain.
 
         Args:
@@ -93,11 +101,19 @@ class LangChainLLM(LLMBase):
         """
         logger.info("Calling LangChain LLM provider: method=structured")
 
+        # Cache parameters are provider-specific and cannot be forwarded safely
+        # through the generic BaseChatModel contract.
+        _ = prompt_cache_key
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=prompt),
+        ]
+
         try:
             structured_llm = self.llm.with_structured_output(output_schema, include_raw=True,)
             response = cast(
                         dict[str, Any],
-                        structured_llm.invoke(prompt),
+                        structured_llm.invoke(messages),
                     )
             
             raw = response["raw"]
@@ -174,6 +190,8 @@ class LangChainLLM(LLMBase):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         """Execute one asynchronous structured-output attempt.
@@ -196,11 +214,19 @@ class LangChainLLM(LLMBase):
         """
         logger.info("Calling LangChain LLM provider: method=astructured")
 
+        # Cache parameters are provider-specific and cannot be forwarded safely
+        # through the generic BaseChatModel contract.
+        _ = prompt_cache_key
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=prompt),
+        ]
+
         try:
             structured_llm = self.llm.with_structured_output(output_schema, include_raw=True)
             response = cast(
                         dict[str, Any],
-                        await structured_llm.ainvoke(prompt),
+                        await structured_llm.ainvoke(messages),
                     )
             
             raw = response["raw"]

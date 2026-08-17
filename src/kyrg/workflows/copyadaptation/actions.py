@@ -14,6 +14,7 @@ from kyrg.llms.base import LLMBase
 from kyrg.workflows.base import AIActionBase
 from kyrg.workflows.copyanalysis.schemas import CopyAnalysisOutput, SectionType
 from kyrg.workflows.copyadaptation.prompts import CopyAdaptationPrompts
+from kyrg.workflows.copyadaptation.system_prompt import CopyAdaptationSystemPrompts
 from kyrg.workflows.copyadaptation.schemas import (
     BuildCopyStrategyOutput,
     ReviewSectionFlowOutput,
@@ -58,6 +59,8 @@ class BuildCopyStrategy(AIActionBase):
 
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_BUILD_COPY_STRATEGY,
+            prompt_cache_key="copy-adaptation:strategy",
             output_schema=BuildCopyStrategyOutput,
         )
 
@@ -66,6 +69,8 @@ class BuildCopyStrategy(AIActionBase):
 
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_BUILD_COPY_STRATEGY,
+            prompt_cache_key="copy-adaptation:strategy",
             output_schema=BuildCopyStrategyOutput,
         )
 
@@ -142,6 +147,8 @@ class WriteScriptSection(AIActionBase):
 
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_WRITE_SCRIPT_SECTIONS,
+            prompt_cache_key="copy-adaptation:write-sections",
             output_schema=WriteScriptSectionsOutput,
         )
 
@@ -150,6 +157,8 @@ class WriteScriptSection(AIActionBase):
 
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_WRITE_SCRIPT_SECTIONS,
+            prompt_cache_key="copy-adaptation:write-sections",
             output_schema=WriteScriptSectionsOutput,
         )
 
@@ -244,6 +253,8 @@ class CorrectScriptSections(AIActionBase):
 
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_CORRECT_SCRIPT_SECTIONS,
+            prompt_cache_key="copy-adaptation:correct-sections",
             output_schema=WriteScriptSectionsOutput,
         )
 
@@ -252,6 +263,8 @@ class CorrectScriptSections(AIActionBase):
 
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_CORRECT_SCRIPT_SECTIONS,
+            prompt_cache_key="copy-adaptation:correct-sections",
             output_schema=WriteScriptSectionsOutput,
         )
 
@@ -349,6 +362,8 @@ class CorrectValidatedScript(AIActionBase):
 
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_CORRECT_VALIDATED_SCRIPT,
+            prompt_cache_key="copy-adaptation:correct-validated-script",
             output_schema=WriteScriptSectionsOutput,
         )
 
@@ -357,6 +372,8 @@ class CorrectValidatedScript(AIActionBase):
 
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_CORRECT_VALIDATED_SCRIPT,
+            prompt_cache_key="copy-adaptation:correct-validated-script",
             output_schema=WriteScriptSectionsOutput,
         )
 
@@ -448,6 +465,8 @@ class ReviewAction(AIActionBase):
 
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_REVIEW_SECTION_FLOW,
+            prompt_cache_key="copy-adaptation:review-flow",
             output_schema=ReviewSectionFlowOutput,
         )
 
@@ -456,6 +475,8 @@ class ReviewAction(AIActionBase):
 
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_REVIEW_SECTION_FLOW,
+            prompt_cache_key="copy-adaptation:review-flow",
             output_schema=ReviewSectionFlowOutput,
         )
 
@@ -537,6 +558,8 @@ class ValidateScriptAction(AIActionBase):
 
         return self.llm.structured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_VALIDATE_SCRIPT,
+            prompt_cache_key="copy-adaptation:validate-script",
             output_schema=ValidateScriptOutput,
         )
 
@@ -545,6 +568,8 @@ class ValidateScriptAction(AIActionBase):
 
         return await self.llm.astructured(
             prompt=self._build_prompt(),
+            system_prompt=CopyAdaptationSystemPrompts.SYSTEM_PROMPT_VALIDATE_SCRIPT,
+            prompt_cache_key="copy-adaptation:validate-script",
             output_schema=ValidateScriptOutput,
         )
 

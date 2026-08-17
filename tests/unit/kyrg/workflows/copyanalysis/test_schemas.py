@@ -58,6 +58,8 @@ class StubLLM(LLMBase):
     def _structured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         raise AssertionError("Schema tests must not call an LLM.")
@@ -65,6 +67,8 @@ class StubLLM(LLMBase):
     async def _astructured_once(
         self,
         prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
         output_schema: type[OutputT],
     ) -> OutputT:
         raise AssertionError("Schema tests must not call an LLM.")

@@ -15,6 +15,10 @@ from kyrg.llms.error import StructuredOutputParsingError
 from kyrg.llms.gemini_llm import GoogleLLM
 
 
+SYSTEM_PROMPT = "Follow the structured-output contract."
+PROMPT_CACHE_KEY = "test:gemini-structured"
+
+
 class SimpleOutput(BaseModel):
     """Small schema used by Gemini structured-output tests."""
 
@@ -151,7 +155,15 @@ def test_structured_once_accepts_instance_and_dict_outputs() -> None:
         )
     )
 
-    assert instance_llm._structured_once("prompt", SimpleOutput) is instance
+    assert (
+        instance_llm._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
+        is instance
+    )
     assert instance_llm.token_usage() == {
         "input_tokens": 0,
         "output_tokens": 0,
@@ -160,7 +172,12 @@ def test_structured_once_accepts_instance_and_dict_outputs() -> None:
 
     dict_llm = _llm(Client(models=SyncModels(GeminiResponse(parsed={"value": "dict"}))))
 
-    assert dict_llm._structured_once("prompt", SimpleOutput) == SimpleOutput(value="dict")
+    assert dict_llm._structured_once(
+        "prompt",
+        SYSTEM_PROMPT,
+        PROMPT_CACHE_KEY,
+        SimpleOutput,
+    ) == SimpleOutput(value="dict")
 
 
 def test_structured_once_rejects_missing_or_invalid_parsed_output() -> None:
@@ -168,12 +185,22 @@ def test_structured_once_rejects_missing_or_invalid_parsed_output() -> None:
     missing = _llm(Client(models=SyncModels(GeminiResponse(parsed=None))))
 
     with pytest.raises(StructuredOutputParsingError, match="no structured output"):
-        missing._structured_once("prompt", SimpleOutput)
+        missing._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
     invalid = _llm(Client(models=SyncModels(GeminiResponse(parsed=["bad"]))))
 
     with pytest.raises(StructuredOutputParsingError, match="invalid format"):
-        invalid._structured_once("prompt", SimpleOutput)
+        invalid._structured_once(
+            "prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
 
 
 def test_async_methods_mirror_sync_behavior() -> None:
@@ -188,10 +215,18 @@ def test_async_methods_mirror_sync_behavior() -> None:
     llm = _llm(Client(async_models=async_models))
 
     text = asyncio.run(llm.ainvoke("async prompt"))
-    parsed = asyncio.run(llm._astructured_once("structured prompt", SimpleOutput))
+    parsed = asyncio.run(
+        llm._astructured_once(
+            "structured prompt",
+            SYSTEM_PROMPT,
+            PROMPT_CACHE_KEY,
+            SimpleOutput,
+        )
+    )
 
     assert text == "async text"
     assert parsed == SimpleOutput(value="async parsed")
     assert async_models.calls[0]["contents"] == "async prompt"
     assert async_models.calls[1]["contents"] == "structured prompt"
+    assert async_models.calls[1]["config"].system_instruction == SYSTEM_PROMPT
     assert llm.token_usage()["total_tokens"] == 9

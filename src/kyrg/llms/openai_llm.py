@@ -26,7 +26,12 @@ class OpenAILLM(LLMBase):
 
     BASE_URL = "https://api.openai.com/v1"
     
-    def __init__(self, api_key: str | None, model: str, temperature: Optional[float] = None):   
+    def __init__(
+        self,
+        api_key: str | None,
+        model: str,
+        temperature: Optional[float] = None,
+        ):
         """Create synchronous and asynchronous OpenAI clients.
 
         Args:
@@ -74,7 +79,13 @@ class OpenAILLM(LLMBase):
             
         return response.output_text
 
-    def _structured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    def _structured_once(
+        self,
+        prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
+        output_schema: type[OutputT],
+        ) -> OutputT:
         """Execute one structured-output attempt with ``responses.parse``.
 
         Args:
@@ -96,6 +107,8 @@ class OpenAILLM(LLMBase):
             response = self.client.responses.parse(
                 model=self.model,
                 input=prompt,
+                instructions=system_prompt,
+                prompt_cache_key=prompt_cache_key,
                 text_format=output_schema,
                 temperature=self.temperature,
             )
@@ -153,7 +166,13 @@ class OpenAILLM(LLMBase):
             
         return response.output_text
     
-    async def _astructured_once(self, prompt: str, output_schema: type[OutputT]) -> OutputT:
+    async def _astructured_once(
+        self,
+        prompt: str,
+        system_prompt: str,
+        prompt_cache_key: str,
+        output_schema: type[OutputT],
+        ) -> OutputT:
         """Execute one asynchronous structured-output attempt.
 
         Args:
@@ -175,6 +194,8 @@ class OpenAILLM(LLMBase):
             response = await self.async_client.responses.parse(
                 model=self.model,
                 input=prompt,
+                instructions=system_prompt,
+                prompt_cache_key=prompt_cache_key,
                 text_format=output_schema,
                 temperature=self.temperature
             )
