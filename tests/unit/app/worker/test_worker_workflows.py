@@ -57,6 +57,11 @@ def test_selects_copy_analysis_workflow(tmp_path: Path) -> None:
     )
 
     assert len(transcriber_factory.calls) == 1
+    transcription_audio_path = Path(
+        transcriber_factory.calls[0]["initial_state"]["audio_path"]
+    )
+    assert transcription_audio_path.name == "transcription.mp3"
+    assert not transcription_audio_path.exists()
     assert len(analysis_factory.calls) == 1
     assert adaptation_factory.calls == []
     assert result.output_json["transcription"] == _transcription().model_dump(
