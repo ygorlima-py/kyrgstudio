@@ -5,10 +5,12 @@ one external provider response into the shared ``TranscriptionResult`` schema
 used by the application.
 """
 
+import asyncio
 import base64
-import requests
-import httpx
 from typing import Any
+
+import httpx
+import requests
 
 from kyrg.transcribers.base import TranscriberAPIBase
 from kyrg.transcribers.schemas import TranscriptionResult, WordSegment, TextSegment
@@ -97,14 +99,37 @@ class OpenRouterTranscriber(TranscriberAPIBase):
         if self.language is not None:
             request_args["json"]["language"] = self.language
 
+        retry_delays = (2.0, 5.0, 10.0)
+        retryable_status_codes = {429, 500, 502, 503, 504}
+
         async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(self.URL, **request_args)
-                response.raise_for_status()
-                return response.json()
-            
-            except httpx.HTTPError as error:
-                raise RuntimeError(f"Error calling OpenRouter provider: {error}")
+            for attempt in range(len(retry_delays) + 1):
+                try:
+                    response = await client.post(self.URL, **request_args)
+                    response.raise_for_status()
+                    return response.json()
+                except httpx.HTTPStatusError as error:
+                    status_code = error.response.status_code
+                    retries_exhausted = attempt >= len(retry_delays)
+
+                    if (
+                        status_code not in retryable_status_codes
+                        or retries_exhausted
+                    ):
+                        raise RuntimeError(
+                            f"Error calling OpenRouter provider: {error}"
+                        ) from error
+                except httpx.TransportError as error:
+                    if attempt >= len(retry_delays):
+                        raise RuntimeError(
+                            f"Error calling OpenRouter provider: {error}"
+                        ) from error
+
+                await asyncio.sleep(retry_delays[attempt])
+
+        raise RuntimeError(
+            "OpenRouter transcription retry loop ended unexpectedly."
+        )
 
     def _normalize_response(self, raw_result: dict[str, Any]) -> TranscriptionResult:
         """Convert an OpenRouter response into ``TranscriptionResult``."""
