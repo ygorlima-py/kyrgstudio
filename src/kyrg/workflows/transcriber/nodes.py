@@ -1,14 +1,16 @@
-from kyrg.editor import MediaContext, CommandRunner
-from kyrg.editor.audio import ExtractAudio, ConvertToWhisperFormat, AudioSize
+from kyrg.editor import CommandRunner, MediaContext
+from kyrg.editor.audio import AudioSize, ConvertAudio
 from kyrg.transcribers.base import TranscriberAPIBase, TranscriberBase
-from kyrg.workflows.transcriber.state import TranscriberState
-from kyrg.workflows.transcriber.actions import ExtractDomainContext, CorrectTranscription
-from kyrg.workflows.base import AIActionExecutor
-from kyrg.workflows.transcriber.prompts import TranscriptionPrompts
-from kyrg.workflows.workflow_types import WorkflowRuntime
-from kyrg.workflows.transcriber.schemas import TranscriberWorkflowContext
 from kyrg.workflows import guards
-
+from kyrg.workflows.base import AIActionExecutor
+from kyrg.workflows.transcriber.actions import (
+    CorrectTranscription,
+    ExtractDomainContext,
+)
+from kyrg.workflows.transcriber.prompts import TranscriptionPrompts
+from kyrg.workflows.transcriber.schemas import TranscriberWorkflowContext
+from kyrg.workflows.transcriber.state import TranscriberState
+from kyrg.workflows.workflow_types import WorkflowRuntime
 
 # ----- Nodes Sync --------------------
 
@@ -27,9 +29,13 @@ def prepare_audio(state: TranscriberState) -> dict:
         input_path=state["source_path"],
         output_path=state["audio_path"],
     )
-    converter = ConvertToWhisperFormat(
+    converter = ConvertAudio(
         context=context,
         runner=CommandRunner(),
+        codec="libmp3lame",
+        bitrate="64k",
+        sample_rate=16000,
+        channels=1,
     )
     converter.execute()
 
@@ -40,7 +46,14 @@ def prepare_audio(state: TranscriberState) -> dict:
 
 def extract_audio(state: TranscriberState)-> dict: 
     context = MediaContext(input_path=state["source_path"], output_path=state["audio_path"])
-    extractor = ExtractAudio(context=context, runner=CommandRunner())
+    extractor = ConvertAudio(
+        context=context,
+        runner=CommandRunner(),
+        codec="libmp3lame",
+        bitrate="64k",
+        sample_rate=16000,
+        channels=1,
+    )
     extractor.execute()
     
     return {

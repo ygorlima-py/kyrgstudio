@@ -51,27 +51,31 @@ def test_prepare_audio_executes_conversion_with_exact_paths(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Convert exact input and output paths with a new command runner."""
-    doubles = _install_media_doubles(monkeypatch, "ConvertToWhisperFormat")
+    doubles = _install_media_doubles(monkeypatch, "ConvertAudio")
     ignored_conversion_result = object()
     doubles.action.execute.return_value = ignored_conversion_result
     state = _state(
         source_path="incoming/source.wav",
-        audio_path="working/normalized.wav",
+        audio_path="working/normalized.mp3",
     )
 
     result = nodes.prepare_audio(state)
 
     doubles.context_type.assert_called_once_with(
         input_path="incoming/source.wav",
-        output_path="working/normalized.wav",
+        output_path="working/normalized.mp3",
     )
     doubles.runner_type.assert_called_once_with()
     doubles.action_type.assert_called_once_with(
         context=doubles.context_type.return_value,
         runner=doubles.runner_type.return_value,
+        codec="libmp3lame",
+        bitrate="64k",
+        sample_rate=16000,
+        channels=1,
     )
     doubles.action.execute.assert_called_once_with()
-    assert result == {"audio_path": "working/normalized.wav"}
+    assert result == {"audio_path": "working/normalized.mp3"}
 
 
 @pytest.mark.parametrize(
@@ -96,10 +100,10 @@ def test_prepare_audio_propagates_conversion_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Propagate an external conversion error without translation."""
-    doubles = _install_media_doubles(monkeypatch, "ConvertToWhisperFormat")
+    doubles = _install_media_doubles(monkeypatch, "ConvertAudio")
     error = OSError("conversion failed")
     doubles.action.execute.side_effect = error
-    state = _state(source_path="source.wav", audio_path="audio.wav")
+    state = _state(source_path="source.wav", audio_path="audio.mp3")
 
     with pytest.raises(OSError) as exc_info:
         nodes.prepare_audio(state)
@@ -112,27 +116,31 @@ def test_extract_audio_executes_extraction_with_exact_paths(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Extract between exact paths with a new command runner."""
-    doubles = _install_media_doubles(monkeypatch, "ExtractAudio")
+    doubles = _install_media_doubles(monkeypatch, "ConvertAudio")
     ignored_extraction_result = object()
     doubles.action.execute.return_value = ignored_extraction_result
     state = _state(
         source_path="incoming/source.mp4",
-        audio_path="working/extracted.wav",
+        audio_path="working/extracted.mp3",
     )
 
     result = nodes.extract_audio(state)
 
     doubles.context_type.assert_called_once_with(
         input_path="incoming/source.mp4",
-        output_path="working/extracted.wav",
+        output_path="working/extracted.mp3",
     )
     doubles.runner_type.assert_called_once_with()
     doubles.action_type.assert_called_once_with(
         context=doubles.context_type.return_value,
         runner=doubles.runner_type.return_value,
+        codec="libmp3lame",
+        bitrate="64k",
+        sample_rate=16000,
+        channels=1,
     )
     doubles.action.execute.assert_called_once_with()
-    assert result == {"audio_path": "working/extracted.wav"}
+    assert result == {"audio_path": "working/extracted.mp3"}
 
 
 @pytest.mark.parametrize(
@@ -157,11 +165,11 @@ def test_extract_audio_propagates_failure_without_cleanup(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Propagate an extraction error without translation or cleanup."""
-    doubles = _install_media_doubles(monkeypatch, "ExtractAudio")
+    doubles = _install_media_doubles(monkeypatch, "ConvertAudio")
     error = RuntimeError("extraction failed")
     doubles.action.execute.side_effect = error
     doubles.action.cleanup = MagicMock(name="cleanup")
-    state = _state(source_path="source.mp4", audio_path="audio.wav")
+    state = _state(source_path="source.mp4", audio_path="audio.mp3")
 
     with pytest.raises(RuntimeError) as exc_info:
         nodes.extract_audio(state)

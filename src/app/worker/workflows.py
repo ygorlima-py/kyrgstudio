@@ -57,7 +57,7 @@ OUTPUT_TOKEN_KEY = "output_tokens"
 TOTAL_TOKEN_KEY = "total_tokens"
 
 DEFAULT_MAX_RETRY = 1
-TRANSCRIPTION_AUDIO_FILENAME = "transcription.wav"
+TRANSCRIPTION_AUDIO_FILENAME = "transcription.mp3"
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 PipelineInput = CopyAnalysisPipelineInput | CopyAdaptationPipelineInput
@@ -155,7 +155,7 @@ class KyrgWorkflowExecutor:
         """Execute and normalize the pipeline selected by ``request``.
 
         The temporary directory contains only workflow-generated media such as
-        normalized WAV audio. The runner remains responsible for the stored
+        normalized MP3 audio. The runner remains responsible for the stored
         input file and any materialized remote copy.
         """
 
