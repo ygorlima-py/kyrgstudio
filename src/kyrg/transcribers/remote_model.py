@@ -7,13 +7,14 @@ used by the application.
 
 import asyncio
 import base64
+from pathlib import Path
 from typing import Any
 
 import httpx
 import requests
 
 from kyrg.transcribers.base import TranscriberAPIBase
-from kyrg.transcribers.schemas import TranscriptionResult, WordSegment, TextSegment
+from kyrg.transcribers.schemas import TextSegment, TranscriptionResult, WordSegment
 
 
 class OpenRouterTranscriber(TranscriberAPIBase):
@@ -27,12 +28,43 @@ class OpenRouterTranscriber(TranscriberAPIBase):
     URL = "https://openrouter.ai/api/v1/audio/transcriptions"
     PROVIDER = "openrouter"
 
+    def _audio_format(self) -> str:
+        """Return the OpenRouter format matching the configured audio file."""
+
+        audio_format = Path(self.audio_path).suffix.lower().removeprefix(".")
+        supported_formats = {"aac", "flac", "m4a", "mp3", "ogg", "wav", "webm"}
+
+        if audio_format not in supported_formats:
+            raise ValueError(
+                "Unsupported OpenRouter transcription audio format: "
+                f"{audio_format or 'missing'}"
+            )
+
+        return audio_format
+
     def _open_file(self) -> str:
         """Read the configured audio file and return it as a base64 string."""
 
         with open(self.audio_path, "rb") as f:
             base64_audio = base64.b64encode(f.read()).decode("utf-8")
             return base64_audio
+
+    def _request_payload(self) -> dict[str, Any]:
+        """Build one format-consistent OpenRouter transcription payload."""
+
+        payload: dict[str, Any] = {
+            "model": self.model_name,
+            "input_audio": {
+                "data": self._open_file(),
+                "format": self._audio_format(),
+            },
+            "temperature": self.temperature,
+        }
+
+        if self.language is not None:
+            payload["language"] = self.language
+
+        return payload
 
     def _request(self) -> dict[str, Any]:
         """Send the transcription request to OpenRouter.
@@ -49,19 +81,9 @@ class OpenRouterTranscriber(TranscriberAPIBase):
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
-            "json": {
-                "model": self.model_name,
-                "input_audio": {
-                    "data": self._open_file(),
-                    "format": "wav",
-                },
-                "temperature": self.temperature,
-            },
+            "json": self._request_payload(),
             "timeout": 300,
         }
-
-        if self.language is not None:
-            request_args["json"]["language"] = self.language
 
         try:
             response = requests.post(self.URL, **request_args)
@@ -85,19 +107,9 @@ class OpenRouterTranscriber(TranscriberAPIBase):
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
-            "json": {
-                "model": self.model_name,
-                "input_audio": {
-                    "data": self._open_file(),
-                    "format": "wav",
-                },
-                "temperature": self.temperature,
-            },
+            "json": self._request_payload(),
             "timeout": 300,
         }
-
-        if self.language is not None:
-            request_args["json"]["language"] = self.language
 
         retry_delays = (2.0, 5.0, 10.0)
         retryable_status_codes = {429, 500, 502, 503, 504}
