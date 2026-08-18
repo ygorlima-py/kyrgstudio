@@ -51,6 +51,9 @@ CELERY_BROKER_URL=amqp://kyrgstudio:replace-with-a-strong-rabbitmq-password@rabb
 APP_DEFAULT_LLM_PROVIDER=openrouter
 APP_DEFAULT_ANALYSIS_MODEL=deepseek/deepseek-v4-flash
 APP_DEFAULT_ADAPTATION_MODEL=deepseek/deepseek-v4-flash
+# LLM sampling temperature. Use 0.0 for the most deterministic analysis.
+# Accepted range: 0.0 to 2.0.
+APP_LLM_TEMPERATURE=0.0
 
 # Transcription is remote through OpenRouter. The worker does not load a local
 # Faster Whisper model when this provider is selected.

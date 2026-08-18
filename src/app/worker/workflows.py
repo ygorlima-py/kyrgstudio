@@ -140,7 +140,11 @@ class KyrgWorkflowExecutor:
         self.transcriber_workflow_factory = transcriber_workflow_factory
         self.copy_analysis_workflow_factory = copy_analysis_workflow_factory
         self.copy_adaptation_workflow_factory = copy_adaptation_workflow_factory
-        self.llm_temperature = llm_temperature
+        self.llm_temperature = (
+            settings.llm_temperature
+            if llm_temperature is None
+            else llm_temperature
+        )
         self.transcriber_temperature = transcriber_temperature
         self.max_retry = _normalize_max_retry(max_retry)
 

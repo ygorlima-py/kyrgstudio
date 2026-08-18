@@ -66,6 +66,7 @@ class AppSettings:
     celery_queue_name: str
     celery_task_soft_time_limit_seconds: int
     celery_task_time_limit_seconds: int
+    llm_temperature: float = 0.0
     
     # Storage defaults keep direct ``AppSettings(...)`` test fixtures on the
     # local backend; production values are still loaded from the environment.
@@ -167,6 +168,12 @@ def load_settings() -> AppSettings:
         "AUTH_ALLOWED_CLOCK_SKEW_SECONDS",
         default=30,
     )
+    llm_temperature = _bounded_environment_float(
+        "APP_LLM_TEMPERATURE",
+        default=0.0,
+        minimum=0.0,
+        maximum=2.0,
+    )
 
     _validate_auth_ttls(
         access_token_ttl_seconds=auth_access_token_ttl_seconds,
@@ -217,6 +224,7 @@ def load_settings() -> AppSettings:
             "APP_DEFAULT_ADAPTATION_MODEL",
             "deepseek/deepseek-v4-flash",
         ),
+        llm_temperature=llm_temperature,
         default_transcriber_provider=os.getenv(
             "APP_DEFAULT_TRANSCRIBER_PROVIDER",
             "whisper_local",
@@ -364,6 +372,28 @@ def _non_negative_environment_int(name: str, *, default: int) -> int:
 
     if parsed_value < 0:
         raise ValueError(f"{name} must be zero or greater.")
+
+    return parsed_value
+
+
+def _bounded_environment_float(
+    name: str,
+    *,
+    default: float,
+    minimum: float,
+    maximum: float,
+) -> float:
+    value = _environment_text(name, default=str(default))
+
+    try:
+        parsed_value = float(value)
+    except ValueError as error:
+        raise ValueError(f"{name} must be a number.") from error
+
+    if not minimum <= parsed_value <= maximum:
+        raise ValueError(
+            f"{name} must be between {minimum} and {maximum}."
+        )
 
     return parsed_value
 
