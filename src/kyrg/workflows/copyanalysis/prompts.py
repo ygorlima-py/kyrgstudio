@@ -37,6 +37,10 @@ class CopyAnalysisPrompts:
     {language}
     </language>
 
+    <clean_transcript>
+    {clean_transcript}
+    </clean_transcript>
+    
     <copy_structure>
     {copy_structure}
     </copy_structure>

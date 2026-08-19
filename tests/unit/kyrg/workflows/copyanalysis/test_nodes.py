@@ -37,7 +37,6 @@ from kyrg.workflows.copyanalysis.schemas import (
 )
 from kyrg.workflows.copyanalysis.state import CopyAnalysisState
 
-
 INPUT_TOKENS = 11
 OUTPUT_TOKENS = 5
 TOKEN_OUTPUT = {
@@ -598,11 +597,19 @@ def test_llm_nodes_reject_missing_runtime_context(
         (
             analyse_persuasion,
             {},
+            "clean_transcript is required to analyse persuasion",
+        ),
+        (
+            analyse_persuasion,
+            {"clean_transcript": "Valid text."},
             "copy structure is required to analyse persuasion",
         ),
         (
             analyse_persuasion,
-            {"copy_structure": _copy_structure()},
+            {
+                "clean_transcript": "Valid text.",
+                "copy_structure": _copy_structure(),
+            },
             "Offer structure is required to analyse persuasion",
         ),
     ),

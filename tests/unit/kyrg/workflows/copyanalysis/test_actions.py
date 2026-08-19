@@ -30,7 +30,6 @@ from kyrg.workflows.copyanalysis.schemas import (
 )
 from kyrg.workflows.copyanalysis.system_prompt import CopyAnalysisSystemPrompts
 
-
 INPUT_TOKENS = 19
 OUTPUT_TOKENS = 7
 
@@ -267,6 +266,10 @@ def _analyse_persuasion_action(llm: RecordingLLM) -> AnalysePersuasion:
 
     return AnalysePersuasion(
         llm=llm,
+        clean_transcript=(
+            "Tu comisión también puede trabajar por tu futuro. "
+            "Aprende a organizar tus inversiones paso a paso."
+        ),
         copy_structure=_copy_structure(),
         offer_analysis=_offer_analysis(),
         language="Spanish",
@@ -455,16 +458,16 @@ def test_extract_offer_elements_serializes_structure_without_mutation() -> None:
     assert action.copy_structure.model_dump() == structure_before
 
 
-def test_analyse_persuasion_serializes_only_required_prior_analyses() -> None:
-    """Persuasion analysis should consume structured context, not raw transcript text."""
+def test_analyse_persuasion_serializes_source_and_prior_analyses() -> None:
+    """Persuasion analysis should receive the source and both derived analyses."""
 
     action = _analyse_persuasion_action(RecordingLLM())
     prompt = action._build_prompt()
 
     assert _tag_content(prompt, "language") == action.language
+    assert _tag_content(prompt, "clean_transcript") == action.clean_transcript
     assert _json_tag(prompt, "copy_structure") == action.copy_structure.model_dump()
     assert _json_tag(prompt, "offer_analysis") == action.offer_analysis.model_dump()
-    assert "<clean_transcript>" not in prompt
 
 
 def test_analyse_persuasion_preserves_unicode_json() -> None:
