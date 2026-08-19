@@ -111,11 +111,13 @@ class AnalysePersuasion(AIActionBase):
         llm: LLMBase,
         copy_structure: CopyStructureOutput,
         offer_analysis: OfferAnalysisOutput,
+        clean_transcript: str,
         language: str | None,
         ) -> None:
         
         self.copy_structure = copy_structure
         self.offer_analysis = offer_analysis
+        self.clean_transcript = clean_transcript
         self.language = language
         super().__init__(llm)
         
@@ -140,6 +142,7 @@ class AnalysePersuasion(AIActionBase):
     def _build_prompt(self) -> str:
         return CopyAnalysisPrompts.ANALYSE_PERSUASION.format(
             language=self.language,
+            clean_transcript=self.clean_transcript,
             copy_structure=self.copy_structure.model_dump_json(indent=2),
             offer_analysis=self.offer_analysis.model_dump_json(indent=2),
         )

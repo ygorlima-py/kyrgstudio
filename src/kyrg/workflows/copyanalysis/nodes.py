@@ -1,19 +1,20 @@
 """Workflow nodes that transform transcription input into copy analysis output."""
 
-from kyrg.workflows.copyanalysis.state import CopyAnalysisState
-from kyrg.workflows.copyanalysis.schemas import (
-    StructuredTranscript,
-    CopyAnalysisWorkflowContext,
-    CopyAnalysisOutput,
-)
+from kyrg.workflows import guards
+from kyrg.workflows.base import AIActionExecutor
 from kyrg.workflows.copyanalysis.actions import (
+    AnalysePersuasion,
     ExtractCopyStructure,
     ExtractOfferElements,
-    AnalysePersuasion,
 )
-from kyrg.workflows.base import AIActionExecutor
+from kyrg.workflows.copyanalysis.schemas import (
+    CopyAnalysisOutput,
+    CopyAnalysisWorkflowContext,
+    StructuredTranscript,
+)
+from kyrg.workflows.copyanalysis.state import CopyAnalysisState
 from kyrg.workflows.core import WorkflowRuntime
-from kyrg.workflows import guards
+
 
 # ----- Nodes Sync --------------------
 def prepare_copy_input(state: CopyAnalysisState) -> dict:
@@ -132,6 +133,11 @@ def analyse_persuasion(
         runtime.context,
         "Copy analysis",
     )
+    clean_transcript = guards.require_non_empty(
+        state.get("clean_transcript"),
+        "clean_transcript",
+        "analyse persuasion",
+    )
     copy_structure = guards.require_value(
         state.get("copy_structure"),
         "copy structure",
@@ -145,6 +151,7 @@ def analyse_persuasion(
     
     action = AnalysePersuasion(
         llm=context.analysis_llm,
+        clean_transcript=clean_transcript,
         copy_structure=copy_structure,
         offer_analysis=offer_analysis,
         language=state.get("language"),
@@ -272,6 +279,11 @@ async def aanalyse_persuasion(
         runtime.context,
         "Copy analysis",
     )
+    clean_transcript = guards.require_non_empty(
+        state.get("clean_transcript"),
+        "clean_transcript",
+        "analyse persuasion",
+    )
     copy_structure = guards.require_value(
         state.get("copy_structure"),
         "copy structure",
@@ -285,6 +297,7 @@ async def aanalyse_persuasion(
     
     action = AnalysePersuasion(
         llm=context.analysis_llm,
+        clean_transcript=clean_transcript,
         copy_structure=copy_structure,
         offer_analysis=offer_analysis,
         language=state.get("language"),
